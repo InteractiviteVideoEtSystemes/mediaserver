@@ -242,7 +242,7 @@ install:
 #MCU
 ############################################
 
-mcu: $(OBJSMCU)
+mcu:  mkdirs $(OBJSMCU)
 	$(CXX) -o $(BIN)/$@ $(BUILDOBJSMCU) $(LDFLAGS) $(VADLD)
 
 rtmptest: $(OBJSRTMPTEST)

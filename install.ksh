@@ -1,6 +1,7 @@
 #!/usr/bin/ksh
 
 PROJET=mcumediaserver
+VERSION=1.6.14
 #Repertoire d'installation des includes
 DESTDIR_INC=/usr/include/
 #Repertoire d'installation des librairies
@@ -101,24 +102,35 @@ function create_rpm
     cd ./rpmbuild/SPECS/
     cp ../../mcumediaserver-opensource.spec .
     cd ../../
-    if [[ -z $1 || $1 -ne nosign ]]
+	git checkout -b $VERSION $VERSION
+	
+	git status | grep nothing
+	if [$? == 0]
     then
-	rpmbuild -bb --sign $PWD/rpmbuild/SPECS/mcumediaserver-opensource.spec
-    else
-        rpmbuild -bb $PWD/rpmbuild/SPECS/mcumediaserver-opensource.spec
+		if [[ -z $1 || $1 -ne nosign ]]
+		then
+		rpmbuild -bb --sign $PWD/rpmbuild/SPECS/mcumediaserver-opensource.spec
+		else
+			rpmbuild -bb $PWD/rpmbuild/SPECS/mcumediaserver-opensource.spec
+		fi
+		if [ $? == 0 ]
+		then
+			echo "************************* fin du rpmbuild ****************************"
+			#Recuperation du rpm
+			mv -f $PWD/rpmbuild/RPMS/i386/*.rpm $PWD/.
+			mv -f $PWD/rpmbuild/RPMS/x86_64/*.rpm $PWD/.
+		clean
+		else
+		clean
+		echo "*** error during build ***"
+		exit 20
+		fi
+	else
+        clean
+		echo "*** error git - some files are not commited ***"
+		exit 20
     fi
-    if [ $? == 0 ]
-    then
-        echo "************************* fin du rpmbuild ****************************"
-        #Recuperation du rpm
-        mv -f $PWD/rpmbuild/RPMS/i386/*.rpm $PWD/.
-        mv -f $PWD/rpmbuild/RPMS/x86_64/*.rpm $PWD/.
-	clean
-    else
-	clean
-	echo "*** error during build ***"
-	exit 20
-    fi
+	
     
 }
 
@@ -130,6 +142,9 @@ function clean
 	cd mcu 
 	make -f Makefile.rpm clean
 	cd -
+	git checkout master
+	git branch -d $VERSION
+
 }
 
 function compile_webrtc_from_google

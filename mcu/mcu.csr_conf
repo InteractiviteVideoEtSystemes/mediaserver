@@ -1,0 +1,16 @@
+[ req ]
+distinguished_name      	= req_distinguished_name
+
+[req_distinguished_name]
+countryName        	= FR
+countryName_default             	= FR
+countryName_min                 	= 2
+countryName_max                 	= 2
+
+localityName                   = Grenoble
+organizationalUnitName         = IVeS
+organizationalUnitName_default = IVeS
+commonName_max                 = 64
+emailAddress                   = support@ives.fr
+emailAddress_default           = support@ives.fr
+emailAddress_max               = 40  

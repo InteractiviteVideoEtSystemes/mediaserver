@@ -1,0 +1,256 @@
+###########################################
+# Fichero de configuracion
+###########################################
+MACHINE := $(shell uname -m)
+
+ifeq ($(MACHINE), x86_64)
+libdir=lib64
+endif
+ifeq ($(MACHINE), i686)
+libdir=lib
+endif
+
+LOG             = yes
+DEBUG           = yes
+BFCPINCLUDE     = /opt/ives/include
+FLASHSTREAMER   = no
+ADDLIBPATH      = ../staticdeps
+VADWEBRTC       = yes
+WEBRTCINCLUDE   = ${HOME}/webrtc/trunk/webrtc/
+WEBRTDIROBJ     = ${HOME}/webrtc/trunk/out/Release/obj.target/webrtc/
+PROTOC		= ../staticdeps/bin/protoc
+
+#DEBUG
+#OPTS=-msse -msse2 -msse3 -D__SSE2__  
+
+ifeq ($(FEWSTATICDEPS),yes)
+    OPTS+= -DFEWSTATICDEPS -I/usr/include/ffmpeg -I/usr/include/webrtc
+endif
+
+ifeq ($(GPROF),yes)
+        OPTS+= -g -O0 -pg
+        LDFLAGS +=  -pg
+endif
+
+ifeq ($(DEBUG),yes)
+	TAG=debug
+	OPTS+= -g -O0
+	BFCPLIBS=/opt/ives/$(libdir)/libbfcpdbg.a 
+else
+	OPTS+= -O3
+	TAG=release
+	BFCPLIBS=/opt/ives/$(libdir)/libbfcprel.a 
+endif
+
+#LOG
+ifeq ($(LOG),yes)
+	OPTS+= -DLOG_
+endif
+
+############################################
+#Directorios
+############################################
+BUILD = media/build/$(TAG)
+BIN   = ../bin/$(TAG)
+
+############################################
+#Objetos
+############################################
+G711DIR=g711
+G711OBJ=g711.o pcmucodec.o pcmacodec.o
+
+H263DIR=h263
+H263OBJ=h263.o h263codec.o mpeg4codec.o h263-1996codec.o
+
+JSR309DIR=jsr309
+JSR309OBJ=JSR309Event.o WSEndpoint.o RTPEndpoint.o Player.o Endpoint.o  MediaSession.o \
+    JSR309Manager.o RTPMultiplexer.o xmlrpcjsr309.o AudioDecoderWorker.o \
+    AudioEncoderWorker.o AudioMixerResource.o VideoDecoderWorker.o VideoEncoderWorker.o \
+    VideoMixerResource.o RTPMultiplexerSmoother.o Recorder.o AudioTranscoder.o Joinable.o
+
+
+ifeq ($(FLV1PARSER),yes)
+	FLV1DIR=flv1
+	FLV1OBJ=flv1codec.o flv1Parser.o
+	OPTS+= -DFLV1PARSER
+else
+	FLV1DIR=flv1
+	FLV1OBJ=flv1codec.o
+endif
+
+
+
+H264DIR=h264
+H264OBJ=h264encoder.o h264decoder.o h264depacketizer.o
+
+VP6DIR=vp6
+VP6OBJ=vp6decoder.o
+
+VP8DIR=vp8
+VP8OBJ=vp8encoder.o vp8decoder.o
+
+GSMDIR=gsm
+GSMOBJ=gsmcodec.o
+
+SPEEXDIR=speex
+SPEEXOBJ=speexcodec.o
+
+NELLYDIR=nelly
+NELLYOBJ=NellyCodec.o
+
+G722DIR=g722
+G722OBJ=g722codec.o g7221codec.o
+
+OPUSDIR=opus
+OPUSOBJ=opusencoder.o opusdecoder.o
+
+DOCSHARINGOBJ= stunmessage.o crc32calc.o remoteratecontrol.o uploadhandler.o http.o appmixer.o
+
+MOTELIDIR=moteli
+MOTELIOBJ=rabbitmqmcu.o mcu.pb.o rabbitmqserver.o
+
+OBJS=httpparser.o websocketserver.o websocketconnection.o audio.o video.o mcu.o multiconf.o rtpparticipant.o rtmpparticipant.o videomixer.o audiomixer.o xmlrpcserver.o xmlhandler.o xmlstreaminghandler.o statushandler.o xmlrpcmcu.o rtpsession.o audiostream.o videostream.o pipeaudioinput.o pipeaudiooutput.o pipevideoinput.o pipevideooutput.o 
+OBJS+=framescaler.o mosaic.o partedmosaic.o asymmetricmosaic.o pipmosaic.o logo.o overlay.o amf.o rtmpmessage.o rtmpchunk.o rtmpstream.o rtmpconnection.o  rtmpserver.o broadcaster.o broadcastsession.o rtmpflvstream.o flvrecorder.o FLVEncoder.o xmlrpcbroadcaster.o mediagateway.o mediabridgesession.o 
+OBJS+=xmlrpcmediagateway.o textmixer.o textmixerworker.o textstream.o pipetextinput.o pipetextoutput.o mp4player.o mp4streamer.o audioencoder.o audiodecoder.o textencoder.o mp4recorder.o rtmpmp4stream.o rtmpnetconnection.o rtmpclientconnection.o avcdescriptor.o RTPSmoother.o rtp.o fecdecoder.o sidebar.o \
+      vad.o dtls.o VideoTranscoder.o remoterateestimator.o audiotransrater.o eventstreaminghandler.o videopipe.o red.o redcodec.o shareddocmixer.o mcustatushandler.o
+
+OBJS+= $(G711OBJ) $(H263OBJ) $(GSMOBJ)  $(H264OBJ) ${FLV1OBJ} $(SPEEXOBJ) $(NELLYOBJ) $(VP6OBJ) $(DOCSHARINGOBJ) $(JSR309OBJ) $(VP8OBJ) $(G722OBJ) $(OPUSOBJ) 
+TARGETS=mcu rtmptest mediagw
+
+OBJS2=audio.o video.o mcu.o multiconf.o rtpparticipant.o rtmpparticipant.o videomixer.o audiomixer.o xmlrpcserver.o xmlhandler.o xmlstreaminghandler.o statushandler.o xmlrpcmcu.o rtpsession.o audiostream.o videostream.o pipeaudioinput.o pipeaudiooutput.o pipevideoinput.o pipevideooutput.o 
+OBJS2+=framescaler.o logo.o overlay.o amf.o rtmpmessage.o rtmpchunk.o rtmpstream.o rtmpconnection.o  rtmpserver.o broadcaster.o broadcastsession.o rtmpflvstream.o flvrecorder.omediagateway.o mediabridgesession.o mcustatushandler.o
+OBJS2+=xmlrpcmediagateway.o textstream.o pipetextinput.o pipetextoutput.o audioencoder.o audiodecoder.o textencoder.o rtmpnetconnection.o rtmpclientconnection.o avcdescriptor.o RTPSmoother.o rtp.o fecdecoder.o vad.o 
+OBJS2+=remoterateestimator.o audiotransrater.o eventstreaminghandler.o VideoTranscoder.o videopipe.o red.o redcodec.o
+OBJS2+= $(G711OBJ) $(H263OBJ) $(GSMOBJ) $(H264OBJ) ${FLV1OBJ} $(SPEEXOBJ) $(NELLYOBJ) $(VP6OBJ) $(JSR309OBJ) $(DOCSHARINGOBJ) $(VP8OBJ) $(G722OBJ) $(OPUSOBJ)
+
+ifeq ($(FLASHSTREAMER),yes)
+	OBJS+= flash.o xmlrpcflash.o 
+	OBJSFS   = flashstreamer.o FlashPlayer.o FlashSoundHandler.o $(OBJS)
+	OBJSFSCLIENT = xmlrpcclient.o xmlrpcflashclient.o
+	TARGETS += flashstreamer flashclient testflash
+endif
+
+ifeq ($(VADWEBRTC),yes)
+        VADINCLUDE = -I$(WEBRTCINCLUDE)
+        VADLD = -L $(WEBRTDIROBJ)/common_audio -lvad -lsignal_processing -lopus
+        OPTS+= -DVADWEBRTC -DOPUS_SUPPORT
+else
+        VADINCLUDE =
+        VADLD =
+endif
+
+ifeq ($(MOTELI),yes)
+	OPTS+= -DMOTELI=yes
+	OBJS+= $(MOTELIOBJ)
+	LDFLAGS += -Wl,-Bstatic -lamqpcpp -lrabbitmq -lprotobuf -Wl,-Bdynamic
+endif
+
+OBJSMCU = $(OBJS) main.o
+OBJSRTMPTEST = $(OBJS) rtmptest.o
+
+BUILDOBJSMCU = $(addprefix $(BUILD)/,$(OBJSMCU))
+BUILDOBJSRTMPTEST= $(addprefix $(BUILD)/,$(OBJSRTMPTEST))
+BUILDOBJSMEDIAGW= $(addprefix $(BUILD)/,$(OBJS2))
+BUILDOBJSFS= $(addprefix $(BUILD)/,$(OBJSFS)) 
+BUILDOBJSFSCLIENT= $(addprefix $(BUILD)/,$(OBJSFSCLIENT))
+
+###################################
+#Compilacion condicional
+###################################
+VPATH  =  %.o $(BUILD)/
+VPATH +=  %.c src/
+VPATH +=  %.cpp src/
+VPATH +=  %.cpp src/$(G711DIR)
+VPATH +=  %.cpp src/$(GSMDIR)
+VPATH +=  %.cpp src/$(H263DIR)
+VPATH +=  %.cpp src/$(H264DIR)
+VPATH +=  %.cpp src/$(FLV1DIR)
+VPATH +=  %.cpp src/$(VP6DIR)
+VPATH +=  %.cpp src/$(SPEEXDIR)
+VPATH +=  %.cpp src/$(NELLYDIR)
+VPATH +=  %.cpp src/$(JSR309DIR)
+VPATH +=  %.cpp src/$(VP8DIR)
+VPATH +=  %.cpp src/$(G722DIR) src/$(OPUSDIR)
+
+ifeq ($(MOTELI),yes)
+    VPATH +=  %.cpp src/$(MOTELIDIR)
+    VPATH +=  %.cc src/$(MOTELIDIR)
+    VPATH +=  %.proto src/$(MOTELIDIR)
+endif
+
+INCLUDE+= -Iinclude/ -I$(ADDLIBPATH)/include $(VADINCLUDE) -I/usr/include/ImageMagick-6 -I$(BFCPINCLUDE)
+
+LDFLAGS+= $(BFCPLIBS) -L$(ADDLIBPATH)/lib 
+
+ifeq ($(MOTELI),yes)
+	LDFLAGS += -lamqpcpp -lrabbitmq -lprotobuf 
+endif
+
+ifeq ($(FEWSTATICDEPS),yes)
+    # Use of dynamic libs (on FC20 ...)
+    LDFLAGS += -lmp4v2 -lsrtp -lavcodec -lswscale -lavformat -lavutil -lx264 -lvpx -lg722_1 -lspeex -lspeexdsp -lgsm -lssl -lcrypto -lpthread -lMagick++-6.Q16 -lbz2
+    LDXMLFLAGS+= -lxmlrpc_abyss -lxmlrpc_server -lxmlrpc -lxmlrpc_util
+else
+    # Usin static libs (CentOS)
+    LDFLAGS += -Wl,-Bstatic -lmp4v2 -lsrtp -lavcodec -lswscale -lavformat -lavutil -lx264 -lvpx -lg722_1 -lspeex -lspeexdsp -Wl,-Bdynamic -lgsm -lssl -lcrypto -lpthread -lMagick++-6.Q16 -lbz2
+    LDXMLFLAGS+= $(ADDLIBPATH)/lib/libxmlrpc_abyss.a $(ADDLIBPATH)/lib/libxmlrpc_server.a $(ADDLIBPATH)/lib/libxmlrpc.a $(ADDLIBPATH)/lib/libxmlrpc_xmlparse.a  $(ADDLIBPATH)/lib/libxmlrpc_xmltok.a $(ADDLIBPATH)/lib/libxmlrpc_util.a
+endif
+    
+
+LDFLAGS+= $(LDXMLFLAGS)
+
+#For abyss
+OPTS 	+= -D_UNIX -D__STDC_CONSTANT_MACROS -fPIC
+
+CFLAGS  += $(INCLUDE) $(OPTS)
+CXXFLAGS+= $(INCLUDE) $(OPTS)
+
+mcu.pb.cc: mcu.proto
+	$(PROTOC) --cpp_out=$(PWD) src/moteli/mcu.proto
+
+rabbitmqmcu.o: rabbitmqmcu.cpp rabbitmqmcu.h mcu.pb.cc
+	$(CXX) $(CXXFLAGS) -c $< -o $(BUILD)/$@
+
+mcu.pb.o: mcu.pb.cc
+	$(CXX) $(CXXFLAGS) -I$(PWD) -c $< -o $(BUILD)/$@
+
+%.o: %.c
+	$(CC) $(CFLAGS) -c $< -o $(BUILD)/$@
+
+%.o: %.cpp
+	$(CXX) $(CXXFLAGS) -c $< -o $(BUILD)/$@
+
+############################################
+#Targets
+############################################
+all: mkdirs $(TARGETS) 
+
+mkdirs:  
+	mkdir -p $(BUILD)
+	mkdir -p $(BIN)
+	cp logo.png $(BIN)
+clean:
+	rm -f $(BUILDOBJSMCU)
+	rm -f $(BUILDOBJSFS)
+	rm -f "$(BIN)/mcu"
+	rm -f "$(BIN)/flashstreamer"
+
+install:
+	cp $(BUILD)/mcu $(TARGET)/mediaserver
+
+############################################
+#MCU
+############################################
+
+mcu: $(OBJSMCU)
+	$(CXX) -o $(BIN)/$@ $(BUILDOBJSMCU) $(LDFLAGS) $(VADLD)
+
+rtmptest: $(OBJSRTMPTEST)
+	$(CXX) -o $(BIN)/$@ $(BUILDOBJSRTMPTEST) $(LDFLAGS)
+
+mediagw:  $(OBJS2) maingw.o
+	$(CXX) -o $(BIN)/$@ $(OBJSMEDIAGW) maingw.o $(LDFLAGS)
+	
+flashstreamer: $(OBJSFS) $(OBJS)
+	g++ $(GNASHLD) -o $(BIN)/$@ $(BUILDOBJSFS) $(BUILDOBJS) $(GNASHBASE)/backend/.libs/libgnashagg.a  /usr/lib/libagg.a  $(LDFLAGS)
+

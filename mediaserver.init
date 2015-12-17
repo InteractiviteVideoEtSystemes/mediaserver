@@ -1,0 +1,67 @@
+#!/bin/bash
+#
+# Startup script for rtpproxy
+#
+# chkconfig: 345 85 15
+# description: A symmetric RTP proxy
+#
+# processname: rtpproxy
+# pidfile: /var/run/rtpproxy.pid
+
+# Source function library.
+. /etc/rc.d/init.d/functions
+
+mediaserver=/opt/ives/bin/mediaserver
+prog=mediaserver
+RETVAL=0
+OPTIONS="-f --http-port 9090 --websocket-port 8100"
+
+[ -e /etc/sysconfig/$prog ] && . /etc/sysconfig/$prog
+
+start() {
+        echo -n $"Starting $prog $OPTIONS : "
+	cd /var/log
+        daemon $mediaserver $OPTIONS --mcu-pid /var/run/${prog}.pid
+        RETVAL=$?
+        echo
+        [ $RETVAL = 0 ] && touch /var/lock/subsys/mediaserver
+        return $RETVAL
+}
+
+stop() {
+	echo -n $"Stopping $prog: "
+	killproc $mediaserver
+	RETVAL=$?
+	echo
+	[ $RETVAL = 0 ] && rm -f /var/lock/subsys/$prog /var/run/${prog}.pid
+}
+
+
+# See how we were called.
+case "$1" in
+  start)
+	start
+	;;
+  stop)
+	stop
+	;;
+  status)
+        status $mediaserver
+	RETVAL=$?
+	;;
+  restart)
+	stop
+	start
+	;;
+  condrestart)
+	if [ -f /var/run/${prog}.pid ] ; then
+		stop
+		start
+	fi
+	;;
+  *)
+	echo $"Usage: $prog {start|stop|restart|condrestart|status|help}"
+	exit 1
+esac
+
+exit $RETVAL

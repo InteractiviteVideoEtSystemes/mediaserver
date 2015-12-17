@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE typemap [
+<!ELEMENT typemap (type)+>
+<!ELEMENT type (#PCDATA)>
+<!ELEMENT include (#PCDATA)>
+<!ATTLIST type name CDATA #REQUIRED>
+<!ATTLIST type fullname CDATA #IMPLIED>
+<!ATTLIST type family CDATA #IMPLIED>
+<!ATTLIST type foundry CDATA #IMPLIED>
+<!ATTLIST type weight CDATA #IMPLIED>
+<!ATTLIST type style CDATA #IMPLIED>
+<!ATTLIST type stretch CDATA #IMPLIED>
+<!ATTLIST type format CDATA #IMPLIED>
+<!ATTLIST type metrics CDATA #IMPLIED>
+<!ATTLIST type glyphs CDATA #REQUIRED>
+<!ATTLIST type version CDATA #IMPLIED>
+<!ATTLIST include file CDATA #REQUIRED>
+]>
+<typemap>
+
+  <type
+     format="ttf"
+     name="ZenKaiUni"
+     fullname="AR PL ZenKai Uni"
+     family="ZenKai Uni"
+     glyphs="/usr/share/fonts/chinese/TrueType/ukai.ttf"
+     />
+
+  <type
+     format="ttf"
+     name="ShanHeiSunUni"
+     fullname="AR PL ShanHeiSun Uni"
+     family="ShanHeiSun Uni"
+     glyphs="/usr/share/fonts/chinese/TrueType/uming.ttf"
+     />
+
+  <type
+     format="ttf"
+     name="SazanamiGothic"
+     fullname="Sazanami Gothic Regular"
+     family="Sazanami Gothic"
+     glyphs="/usr/share/fonts/japanese/TrueType/sazanami-gothic.ttf"
+     />
+
+  <type
+     format="ttf"
+     name="SazanamiMincho"
+     fullname="Sazanami Mincho Regular"
+     family="Sazanami Mincho"
+     glyphs="/usr/share/fonts/japanese/TrueType/sazanami-mincho.ttf"
+     />
+
+</typemap>

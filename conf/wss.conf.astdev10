@@ -1,0 +1,21 @@
+server {
+    listen 8101;
+    server_name astdev10.ives.fr;
+
+    ssl on;
+    ssl_certificate /etc/mediaserver/mcu.crt;
+    ssl_certificate_key /etc/mediaserver/mcu.key;
+    ssl_session_timeout 5m;
+    ssl_protocols SSLv2 SSLv3 TLSv1;
+    ssl_ciphers HIGH:!aNULL:!MD5;
+    ssl_prefer_server_ciphers on;
+
+    location / {
+
+        proxy_pass http://172.21.100.14:8100;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_read_timeout 86400;
+    }
+}

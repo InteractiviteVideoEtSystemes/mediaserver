@@ -1,0 +1,61 @@
+Index: src/videostream.cpp
+===================================================================
+--- src/videostream.cpp	(révision 3040)
++++ src/videostream.cpp	(copie de travail)
+@@ -15,6 +15,7 @@
+ #include "tools.h"
+ #include "RTPSmoother.h"
+ 
++#define MS2S 1000000
+ 
+ /**********************************
+ * VideoStream
+@@ -412,10 +413,48 @@
+ 			pthread_mutex_lock(&mutex);
+ 			//Calculate timeout
+ 			calcAbsTimeout(&ts,&prev,frameTime);
++      // stats
++			timeval start;
++			timeval stop;
++			timeval real;
++			timeval request= { ts.tv_sec,ts.tv_nsec/1000 };
++			timeval diff;
++			gettimeofday(&start,NULL);
+ 			//Wait next or stopped
+ 			int canceled  = !pthread_cond_timedwait(&cond,&mutex,&ts);
++      gettimeofday(&stop,NULL);
+ 			//Unlock
+ 			pthread_mutex_unlock(&mutex);
++			if ( start.tv_usec > stop.tv_usec )
++			{
++			   real.tv_usec =  stop.tv_usec + MS2S - start.tv_usec ;
++			   real.tv_sec =  stop.tv_sec - start.tv_sec - 1;
++			}
++			else
++			{
++			   real.tv_usec =  stop.tv_usec - start.tv_usec ;
++			   real.tv_sec =  stop.tv_sec - start.tv_sec ;
++			}
++			
++			if ( request.tv_usec > stop.tv_usec )
++			{
++			   diff.tv_usec =  stop.tv_usec + MS2S - request.tv_usec ;
++			   diff.tv_sec =  stop.tv_sec - request.tv_sec - 1;
++			}
++			else
++			{
++			   diff.tv_usec =  stop.tv_usec - request.tv_usec ;
++			   diff.tv_sec =  stop.tv_sec - request.tv_sec ;
++			}
++
++			/* Log("-SendVideo start[%d.%06d] stop[%d.%06d] request[%d,%06d] real[%d,%06d] diff[%d.%06d] \n",
++			    start.tv_sec, start.tv_usec,
++			    stop.tv_sec, stop.tv_usec,
++			    ts.tv_sec , ts.tv_nsec/1000,
++			    real.tv_sec , real.tv_usec,
++			    diff.tv_sec , diff.tv_usec);*/
++			if ( diff.tv_sec > 0 ) Log("-SendVideo: encoder is lagging. We slept [%d.%06d] seconds more than expected.\n",diff.tv_sec , diff.tv_usec);
++			if ( diff.tv_sec == 0 && diff.tv_usec > 20000 ) Log("-SendVideo: encoder is lagging. We slept [%d.%06d] seconds more than expected.\n",diff.tv_sec , diff.tv_usec);
+ 			//Check if we have been canceled
+ 			if (canceled)
+ 				//Exit

@@ -1,0 +1,320 @@
+package moteli.mcu;
+
+option java_outer_classname = "McuProtobuf";
+
+// The definition of message used to comunicate with mcumediasever
+// note that the primary purpose of this message definition is to be used
+// in the MOTELI project where they are carried by the RabbitMQ bus.
+// in that bus, some header fields are used to carry the conferenceId and participantId
+// that is wy
+
+enum PictureSize
+{
+   QCIF = 0;
+   CIF  = 1;
+   VGA  = 2;
+   PAL  = 3;
+   HVGA = 4;
+   QVGA = 5;
+   HD720P = 6;
+} 
+
+enum CompositionType
+{
+   MOSAIC1x1   = 0;
+   MOSAIC2x2   = 1;
+   MOSAIC3x3   = 2;
+   MOSAIC3p4   = 3;
+   MOSAIC1p7   = 4;
+   MOSAIC1p5   = 5;
+   MOSAIC1p1   = 6;
+   MOSAICPIP1  = 7;
+   MOSAICPIP3  = 8;
+}
+enum ParticpantMedia
+{
+   RTP = 0;
+   RTMP = 1;
+   SKYPE = 2;
+}
+enum Codec
+{
+	option allow_alias = true; // in order to assign the same value to different enum constants TELEPHONE_EVENT = SORENSON = 100
+   PCMU    = 0;
+   PCMA    = 8;
+   GSM     = 3;
+   AMR     = 118;
+   AMR_WB  = 119;
+   G726    = 120;
+   G722    = 121;
+   NELLY11 = 131;
+   SPEEX16 = 117;
+   TELEPHONE_EVENT  = 100;
+   H263_1996    = 34;
+   H263_1998    = 103;
+   MPEG4        = 104;
+   H264         = 99;
+   SORENSON     = 100;
+   VP6          = 116;
+   VP8          = 118;
+   T140RED      = 96;
+   T140         = 98;
+}
+message BindReq
+{
+   optional int64 correlationId = 4;
+}
+
+message BindResp
+{
+   optional int64 correlationId = 4;
+}
+message McuObjectId
+{
+   enum ObjectType
+   {
+        CONFERENCE = 0;
+        PARTICIPANT = 1;
+        MOSAIC = 2;
+        SIDEBAR = 3;
+   }
+   required ObjectType objType = 1;
+   required fixed32 confId = 2;
+   optional fixed32 partId = 3;
+   optional fixed32 mosaicId = 4;
+   optional fixed32 sidebarId = 5;
+}
+message ErrorRsp
+{
+   enum ErrCode {
+       OBJ_NOT_FOUND = 404;
+       INVALID_MESSAGE = 400;
+       NOT_ENOUGH_RESSOURCE = 500;
+       INVALID_PARAMETER = 502;
+       OVER_CAPACITY = 503;
+       RESSOURCE_IN_USE = 504;
+       BAD_OBJECT_STATE = 505;
+       NOT_SUPPORTED = 506;
+       PROCESSING_ERR = 501;
+   };
+   
+   required McuObjectId objId = 1; 
+   required ErrorRsp.ErrCode errCode = 2;
+   required string message = 3;
+   optional fixed32 correlationId = 4;  // Moteli uses rabbitmq header
+}
+message McuEvent
+{
+   enum EvtType {
+       NEED_FAST_UPDATE_REQUEST = 100;
+       END_OF_MEDIA_SESSION = 200;
+   };
+   
+   required McuObjectId objId = 1; 
+   required ErrorRsp.ErrCode EvtType_ = 2;
+   required string message = 3;
+   optional fixed32 correlationId = 4;  // event queue
+}
+
+message ConferenceParams
+{
+   required string name = 1;
+   required bool voiceActivityDetectionOn = 2;
+   optional fixed32 eventListenerId = 3;
+   optional fixed32 audioRate = 4;
+}
+   
+message CreateMcuObjectReq
+{
+   required McuObjectId.ObjectType typeofObjToCreate = 1;
+   optional McuObjectId  parentObj = 2;
+   optional fixed32 correlationId = 4; // Moteli uses rabbitmq header
+
+
+   message MosaicParams
+   {
+       required PictureSize size = 1; //MosaicFormat
+       required CompositionType compType = 2;
+   }
+   
+   message SideBarParams
+   {
+       required fixed32 quality = 1;
+       required fixed32 sampleRate = 2;
+   }
+
+   message ParticipantParams
+   {
+       required ParticpantMedia mediaProto = 1;
+       required string name = 2;
+       required fixed32 mosaicId = 3;
+       required fixed32 sidebarId = 4;   
+   }
+   optional ConferenceParams conferenceParams = 10;
+   optional MosaicParams mosaicParams = 11;
+   optional SideBarParams sideBarParams = 12;
+   optional ParticipantParams participantParams = 13;
+}
+
+message CreateMcuObjectResp
+{
+   required McuObjectId objId = 1;
+   optional fixed32 correlationId = 4; // Moteli uses rabbitmq header
+}
+
+message DeleteMcuObjectReq
+{
+   required McuObjectId objId = 1;  
+   optional fixed32 correlationId = 4;  // Moteli uses rabbitmq header  
+}
+
+message DeleteMcuObjectResp
+{
+   required McuObjectId objId = 1;
+   optional fixed32 correlationId = 4; // Moteli uses rabbitmq header
+}
+
+message UpdateMcuObjectReq
+{
+   optional McuObjectId objId = 1;
+   optional fixed32 correlationId = 4; // Moteli uses rabbitmq header
+
+   optional ConferenceParams conferenceParams = 10;
+   optional CreateMcuObjectReq.MosaicParams mosaicParams = 11;
+   optional CreateMcuObjectReq.SideBarParams sideBarParams = 12;
+   optional CreateMcuObjectReq.ParticipantParams participantParams = 13;
+}
+
+message UpdateMcuObjectResp
+{
+   required McuObjectId objId = 1;
+   optional fixed32 correlationId = 4; // Moteli uses rabbitmq header
+}
+message AddParticipantsToMixerReq
+{
+   required McuObjectId objId = 1;
+   optional fixed32 correlationId = 4; // Moteli uses rabbitmq header
+   repeated fixed32 partIds = 5;
+}    
+
+message AddParticipantsToMixerResp
+{
+   required McuObjectId objId = 1;
+   optional fixed32 correlationId = 4; // Moteli uses rabbitmq header
+   repeated fixed32 partIds = 5;           // those participant which were added  
+}
+enum MediaType
+{
+       AUDIO = 0;
+       VIDEO = 1;
+       TEXT = 2;
+       DOCSHARING = 3;   
+}
+enum MediaDirection
+{
+       RECV = 1;
+       SEND = 2;
+       SENDRECV = 3;
+}
+
+message SetMediaPropertiesReq
+{
+   required McuObjectId partId = 1;    // Must be a participant ID
+   optional fixed32 correlationId = 4; // Moteli uses rabbitmq header
+   required MediaType mediaType = 5;
+
+   message CodecProperty
+   {
+       required Codec codec = 1;
+
+       optional fixed32 fps = 2;     //video only
+       optional fixed32 bitrate = 3; //video and some audio codecs
+       optional fixed32 quality = 4; //audio video
+       optional fixed32 intraPeriod = 5; //audio
+       optional PictureSize size = 6;
+   }
+
+   required CodecProperty codecProperty = 6;
+
+   message MediaProperty
+   {
+      required string mediaPropName = 1;
+      required string mediaPropValue = 2;
+   }
+
+   repeated MediaProperty properties = 10;
+}
+
+message SetMediaPropertiesResp
+{
+   required McuObjectId partId = 1;    // Must be a participant ID
+   optional fixed32 correlationId = 4; // Moteli uses rabbitmq header
+   required MediaType mediaType = 5;
+   required fixed32 nbPropApplied = 6;
+}
+
+message MediaDef
+{
+   required MediaType mediaType = 5;
+   required MediaDirection mediaDirection = 6;
+
+   message MediaPeerAddr
+   {
+       required string ipAddr = 1;
+       required fixed32 port = 2;
+   }
+
+   message RtpMapEntry
+   {
+      required fixed32 payloadType = 1;
+      required Codec codec = 2;
+   }
+
+   optional MediaPeerAddr peerAddr = 7;  // When sending media
+   repeated RtpMapEntry sendingRtpMap = 8;
+   repeated RtpMapEntry recevingRtpMap = 9;
+}
+
+message MediaStatus
+{
+   message MediaLocalAddr
+   {
+       optional string ipAddr = 1;
+       required fixed32 port = 2;
+   }
+
+   required MediaType mediaType = 5;
+   required MediaDirection mediaDirection = 6;
+   required bool status = 7;
+   // wuen receiving medias
+   optional MediaLocalAddr localAddr = 8;
+}
+
+message StartMediaReq
+{
+   required McuObjectId partId = 1;    // Must be a participant ID
+   optional fixed32 correlationId = 4; // Moteli uses rabbitmq header
+   repeated MediaDef medias = 5;	       //media to start
+}
+
+message StartMediaResp
+{
+   required McuObjectId partId = 1;    // Must be a participant ID
+   optional fixed32 correlationId = 4; // Moteli uses rabbitmq header
+
+   repeated MediaStatus medias = 5;
+}
+message StopMediaReq
+{
+   required McuObjectId partId = 1;    // Must be a participant ID
+   optional fixed32 correlationId = 4; // Moteli uses rabbitmq header
+   repeated MediaDef medias = 5;	       //media to start
+}
+
+message StopMediaResp
+{
+   required McuObjectId partId = 1;    // Must be a participant ID
+   optional fixed32 correlationId = 4; // Moteli uses rabbitmq header
+   repeated MediaStatus medias = 5;
+}
+

@@ -1,0 +1,361 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="fr" lang="fr">
+<head>
+	<!--
+                   ___            ___            ___     
+      ___         /\__\          /\  \          /\  \    
+     /\  \       /:/  /         /::\  \        /::\  \   
+     \:\  \     /:/  /         /:/\:\  \      /:/\ \  \  
+     /::\__\   /:/__/  ___    /::\~\:\  \    _\:\~\ \  \ 
+  __/:/\/__/   |:|  | /\__\  /:/\:\ \:\__\  /\ \:\ \ \__\
+ /\/:/  /      |:|  |/:/  /  \:\~\:\ \/__/  \:\ \:\ \/__/
+ \::/__/       |:|__/:/  /    \:\ \:\__\     \:\ \:\__\  
+  \:\__\        \::::/__/      \:\ \/__/      \:\/:/  /  
+   \/__/         ~~~~           \:\__\         \::/  /   
+                                 \/__/          \/__/    
+
+								                                                                                             
+       _  |  _  _  ._ _   _    _|_  _    _|_ |_   _     _  _      ._ _  _     _  _   _|  _  
+ \/\/ (/_ | (_ (_) | | | (/_    |_ (_)    |_ | | (/_   _> (_) |_| | (_ (/_   (_ (_) (_| (/_ 
+                                                                                            
+-->
+<title>Release Note Media Server</title>
+<style type="text/css">
+body,html{height:100%}html,body,div,span,applet,object,iframe,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outline:0}del{text-decoration:line-through}table{border-spacing:0}*{margin:0;padding:0}body{font-family:Arial,Helvetica,sans-serif;background-color:#fafafa;margin:0 auto}a:link{color:#666;font-weight:bold;text-decoration:none}a:visited{color:#666;font-weight:bold;text-decoration:none}a:active,a:hover{color:#bd5a35;text-decoration:underline}#container{width:80%;margin-left:auto;margin-right:auto}.bloc h1{padding:20px;background-color:#3b5998;color:#fafafa;text-shadow:none;-moz-border-radius:3px;-webkit-border-radius:3px;border-radius:3px}#logo{position:absolute;top:0;right:0;height:65px;background-color:#FFF;-webkit-border-top-right-radius:3px;-webkit-border-bottom-right-radius:3px;-moz-border-radius-topright:3px;-moz-border-radius-bottomright:3px;border-top-right-radius:3px;border-bottom-right-radius:3px}table a:link{color:#666;font-weight:bold;text-decoration:none}table a:visited{color:#999;font-weight:bold;text-decoration:none}table a:active,table a:hover{color:#bd5a35;text-decoration:underline}table{font-family:Arial,Helvetica,sans-serif;color:#666;font-size:12px;text-shadow:1px 1px 0 #fff;background:#eaebec;margin-top:20px;margin-bottom:20px;border:#ccc 1px solid;width:100%;-moz-border-radius:3px;-webkit-border-radius:3px;border-radius:3px;-moz-box-shadow:0 1px 2px #d1d1d1;-webkit-box-shadow:0 1px 2px #d1d1d1;box-shadow:0 1px 2px #d1d1d1}table th{padding:21px 25px 22px 25px;border-top:1px solid #fafafa;border-bottom:1px solid #e0e0e0;background:#ededed;background:-webkit-gradient(linear,left top,left bottom,from(#ededed),to(#ebebeb));background:-moz-linear-gradient(top,#ededed,#ebebeb)}table th:first-child{text-align:left;padding-left:20px}table tr:first-child th:first-child{-moz-border-radius-topleft:3px;-webkit-border-top-left-radius:3px;border-top-left-radius:3px}table tr:first-child th:last-child{-moz-border-radius-topright:3px;-webkit-border-top-right-radius:3px;border-top-right-radius:3px}table tr{text-align:center;padding-left:20px}table tr td:first-child{text-align:left;padding-left:20px;border-left:0}table tr td{padding:15px;line-height:1.5;border-top:1px solid #fff;border-bottom:1px solid #e0e0e0;border-left:1px solid #e0e0e0;background:#fafafa;background:-webkit-gradient(linear,left top,left bottom,from(#fbfbfb),to(#fafafa));background:-moz-linear-gradient(top,#fbfbfb,#fafafa)}table tr.even td{background:#f6f6f6;background:-webkit-gradient(linear,left top,left bottom,from(#f8f8f8),to(#f6f6f6));background:-moz-linear-gradient(top,#f8f8f8,#f6f6f6)}table tr:last-child td{border-bottom:0}table tr:last-child td:first-child{-moz-border-radius-bottomleft:3px;-webkit-border-bottom-left-radius:3px;border-bottom-left-radius:3px}table tr:last-child td:last-child{-moz-border-radius-bottomright:3px;-webkit-border-bottom-right-radius:3px;border-bottom-right-radius:3px}table tr:hover td{background:#f2f2f2;background:-webkit-gradient(linear,left top,left bottom,from(#f2f2f2),to(#f0f0f0));background:-moz-linear-gradient(top,#f2f2f2,#f0f0f0)}.bloc{font-family:Arial,Helvetica,sans-serif;color:#666;font-size:12px;text-shadow:1px 1px 0 #fff;background-color:#fafafa;margin-top:20px;margin-bottom:20px;border:#ccc 1px solid;width:100%;-moz-border-radius:3px;-webkit-border-radius:3px;border-radius:3px;-moz-box-shadow:0 1px 2px #d1d1d1;-webkit-box-shadow:0 1px 2px #d1d1d1;box-shadow:0 1px 2px #d1d1d1;position:relative}.bloc:hover{background-color:#eaebec}.bloc p{padding:20px}.td_padd{padding-left:50px!important}.note{font-family:Arial,Helvetica,sans-serif;color:#666;font-size:10px;font-style:italic;text-shadow:1px 1px 0 #fff}.puce{background-color:#ff7200;width:10px;height:10px;display:block;float:left;margin-right:10px;border-radius:5px}
+ul { list-style-type: circle; }
+.old{color:#aaa;}
+</style>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+</head>
+<body>
+	
+	
+	<div id="container">
+		<div class="bloc">
+			<h1>Release Note - McuMediaServer - 09/12/2015</h1><!--########## LE NOM DU SERVICE ##########-->
+			<img id="logo" src="http://www.ives.fr/images/ives_logo.png" alt="IVeS" title="IVeS"/>
+		</div>
+		
+		
+		
+		
+		<table cellspacing='0'>
+			<tr><th><div class="puce" style="background-color:#FF7200;"></div>Product Name & Version</th>
+			<td>mcumediaserver 1.6.14</td></tr><!--########## LE NOM DU SERVICE ##########-->
+		</table>
+		
+		
+		
+		
+		<table cellspacing='0'>
+			<tr><th><div class="puce" style="background-color:#FFBB00;"></div>SVN info</th></tr>
+			<tr class='even'><td><b>Package</b></td></tr>
+			<tr>
+			  <td class="td_padd">URL => http://svn.ives.fr/svn-libs-dev/mcumediaserver/tags/1.6.14</td></tr><!--########## URL du Package ##########-->
+			<tr class='even'><td><b>Developpement</b></td></tr>
+			<tr>
+		  <td class="td_padd">http://svn.ives.fr/svn-libs-dev/mcumediaserver/trunk</td></tr><!--########## URL de Dev ##########-->
+		</table>
+		
+		
+		
+		
+		<table cellspacing='0'>
+			<tr><th><div class="puce" style="background-color:#2EFF00;"></div>Short description / When use the release</th></tr>
+		<tr class='even'>
+			  <td><p><strong>09/12/2015 : Tag 1.6.14 </strong></p>
+                <ul>
+                    <li>- adding --websocket-host for WSS</li>
+              </ul></td>
+		</tr>
+		<tr class='even old'>
+			  <td><p><strong>23/11/2015 : Tag 1.6.13 </strong></p>
+                <ul>
+                    <li>-  Adding support for BFCP over UDP. New BFCP lib integration</li>
+              </ul></td>
+		</tr>
+		<tr class='even old'>
+			  <td><p><strong>27/10/2015 : Tag 1.6.12 </strong></p>
+                <ul>
+                    <li>- Merge from 1.5 (version 6935)</li>
+					<li>- Fixed issue with CentOS 5 compilation</li>
+              </ul></td>
+		</tr>
+		<tr class='even old'>
+			  <td><p><strong>13/05/2015 : Tag 1.6.11 </strong></p>
+                <ul>
+                    <li>- Fix rtp multiplexer regression for doc sharing</li>
+              </ul></td>
+		</tr>
+		<tr class='even old'>
+			  <td><p><strong>27/03/2015 : Tag 1.6.10 </strong></p>
+                <ul>
+                    <li>- SIP INFO FIR support</li>
+					<li>- fixed ticket #32 #31 Omnitor</li>
+              </ul></td>
+		</tr>
+		<tr class='even old'>
+			  <td><p><strong>06/03/2015 : Tag 1.6.9 </strong></p>
+                <ul>
+                    <li>- integration code sergio DTLS + fix sequence numerotation issue(setrtpproperty useOriSeqNum).</li>
+					<li>- setmaxwaittime extend from 60 to 300.</li>
+					<li>- fixed crash packet issue.</li>
+              </ul></td>
+		  </tr>
+		<tr class='even old'>
+			  <td><p><strong>11/12/2014 : Tag 1.6.8 </strong></p>
+                <ul>
+                    <li>- corrected redundancy text issue processing.</li>
+					<li>- fixed  issue with opus codec.</li>
+              </ul></td>
+		  </tr>
+			<tr class='even old'>
+			  <td><p><strong>07/11/2014 : Tag 1.6.7 </strong></p>
+                <ul>
+                    <li>- corrected encoding text issue.</li>
+					<li>- fixed issue with payload type not synchronised with asterisk</li>
+					<li>- implemented auto transcoder.</li>
+              </ul></td>
+		  </tr>
+			<tr class='even old'>
+			  <td><p><strong>24/09/2014 : Tag 1.6.6 </strong></p>
+                <ul>
+                    <li>- corrected redundancy text issue.</li>
+              </ul></td>
+		  </tr>
+			
+
+			<tr class='even old'>
+			  <td><p><strong>11/09/2014 : Tag 1.6.5 </strong></p>
+                <ul>
+                    <li>- corrected JSR309 endpoint to support webrtc to webrtc call</li>
+					<li>- tested regression on MCU function and corrected them.</li> 
+					<li>- added audio transcoding in JSR 309 API</li>
+					<li>- added media statistics for JSR309 endpoint</li>
+					<li>- merged chages from 1.5 branch</li>
+              </ul></td>
+		  </tr>
+			
+			<tr class='even old'>
+			  <td><p><strong>02/09/2014 : Tag 1.6.2 </strong></p>
+                <ul>
+                    <li>- Fixed STUN negociation</li>
+					<li>- Fixed several encoding issue(G722,VP8)</li> 
+					<li>- Audio transcoder implementation</li>
+					<li>- Fixed issue with redundancy T140</li>
+              </ul></td>
+		  </tr>
+			<tr class='even old'>
+			  <td><p><strong>01/08/2014 : Tag 1.6.1 </strong></p>
+                <ul>
+                    <li>- added text over WebSocket support</li>
+					<li>- various JSR309 fixes for encoding/decoding problems.</li> 
+					<li>- added G.722.1 codec support</li>
+					<li>- if RTMP or WevSocket server port is already in use, mediaserver do not start</li>
+              </ul></td>
+		  </tr>
+			
+			<tr class='even old'>
+			  <td><p><strong>21/03/2014 : Tag 1.5.16 </strong></p>
+                <ul>
+                  <li>Fix VAD issue for VCUBE Ticket #173</li>
+              </ul></td>
+		  </tr>
+			
+			<tr class='even old'>
+			  <td><p><strong>21/03/2014 : Tag 1.5.15 </strong></p>
+                <ul>
+                  <li>RTP Multiplexing</li>
+              </ul></td>
+		  </tr>
+			
+			<tr class='even old'>
+			  <td><p><strong> Tag 1.5.14</strong></p>
+               <ul>
+				<li>- Corrected issue VAD clean old slot.</li>
+				<li>- Corrected issue flash gateway audio RTMP -> RTP.</li>
+				<li>- Added AppMixer stop slot handling.</li>
+			</ul></td>
+		  </tr>
+
+			  <tr class='even old'>
+			  <td><p><strong> Tag 1.5.13</strong></p>
+                <ul>
+				<li>Corrected issue VAD clean old slot.</li>
+			</ul></td>
+		  </tr>
+		   <tr class='even old'>
+			  <td><p><strong> Tag 1.5.12</strong></p>
+               <ul>
+				<li> Fixed Htmltosip issue with severals received commands</li>
+				<li> Fixed Crash in setVideoCodec </li>
+				<li> Added Compatibility for xmlrpc method</li>
+				<li> Fixed setVideoSize issue with doc sharing</li>
+				<li> Reimplemented logo with imagemagick</li>
+				<li> Added Opus Support</li>
+				<li> Activated WebSocket</li>
+				<li> Added WebRTC corrections</li>
+            </ul></td>
+		  </tr>
+		   <tr class='even old'>
+			  <td><p><strong> Tag 1.5.11</strong></p>
+                 <ul>
+				<li>Added secondary stream.</li>
+				<li>Added setdocsharingmosaic function.</li>
+            </ul></td>
+		  </tr>
+		   <tr class='even old'>
+			  <td><p><strong> Tag 1.5.10</strong></p>
+                <ul>
+				<li>Added BFCP Library.</li>
+				<li>Added BFCP Request/Server Handling.</li>
+				<li>Fixed Volume level issue with Flash.</li>
+            </ul></td>
+		  </tr>
+		  <tr class='even old'>
+			  <td><p><strong> Tag 1.5.9</strong></p>
+                 <ul>
+				<li>add parameters for recording</li>
+				<li>corrected recording bug</li>
+				<li>gestion evenement doc sharing</li>
+				<li>correction reinvite</li>
+            </ul></td>
+		  </tr>
+		  <tr class='even old'>
+			  <td><p><strong> Tag 1.5.8</strong></p>
+                <ul>
+				<li> corrected dead lock in stop encoding text.</li>
+            </ul></td>
+		  </tr>
+		  <tr class='even old'>
+			  <td><p><strong> Tag 1.5.7</strong></p>
+                <ul>
+				<li> First version of Document Sharing - No BFCP request handling.</li>
+            </ul></td>
+		  </tr>
+		  <tr class='even old'>
+			  <td><p><strong> Tag 1.5.6</strong></p>
+                 <ul>
+				<li> corrected a crash case.</li>
+            </ul></td>
+		  </tr>
+		  <tr class='even old'>
+			  <td><p><strong> Tag 1.5.4</strong></p>
+                 <ul>
+				<li> Added script code parameter for the display of the participant's name</li>
+				<li> Added update conference property (vadmode,autodestroy)</li>
+				<li> Added media server redundency</li>
+            </ul></td>
+		  </tr>
+		  <tr class='even old'>
+			  <td><p><strong> Tag 1.5.3</strong></p>
+                <ul>
+              <li>added japanese/chinese font support</li>
+            </ul></td>
+		  </tr>
+		  <tr class='even old'>
+			  <td><p><strong> Tag 1.5.2</strong></p>
+                  <ul>
+              <li>added truncated text for display of the participant's name</li>
+            </ul></td>
+		  </tr>
+		  <tr class='even old'>
+			  <td><p><strong> Tag 1.5.1</strong></p>
+			  <ul>
+              <li>Support of audio wide band</li>
+              <li>Support of multiple mosaic displays</li>
+              <li>added display of the participant's name</li>
+            </ul></td>
+		  </tr>
+	
+		</table>
+		
+		
+		
+		
+		<table cellspacing='0'>
+<tr><th><div class="puce" style="background-color:#00FFBB;"></div>Changes taken in account in this release</th></tr>
+			<tr><td>None</td></tr>
+    </table>
+		
+		
+		
+		
+		<table cellspacing='0'>
+			<tr><th><div class="puce" style="background-color:#00E1FF;"></div>Partial release</th>
+			<td>No</td></tr> <!--ICI-->
+		</table>
+		
+		
+		
+		
+		<table cellspacing='0'>
+			<tr><th><div class="puce" style="background-color:#0072FF;"></div>Installation and launching :</th></tr>
+			<tr><td>None</td></tr>
+		</table>
+		
+		
+		
+		
+		<table cellspacing='0'>
+			<tr><th><div class="puce" style="background-color:#6A00FF;"></div>Corrected anomalies n°</th><th>Severity</th><th>Short anomaly description</th></tr>
+			
+			<tr><td>None</td><td>Unreported</td><td>None</td></tr>
+			
+		</table>
+		
+		
+		
+		
+		<table cellspacing='0'>
+			<tr><th colspan="2"><div class="puce" style="background-color:#DC00FF;"></div>Compatibility with<p class="note">Guarantee of compatibility is not ensured for products references not mentioned below.</p></th></tr>
+			
+			<tr><td>IV&egrave;S products :</td><td></td></tr>
+			<tr class='even'><td>Supported Operating Systems</td><td><span style="background-color: rgb(255, 255, 255);">
+              <br>
+              Linux CentOS 5.7 -&gt; CentOS 6.2 32/64b </span><br></td></tr>
+			<tr><td>Products or applications</td><td></td></tr>
+			<tr class='even'><td>External products</td><td> mcuGold <br></td></tr>
+		</table>
+		
+		
+		
+		
+		<table cellspacing='0'>
+			<tr><th><div class="puce" style="background-color:#FF00B2;"></div>Known incompatibilities</th></tr>
+			<tr><td><ul>
+			  
+			  </ul></td>
+		  </tr>
+		</table>
+		
+		
+		
+		
+		<table cellspacing='0'>
+			<tr><th colspan="3"><div class="puce" style="background-color:#FF0000;"></div>Known Work-around</th></tr>
+			<tr><th>Anomalies n°</th><th>Severity</th><th>Short anomaly description</th></tr>
+			
+			<tr><td>None</td><td>Unreported</td><td>None</td></tr>
+			
+			<tr><th colspan="3">For each bypassed anomaly give hereafter a short description of the work-around :</th></tr>
+			<tr><td colspan="3">None</td></tr>
+			
+		</table>
+		
+		
+		
+		
+		<table cellspacing='0'>
+	    <tr><th colspan="3"><div class="puce" style="background-color:#870200;"></div>Unresolved anomalies</th></tr>
+			<tr><th>Anomalies n°</th><th>Severity</th><th>Short anomaly description</th></tr>
+			
+			<tr><td>None</td><td>Unreported</td><td>None</td></tr>
+			
+		</table>
+		
+		
+	</div>
+
+</body>
+</html>

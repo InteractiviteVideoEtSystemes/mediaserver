@@ -139,7 +139,7 @@ function clean
 {
   	# On efface les liens ainsi que le package precedemment créé
   	echo Effacement des fichiers et liens gnupg rpmbuild ${PROJET}.rpm ${TEMPDIR}/${PROJET}
-  	rm -rf gnupg rpmbuild ${PROJET}*.rpm ${TEMPDIR}/${PROJET}
+  	rm -rf gnupg rpmbuild ${TEMPDIR}/${PROJET}
 	cd mcu 
 	make -f Makefile.rpm clean
 	cd -

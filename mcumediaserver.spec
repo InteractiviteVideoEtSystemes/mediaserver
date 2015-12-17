@@ -1,18 +1,17 @@
 Name:      mcumediaserver
-Version:   %_version
+Version:   1.6.14
 #Ne pas enlever le .ives a la fin de la release !
 #Cela est utilise par les scripts de recherche de package.
-Release:   1.ives%{?dist}
+Release:   1.ives.el6
 Summary:   [IVeS] librairies partagées pour asterisk de Fontventa.
 Vendor:    IVeS / Fontventa
 Group:     Applications/Internet
 License:   GPL
 URL:       http://www.ives.fr
-BuildArchitectures: i386, i586, x86_64
+BuildArchitectures: x86_64
 BuildRoot:  %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
-Requires:  x264, ImageMagick-c++ >= 6.7.0
-BuildRequires: ffmpeg-devel, x264-devel, gcc-c++, bzip2-devel, ImageMagick-c++-devel >= 6.7.0, libbfcp >= 5.5.0
-
+Requires:  ivespkg, x264, ImageMagick-c++ >= 6.8.0
+BuildRequires: ffmpeg-devel, x264-devel, gcc-c++, bzip2-devel, ImageMagick-c++-devel >= 6.8.0, libbfcp >= 5.5.0
 %ifarch el5
 Requires: fonts-chinese, fonts-japanese
 %endif
@@ -25,19 +24,16 @@ Mediaserver controlled by sailfin applications
 echo "############################# Clean"
 echo Clean du repertoire $RPM_BUILD_ROOT
 [ "$RPM_BUILD_ROOT" != "/" ] && rm -rf "$RPM_BUILD_ROOT"
-cd %_topdir
-cd ../mcu
-make -f Makefile.rpm clean
 
 %prep
-cd %_topdir
-cd ..
+echo "Export du SVN ives"
+svn export --force http://svn.ives.fr/svn-libs-dev/%name/tags/%version %name
+cd %name
 ./install.ksh webrtc
 
 %build
 echo "Build"
-cd %_topdir
-cd ..
+cd %name
 ./install.ksh localcompile
 
 %install
@@ -45,8 +41,7 @@ echo "############################# Install"
 mkdir -p $RPM_BUILD_ROOT/opt/ives/bin/
 mkdir -p $RPM_BUILD_ROOT/etc/init.d
 mkdir -p $RPM_BUILD_ROOT/etc/mediaserver
-cd %_topdir
-cd ..
+cd %name
 cp bin/debug/mcu $RPM_BUILD_ROOT/opt/ives/bin/mediaserver
 chmod 750 $RPM_BUILD_ROOT/opt/ives/bin/mediaserver
 cp mediaserver.init $RPM_BUILD_ROOT/etc/init.d/mediaserver

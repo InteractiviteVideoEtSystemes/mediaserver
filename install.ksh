@@ -75,6 +75,7 @@ function create_rpm
     #Creation des macros rpmbuild
     rm ~/.rpmmacros
     touch ~/.rpmmacros
+	 echo "%_version" $VERSION >> ~/.rpmmacros
     echo "%_topdir" $PWD"/rpmbuild" >> ~/.rpmmacros
     echo "%_tmppath %{_topdir}/TMP" >> ~/.rpmmacros
     echo "%_signature gpg" >> ~/.rpmmacros

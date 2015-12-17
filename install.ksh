@@ -105,8 +105,8 @@ function create_rpm
 	git checkout -b $VERSION $VERSION
 	
 	git status | grep nothing
-	if [$? == 0]
-    then
+	if ["$?" == "0"]
+    	then
 		if [[ -z $1 || $1 -ne nosign ]]
 		then
 		rpmbuild -bb --sign $PWD/rpmbuild/SPECS/mcumediaserver-opensource.spec
@@ -126,10 +126,10 @@ function create_rpm
 		exit 20
 		fi
 	else
-        clean
+        	clean
 		echo "*** error git - some files are not commited ***"
 		exit 20
-    fi
+    	fi
 	
     
 }

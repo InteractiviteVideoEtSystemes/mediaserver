@@ -128,7 +128,7 @@ function create_rpm
 		fi
 	else
         clean
-		echo "*** error git - some files are not commited ***"
+		echo "*** error during build - some source files are not commited ***"
 		exit 20
     fi
 	

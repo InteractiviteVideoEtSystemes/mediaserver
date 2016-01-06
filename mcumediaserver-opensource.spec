@@ -8,7 +8,7 @@ Vendor:    IVeS / Fontventa
 Group:     Applications/Internet
 License:   GPL
 URL:       http://www.ives.fr
-BuildArchitectures: i386, i586, x86_64
+BuildArchitectures: i386, i586, i686, x86_64
 BuildRoot:  %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 Requires:  x264, ImageMagick-c++ >= 6.7.0
 BuildRequires: ffmpeg-devel, x264-devel, gcc-c++, bzip2-devel, ImageMagick-c++-devel >= 6.7.0, libbfcp >= 5.5.0

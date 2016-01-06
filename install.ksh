@@ -119,6 +119,8 @@ function create_rpm
 			echo "************************* fin du rpmbuild ****************************"
 			#Recuperation du rpm
 			mv -f $PWD/rpmbuild/RPMS/i386/*.rpm $PWD/.
+			mv -f $PWD/rpmbuild/RPMS/i586/*.rpm $PWD/.
+			mv -f $PWD/rpmbuild/RPMS/i686/*.rpm $PWD/.
 			mv -f $PWD/rpmbuild/RPMS/x86_64/*.rpm $PWD/.
 		clean
 		else
@@ -540,7 +542,6 @@ case $1 in
   		clean ;;
   	"rpm")
   		echo "Creation du rpm"
-                prepare_spec
   		create_rpm $2 ;;
 	"localcompile")
 		local_compile;;

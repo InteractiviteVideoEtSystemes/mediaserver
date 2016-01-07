@@ -146,6 +146,7 @@ function clean
 	make -f Makefile.rpm clean
 	cd -
 	git checkout master
+	git pull
 	git branch -D $VERSION
 
 }

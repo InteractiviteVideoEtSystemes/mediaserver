@@ -13,6 +13,19 @@
 * blocksignals
 *       Bloquea todas las sygnals para esa thread
 *************************************/
+
+#ifndef NULL
+#define NULL ((void *)0)
+#endif  /* NULL */
+
+#ifndef TRUE
+#define TRUE    1
+#endif  /* TRUE */
+
+#ifndef FALSE
+#define FALSE    0
+#endif  /* FALSE */
+
 inline int blocksignals()
 {
 	sigset_t mask;

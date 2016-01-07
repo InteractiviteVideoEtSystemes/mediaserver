@@ -392,7 +392,7 @@ function local_compile
 		if [ ! -f xmlrpc-c ]
 		then
 			#svn export http://svn.ives.fr/svn-libs-dev/xmlrpc-c/branches/1.6 xmlrpc-c
-			svn export svn://svn.code.sf.net/p/xmlrpc-c/code/super_stable xmlrpc-c
+			svn export svn://svn.code.sf.net/p/xmlrpc-c/code/release_number/01.39.06 xmlrpc-c
 		fi
 		cd xmlrpc-c
 		./configure --prefix=$BASESRCDIR/staticdeps --exec-prefix=$BASESRCDIR/staticdeps --enable-shared=no

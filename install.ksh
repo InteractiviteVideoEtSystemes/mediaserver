@@ -148,7 +148,6 @@ function clean
 	git checkout master
 	git pull
 	git branch -D $VERSION
-
 }
 
 function compile_webrtc_from_google

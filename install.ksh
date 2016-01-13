@@ -1,4 +1,4 @@
-#!/usr/bin/ksh
+#!/bin/bash
 
 PROJET=mcumediaserver
 VERSION=1.6.14

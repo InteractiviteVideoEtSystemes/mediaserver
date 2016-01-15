@@ -76,7 +76,7 @@ echo "Now restarting mediaserver"
 /etc/init.d/mediaserver restart
 
 %changelog
-* Fri Jan 15 2015 Thomas Carvello <thomas.carvello@ives.fr>
+* Fri Jan 15 2016 Thomas Carvello <thomas.carvello@ives.fr>
 - Github compilation and packaging
 - version 1.6.15
 * Wed Dec 09 2015 Thomas Carvello <thomas.carvello@ives.fr>

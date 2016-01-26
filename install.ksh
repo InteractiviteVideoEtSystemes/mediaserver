@@ -103,8 +103,16 @@ function create_rpm
     cd ./rpmbuild/SPECS/
     cp ../../mcumediaserver-opensource.spec .
     cd ../../
+	
+	# we remove the tag locally
+	git tag -d $VERSION
+	# we recover latest tags
+	git fetch
+	
+	#we create a branch from the tag
 	git checkout -b $VERSION $VERSION
 	
+	#we check if anything has not been commited
 	git status | grep nothing
 	if [ $? == 0 ]
     then
@@ -145,8 +153,12 @@ function clean
 	cd mcu 
 	make -f Makefile.rpm clean
 	cd -
+	
+	#we clean the repo git
 	git checkout master
 	git pull
+	
+	#we delete the branch no longer used
 	git branch -D $VERSION
 }
 

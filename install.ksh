@@ -408,10 +408,11 @@ function local_compile
 		cd $HOME
 		if [ ! -f srtp ]
 		then
+			 git clone https://github.com/InteractiviteVideoEtSystemes/patchedLibSRTP.git srtp
 			 #svn export http://svn.ives.fr/svn-libs-dev/srtp/trunk srtp
-			 wget http://srtp.sourceforge.net/srtp-1.4.2.tgz
-			 tar xzf srtp-1.4.2.tgz
-			 mv srtp-1.4.2 srtp
+			 #wget http://srtp.sourceforge.net/srtp-1.4.2.tgz
+			 #tar xzf srtp-1.4.2.tgz
+			 #mv srtp-1.4.2 srtp
 		fi
 		cd srtp
 		./configure --prefix=$BASESRCDIR/staticdeps --exec-prefix=$BASESRCDIR/staticdeps --enable-shared=no

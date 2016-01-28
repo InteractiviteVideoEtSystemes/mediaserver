@@ -427,6 +427,7 @@ function local_compile
 			 #mv srtp-1.4.2 srtp
 		fi
 		cd srtp
+		chmod 755 configure
 		./configure --prefix=$BASESRCDIR/staticdeps --exec-prefix=$BASESRCDIR/staticdeps --enable-shared=no
 		make
 		make uninstall

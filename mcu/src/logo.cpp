@@ -227,7 +227,7 @@ end:
 		sws_freeContext(sws);
 
 	if (fctx)
-		av_close_input_file(fctx);
+		avformat_close_input(&fctx);
 
 	//Exit
 	return res;	

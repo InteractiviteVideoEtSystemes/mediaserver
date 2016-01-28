@@ -188,8 +188,8 @@ endif
 
 ifeq ($(FEWSTATICDEPS),yes)
     # Use of dynamic libs (on FC20 ...)
-    LDFLAGS += -lmp4v2 -lsrtp -lavcodec -lswscale -lavformat -lavutil -lx264 -lvpx -lg722_1 -lspeex -lspeexdsp -lgsm -lssl -lcrypto -lpthread -lMagick++-6.Q16 -lbz2
-    LDXMLFLAGS+= -lxmlrpc_abyss -lxmlrpc_server -lxmlrpc -lxmlrpc_util
+    LDFLAGS += -Wl,-Bstatic -lmp4v2 -lsrtp -lavcodec -lswscale -lswresample -lavformat -lavutil -lfdk-aac -lx264 -lvpx -lg722_1 -lspeex -lspeexdsp -Wl,-Bdynamic -lgsm -lssl -lcrypto -lpthread -lMagick++-6.Q16 -lbz2 -lopencore-amrnb -lopencore-amrwb
+	LDXMLFLAGS+= -lxmlrpc_abyss -lxmlrpc_server -lxmlrpc -lxmlrpc_util
 else
     # Usin static libs (CentOS)
     LDFLAGS += -Wl,-Bstatic -lmp4v2 -lsrtp -lavcodec -lswscale -lavformat -lavutil -lx264 -lvpx -lg722_1 -lspeex -lspeexdsp -Wl,-Bdynamic -lgsm -lssl -lcrypto -lpthread -lMagick++-6.Q16 -lbz2

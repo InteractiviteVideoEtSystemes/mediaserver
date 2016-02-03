@@ -86,6 +86,15 @@ int PIPMosaic::Update(int pos, BYTE *image, int imgWidth, int imgHeight)
 	//Calculate pip participant size
 	DWORD mosaicWidth		= SIZE4MUL(mosaicTotalWidth/5);
 	DWORD mosaicHeight		= SIZE4MUL(mosaicTotalHeight/5);
+	
+    // if we have an odd width , we round to the smallest even width.
+	if (mosaicWidth %2)
+			mosaicWidth=mosaicWidth-1;
+
+	// if we have an odd height , we round to the smallest even height.
+	if (mosaicHeight %2)
+			mosaicHeight=mosaicHeight-1;
+
 	DWORD mosaicTotalWidthUV	= mosaicTotalWidth/2;
 	DWORD mosaicWidthUV		= mosaicWidth/2;
 	//Get empty space between PIP
@@ -109,6 +118,17 @@ int PIPMosaic::Update(int pos, BYTE *image, int imgWidth, int imgHeight)
 		//Change size
 		mosaicWidth		= SIZE4MUL(mosaicTotalWidth/4);
 		mosaicHeight		= SIZE4MUL(mosaicTotalHeight/4);
+		
+		// if we have an odd width , we round to the smallest even width.
+		if (mosaicWidth %2)
+			mosaicWidth=mosaicWidth-1;
+
+		// if we have an odd height , we round to the smallest even height.
+		if (mosaicHeight %2)
+			mosaicHeight=mosaicHeight-1;
+		
+		mosaicWidthUV		= mosaicWidth/2;
+		
 	}
 	//Get top position
 	DWORD pipIni;
@@ -370,6 +390,11 @@ int PIPMosaic::GetTop(int pos)
 		return 0;
 	//Calculate pip participant size
 	DWORD mosaicHeight		= SIZE4MUL(mosaicTotalHeight/5);
+
+	// if we have an odd height , we round to the smallest even height.
+	if (mosaicHeight %2)
+			mosaicHeight=mosaicHeight-1;
+	
 	//Get top position
 	return SIZE4MUL(mosaicTotalHeight-mosaicHeight-mosaicHeight/2);
 }
@@ -384,6 +409,11 @@ int PIPMosaic::GetLeft(int pos)
 		return 0;
 	//Calculate pip participant size
 	DWORD mosaicWidth		= SIZE4MUL(mosaicTotalWidth/5);
+	
+	// if we have an odd width , we round to the smallest even width.
+	if (mosaicWidth %2)
+			mosaicWidth=mosaicWidth-1;
+
 	//Get empty space between PIP
 	DWORD intraWidth = mosaicWidth/2;
 

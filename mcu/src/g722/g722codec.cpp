@@ -196,7 +196,7 @@ G722Decoder::~G722Decoder()
 
 int G722Decoder::Decode(BYTE *in, int inLen, SWORD* out, int outLen)
 {
-	AVFrame frame;
+	
 	int got_frame;
 	DWORD lenbuf;
 	
@@ -205,7 +205,7 @@ int G722Decoder::Decode(BYTE *in, int inLen, SWORD* out, int outLen)
 	{
 		//Create packet
 		AVPacket packet;
-
+		AVFrame* frame = av_frame_alloc();
 		//Init it
 		av_init_packet(&packet);
 
@@ -214,23 +214,25 @@ int G722Decoder::Decode(BYTE *in, int inLen, SWORD* out, int outLen)
 		packet.size = inLen;
 
 		//Decode it
-		if (avcodec_decode_audio4(ctx,&frame,&got_frame,&packet)<0)
+		if (avcodec_decode_audio4(ctx,frame,&got_frame,&packet)<0)
+		{
+			av_frame_free(&frame);
 			//nothing
 			return Error("Error decoding G.722\n");
-
+		}
 		//If we got a frame
 		if (got_frame)
 		{
 			//Get data
-			SWORD *buffer16 = (SWORD *)frame.extended_data[0];
-			DWORD len16 = frame.nb_samples;
+			SWORD *buffer16 = (SWORD *)frame->extended_data[0];
+			DWORD len16 = frame->nb_samples;
 
 			samples.push(buffer16,len16);
 		}
 		else
 		{
 		}
-
+		av_frame_free(&frame);
 	}
 	//Check size
 	

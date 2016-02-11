@@ -76,12 +76,15 @@ echo "Now restarting mediaserver"
 /etc/init.d/mediaserver restart
 
 %changelog
-* Fri Jan 29 2016 Thomas Carvello <thomas.carvello@ives.fr>
+* Tue Feb 03 2016 Thomas Carvello <thomas.carvello@ives.fr>
 - Fixed ticket size mosaic
 - Fixed deprecated function for ffmpeg
 - Fixed packaging issue
 - Fixed crash websocketconnection close
 - Fixed lib dependency for compiling
+- Fixed crash with mosaicPiP1
+- Fixed crash issue with G722 codec (frame not initialized)
+- Fixed Loop RTP
 - version 1.6.16
 * Fri Jan 15 2016 Thomas Carvello <thomas.carvello@ives.fr>
 - Github compilation and packaging

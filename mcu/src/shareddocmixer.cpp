@@ -172,30 +172,42 @@ int SharedDocMixer::RefuseDocSharingRequest(int confId, Participant *part)
 
 int SharedDocMixer::StopSharing()
 {
-
-	if ( part != NULL )
-	{
-		conf->onRequestDocSharing(part->GetPartId(),L"NONE");
 	
-	    part->SetVideoOutput(NULL,MediaFrame::VIDEO_SLIDES);
+	Participant *p = NULL;
+
+	pthread_mutex_lock(&mutex);
+	
+        if ( part != NULL )
+	{
+		p=part;
+		p->use.IncUse();
+		part    = NULL;
+
+		pthread_mutex_unlock(&mutex);
+
+		conf->onRequestDocSharing(p->GetPartId(),L"NONE");
+	
+	        p->SetVideoOutput(NULL,MediaFrame::VIDEO_SLIDES);
 		conf->SetDocSharingMosaic(-1);
 		
 		struct BFCPInfo bfcpinfo ;
-		if (GetBfcpInfo(part->GetPartId(),bfcpinfo))
+		if (GetBfcpInfo(p->GetPartId(),bfcpinfo))
 		{
-			bfcp_server->FloorRequestRespons( part->GetPartId() ,part->GetPartId() , bfcpinfo.transactionId ,  bfcpinfo.floorRequestID, BFCP_REVOKED , 0 , BFCP_NORMAL_PRIORITY , true );
-			
-			//Lock
-			pthread_mutex_lock(&mutex);
-			transactions.erase(part->GetPartId());
-			//Unlock
-			pthread_mutex_unlock(&mutex);
-				
+			bfcp_server->FloorRequestRespons( p->GetPartId() ,p->GetPartId() , bfcpinfo.transactionId ,  bfcpinfo.floorRequestID, BFCP_REVOKED , 0 , BFCP_NORMAL_PRIORITY , true );
+			pthread_mutex_lock(&mutex);			
+			transactions.erase(p->GetPartId());
+			 pthread_mutex_unlock(&mutex);
+		
 		}
+		p->use.DecUse();
+
+	}
+	else
+	{
+		 pthread_mutex_unlock(&mutex);
 	}
 	
-	part	= NULL;
-	
+
 	if (logo != NULL && output != NULL)
 	{
 		//Set size

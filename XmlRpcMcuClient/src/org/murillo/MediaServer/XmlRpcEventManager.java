@@ -271,7 +271,7 @@ public class XmlRpcEventManager {
                 //Call event
                 listener.onEvent(xp.getResult());
         } catch (SAXException e) {
-            Logger.getLogger(XmlRpcEventManager.class.getName()).log(Level.SEVERE, "Chunk: "+chunk, e);
+            Logger.getLogger(XmlRpcEventManager.class.getName()).log(Level.SEVERE, "Ignoring premature end of file.");
         } catch (IOException e) {
             Logger.getLogger(XmlRpcEventManager.class.getName()).log(Level.SEVERE, null, e);
         } catch (XmlRpcException e) {

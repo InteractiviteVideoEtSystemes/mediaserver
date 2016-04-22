@@ -242,11 +242,11 @@ int NellyDecoder11Khz::Decode(BYTE *in, int inLen, SWORD* out, int outLen)
 		if (got_frame)
 		{
 			//Get data
-			float *fbuffer11 = (float *) frame.extended_data[0];
+			float *fbuffer11 = (float *) frame->extended_data[0];
 
 			//Convert to SWORD
 			DWORD len11 = 0;
-			for (int i=0; i<frame.nb_samples; ++i)
+			for (int i=0; i<frame->nb_samples; ++i)
 			{   
 				buffer11[len11++] = (SWORD) (fbuffer11[i] * 32767.0f * 0.8f);
 				if (len11 > 512)

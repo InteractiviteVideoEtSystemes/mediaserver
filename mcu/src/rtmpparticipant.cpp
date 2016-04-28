@@ -922,9 +922,10 @@ int RTMPParticipant::RecVideo()
 		RTMPVideoFrame* video = videoFrames.Pop();
 		//check
 		if (!video)
+		{
 			//Again
 			continue;
-
+		}
                 videoStats.numRecvPackets++;
                 videoStats.totalRecvBytes = video->GetSize();
 

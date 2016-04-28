@@ -212,7 +212,15 @@ public:
 	    return len;
 	}
 
-        bool IsCanceled() { return cancel; }
+        bool IsCanceled()
+	{
+	    bool ret;
+	    pthread_mutex_lock(&mutex);
+	    ret = cancel;
+	    pthread_mutex_unlock(&mutex);
+
+	    return ret; 
+	}
 
 private:
 	typedef std::list<T> ObjectList;

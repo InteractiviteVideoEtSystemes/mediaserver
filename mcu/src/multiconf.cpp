@@ -660,6 +660,7 @@ int MultiConf::DeleteParticipant(int id)
 
 	//Stop recording participant just in case
 	StopRecordingParticipant(id);
+	
 
 	//Block
 	if ( participantsLock.WaitUnusedAndLock(2000) != 1)
@@ -681,6 +682,12 @@ int MultiConf::DeleteParticipant(int id)
 
 	//LO obtenemos
 	Participant *part = it->second;
+	participantsLock.Unlock();
+	
+	sharedDocMixer.StopSharing(part);
+        sharedDocMixer.removeParticipant(part);
+
+	participantsLock.WaitUnusedAndLock();
 
 	//Y lo quitamos del mapa
 	participants.erase(it);
@@ -702,9 +709,6 @@ int MultiConf::DestroyParticipant(int partId,Participant* part)
 	Log(">DestroyParticipant [%d]\n",partId);
 	bool confEmpty;
 	
-	sharedDocMixer.StopSharing(part);
-	sharedDocMixer.removeParticipant(part);
-
 	//End participant audio and video streams
 	int ret = part->End();
 
@@ -1111,8 +1115,8 @@ int  MultiConf::StopDocSharing(int confId,int partId)
 	{
 		ret = sharedDocMixer.StopSharing(part);
 	}
-	else
-		ret = sharedDocMixer.StopSharing();
+	//else
+	//	ret = sharedDocMixer.StopSharing();
 		
 	return ret;
 

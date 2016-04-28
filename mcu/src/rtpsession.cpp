@@ -711,7 +711,7 @@ void RTPSession::SetRemoteRateEstimator(RemoteRateEstimator* estimator)
 int RTPSession::Init()
 {
 	int retries = 0;
-	
+	simPort=0;	
 	Log(">Init RTPSession\n");
 
 	sockaddr_in recAddr;
@@ -721,7 +721,7 @@ int RTPSession::Init()
 
 	//Set family
 	recAddr.sin_family     	= AF_INET;
-
+	
 	//Get two consecutive ramdom ports
 	while (retries++<100)
 	{
@@ -758,6 +758,7 @@ int RTPSession::Init()
 		if(bind(simSocket,(struct sockaddr *)&recAddr,sizeof(struct sockaddr_in))!=0)
 		{
 			Log("Failed to open RTP port %d : %s.\n", simPort, strerror(errno) );
+			simPort=0;
 			//Try again
 			continue;
 		}

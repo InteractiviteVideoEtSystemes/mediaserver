@@ -1,7 +1,7 @@
 #!/bin/bash
 
 PROJET=mcumediaserver
-VERSION=1.6.15
+VERSION=1.6.17
 #Repertoire d'installation des includes
 DESTDIR_INC=/usr/include/
 #Repertoire d'installation des librairies
@@ -427,6 +427,7 @@ function local_compile
 			 #mv srtp-1.4.2 srtp
 		fi
 		cd srtp
+		chmod 755 configure
 		./configure --prefix=$BASESRCDIR/staticdeps --exec-prefix=$BASESRCDIR/staticdeps --enable-shared=no
 		make
 		make uninstall

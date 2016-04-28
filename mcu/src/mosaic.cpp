@@ -153,6 +153,9 @@ int Mosaic::SetSlot(int num,int id)
 
 DWORD Mosaic::ComputeAspectRatio(DWORD imgWidth, DWORD imgHeight)
 {
+	if (imgHeight == 0)
+		return 0;
+	
 	DWORD tmpratio = 1000*imgWidth/imgHeight;
 	
 	switch( tmpratio/10 )

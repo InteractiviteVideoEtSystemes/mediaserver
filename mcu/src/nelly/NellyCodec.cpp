@@ -215,7 +215,6 @@ DWORD NellyDecoder11Khz::TrySetRate(DWORD rate)
 
 int NellyDecoder11Khz::Decode(BYTE *in, int inLen, SWORD* out, int outLen)
 {
-	AVFrame frame;
 	int got_frame;
 	SWORD buffer11[512]; 
 	//If we have input
@@ -223,7 +222,7 @@ int NellyDecoder11Khz::Decode(BYTE *in, int inLen, SWORD* out, int outLen)
 	{
 		//Create packet
 		AVPacket packet;
-
+		AVFrame* frame = av_frame_alloc();
 		//Init it
 		av_init_packet(&packet);
 
@@ -232,19 +231,22 @@ int NellyDecoder11Khz::Decode(BYTE *in, int inLen, SWORD* out, int outLen)
 		packet.size = inLen;
 
 		//Decode it
-		if (avcodec_decode_audio4(ctx,&frame,&got_frame,&packet)<0)
+		if (avcodec_decode_audio4(ctx,frame,&got_frame,&packet)<0)
+		{
+			av_frame_free(&frame);
 			//nothing
 			return Error("Error decoding nellymoser\n");
-        
+        }
+		
 		//If we got a frame
 		if (got_frame)
 		{
 			//Get data
-			float *fbuffer11 = (float *) frame.extended_data[0];
+			float *fbuffer11 = (float *) frame->extended_data[0];
 
 			//Convert to SWORD
 			DWORD len11 = 0;
-			for (int i=0; i<frame.nb_samples; ++i)
+			for (int i=0; i<frame->nb_samples; ++i)
 			{   
 				buffer11[len11++] = (SWORD) (fbuffer11[i] * 32767.0f * 0.8f);
 				if (len11 > 512)
@@ -258,7 +260,7 @@ int NellyDecoder11Khz::Decode(BYTE *in, int inLen, SWORD* out, int outLen)
 			//Append to samples
 			samples.push(buffer11,len11);
 		}
-
+		av_frame_free(&frame);
 	}
 
         DWORD lenbuf = samples.length();

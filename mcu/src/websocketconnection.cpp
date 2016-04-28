@@ -42,8 +42,7 @@ WebSocketConnection::WebSocketConnection(Listener *listener)
 
 WebSocketConnection::~WebSocketConnection()
 {
-	wsl =NULL;
-	//End just in case
+	//End the socket before destruction
 	End();
 
 	//Remove pending frames
@@ -118,7 +117,12 @@ void WebSocketConnection::Close()
 int WebSocketConnection::End()
 {
 	//Check we have been inited
-	wsl = NULL;
+	if (wsl != NULL)
+	{
+		wsl->onClose(this);
+		wsl = NULL;
+	}
+	
 	if (!inited)
 		//Exit
 		return 0;

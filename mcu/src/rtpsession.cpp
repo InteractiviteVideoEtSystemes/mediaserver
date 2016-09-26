@@ -1356,6 +1356,8 @@ int RTPSession::ReadRTP()
 		//Decript
 		if (decript)
 		{
+			if (!recvSRTPSession)
+				return Error("-No recvSRTPSession yet (RTCP)\n");
 			//unprotect
 			err_status_t err = srtp_unprotect_rtcp(recvSRTPSession,buffer,&size);
 			//Check error
@@ -1994,6 +1996,9 @@ int RTPSession::SendFIR(DWORD & ssrc)
 
 int RTPSession::RequestFPU()
 {
+	 if (defaultStream == NULL)
+		return 0;
+
 	DWORD ssrc=defaultStream->GetRecSSRC();
 	return RequestFPU(ssrc);
 }
@@ -2056,6 +2061,7 @@ void RTPSession::SetRTT(DWORD rtt)
 
 void RTPSession::onTargetBitrateRequested(DWORD bitrate)
 {
+    Debug("-RTPSession::onTargetBitrateRequested() %i\n",sendBitrateFeedback);
     if (sendBitrateFeedback)
     {
 	Debug("-RTPSession::onTargetBitrateRequested() | [%d]\n",bitrate);

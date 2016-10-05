@@ -96,7 +96,7 @@ int Logo::Load(const char* fileName)
 		//Free resources
 		goto end;
 	}
-	
+	ctx->thread_count	= 1;
 	//Open codec
 	if (avcodec_open2(ctx, codec, NULL)<0)
 	{
@@ -123,16 +123,17 @@ int Logo::Load(const char* fileName)
 		//Free resources
 		goto end;
 	}
-
+	ctx->thread_count = 1;
 	//Decode logo
 	if (avcodec_decode_video2(ctx, logoRGB, &gotLogo, &packet)<0)
 	{
 		//Set errror
 		res = Error("Couldn't decode logo\n");
+		 av_free_packet(&packet);
 		//Free resources
 		goto end;
 	}
-
+	av_free_packet(&packet);
 	//If it we don't have a logo
 	if (!gotLogo)
 	{

@@ -1241,7 +1241,12 @@ int RTPSession::ReadRTP()
 				else
 					//Do nto authenticate
 					len = resp->NonAuthenticatedFingerPrint(aux,size);
-			
+				if (!len)
+				{
+					Debug("ICE: packet empty no need to send it\n");
+					return 0;	
+				}
+						
 				//Send it
 				sendto(simSocket,aux,len,0,(sockaddr *)&from_addr,sizeof(struct sockaddr_in));
 			}
@@ -1329,6 +1334,12 @@ int RTPSession::ReadRTP()
 						len = request->NonAuthenticatedFingerPrint(aux,size);
 
 					//Send it
+					if (!len)
+					{
+						Debug("ICE: packet empty no need to send it\n");
+						return 0;	
+					}
+					
 					sendto(simSocket,aux,len,0,(sockaddr *)&from_addr,sizeof(struct sockaddr_in));
 				}
 
@@ -1340,6 +1351,11 @@ int RTPSession::ReadRTP()
 				// Needed for DTLS in client mode (otherwise the DTLS "Client Hello" is not sent over the wire)
 				len = dtls.Read(buffer,MTU);
 				//Send back
+				if (!len)
+				{
+					Debug("DTLS: packet empty no need to send it\n");
+					return 0;	
+				}
 				sendto(simSocket,buffer,len,0,(sockaddr *)&from_addr,sizeof(struct sockaddr_in));
 			}
 		}
@@ -1391,6 +1407,11 @@ int RTPSession::ReadRTP()
 		//Read
 		int len = dtls.Read(buffer,MTU);
 		//Send it back
+		if (!len)
+		{
+			Debug("-RTPSession DTLS: packet empty no need to send it\n");
+			return 1;	
+		}
 		sendto(simSocket,buffer,len,0,(sockaddr *)&from_addr,sizeof(struct sockaddr_in));
 		return 1;
 	}

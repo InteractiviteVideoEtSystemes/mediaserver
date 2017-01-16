@@ -31,7 +31,7 @@ ul { list-style-type: circle; }
 	
 	<div id="container">
 		<div class="bloc">
-			<h1>Release Note - McuMediaServer - 03/02/2016</h1><!--########## LE NOM DU SERVICE ##########-->
+			<h1>Release Note - McuMediaServer - 16/01/2017</h1><!--########## LE NOM DU SERVICE ##########-->
 			<img id="logo" src="http://www.ives.fr/images/ives_logo.png" alt="IVeS" title="IVeS"/>
 		</div>
 		
@@ -40,7 +40,7 @@ ul { list-style-type: circle; }
 		
 		<table cellspacing='0'>
 			<tr><th><div class="puce" style="background-color:#FF7200;"></div>Product Name & Version</th>
-			<td>mcumediaserver 1.6.16</td></tr><!--########## LE NOM DU SERVICE ##########-->
+			<td>mcumediaserver 1.6.19</td></tr><!--########## LE NOM DU SERVICE ##########-->
 		</table>
 		
 		
@@ -50,10 +50,10 @@ ul { list-style-type: circle; }
 			<tr><th><div class="puce" style="background-color:#FFBB00;"></div>SVN info</th></tr>
 			<tr class='even'><td><b>Package</b></td></tr>
 			<tr>
-			  <td class="td_padd">URL => http://svn.ives.fr/svn-libs-dev/mcumediaserver/tags/1.6.16</td></tr><!--########## URL du Package ##########-->
+			  <td class="td_padd">URL => https://github.com/InteractiviteVideoEtSystemes/mediaserver</td></tr><!--########## URL du Package ##########-->
 			<tr class='even'><td><b>Developpement</b></td></tr>
 			<tr>
-		  <td class="td_padd">http://svn.ives.fr/svn-libs-dev/mcumediaserver/trunk</td></tr><!--########## URL de Dev ##########-->
+		  <td class="td_padd">https://github.com/InteractiviteVideoEtSystemes/mediaserver</td></tr><!--########## URL de Dev ##########-->
 		</table>
 		
 		
@@ -61,12 +61,17 @@ ul { list-style-type: circle; }
 		
 		<table cellspacing='0'>
 			<tr><th><div class="puce" style="background-color:#2EFF00;"></div>Short description / When use the release</th></tr>
-		- Fixed ticket size mosaic
-- Fixed deprecated function for ffmpeg
-- Fixed packaging issue
-- Fixed crash websocketconnection close
-- Fixed lib dependency for compiling
 		<tr class='even'>
+			  <td><p><strong>16/01/2017 : Tag 1.6.19 </strong></p>
+                <ul>
+					<li>- Fixed Firefox issue with empty rtp packet - not sending it</li>
+                    <li>- Fixed crash if DTLS not negociated</li>
+					<li>- Fixed media lock on webrtc call</li>
+					<li>- Fixed RTMP stop video deadlock</li>
+					<li>- Fixed Logo failure</li>
+              </ul></td>
+		</tr>
+		<tr class='even old'>
 			  <td><p><strong>03/02/2016 : Tag 1.6.16 </strong></p>
                 <ul>
                     <li>- Fixed ticket size mosaic</li>

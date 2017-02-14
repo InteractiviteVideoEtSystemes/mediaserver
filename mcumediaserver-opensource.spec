@@ -2,7 +2,7 @@ Name:      mcumediaserver
 Version:   %_version
 #Ne pas enlever le .ives a la fin de la release !
 #Cela est utilise par les scripts de recherche de package.
-Release:   1.ives%{?dist}
+Release:   2.ives%{?dist}
 Summary:   [IVeS] librairies partagées pour asterisk de Fontventa.
 Vendor:    IVeS / Fontventa
 Group:     Applications/Internet

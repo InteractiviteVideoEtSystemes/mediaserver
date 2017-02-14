@@ -19,7 +19,8 @@ VADWEBRTC       = yes
 WEBRTCINCLUDE   = ${HOME}/webrtc/trunk/webrtc/
 WEBRTDIROBJ     = ${HOME}/webrtc/trunk/out/Release/obj.target/webrtc/
 PROTOC		= ../staticdeps/bin/protoc
-
+DISTRO          = $(shell head -1 /etc/redhat-release | awk \
+                      '{if ($$0 ~ /Fedora/) {print "fc"} else if ($$0 ~ /CentOS release 5/) {print "el5"} else if ($$0 ~ /CentOS release 6/) {print "el6"}}' )
 #DEBUG
 #OPTS=-msse -msse2 -msse3 -D__SSE2__  
 
@@ -192,7 +193,11 @@ ifeq ($(FEWSTATICDEPS),yes)
 	LDXMLFLAGS+= -lxmlrpc_abyss -lxmlrpc_server -lxmlrpc -lxmlrpc_util
 else
     # Usin static libs (CentOS)
-     LDFLAGS += -Wl,-Bstatic -lmp4v2 -lsrtp -lavcodec -lswscale -lswresample -lavformat -lavutil -lfdk-aac -lx264 -lvpx -lg722_1 -lspeex -lspeexdsp -Wl,-Bdynamic -lgsm -lssl -lcrypto -lpthread -lMagick++-6.Q16 -lbz2 -lopencore-amrnb -lopencore-amrwb
+ifeq ($(DISTRO), el5)   
+  LDFLAGS += -Wl,-Bstatic -lmp4v2 -lsrtp -lavcodec -lswscale -lswresample -lavformat -lavutil -lx264 -lvpx -lg722_1 -lspeex -lspeexdsp -Wl,-Bdynamic -lgsm -lssl -lcrypto -lpthread -lMagick++-6.Q16 -lbz2 -lopencore-amrnb -lopencore-amrwb
+else
+LDFLAGS += -Wl,-Bstatic -lmp4v2 -lsrtp -lavcodec -lswscale -lswresample -lavformat -lavutil -lfdk-aac -lx264 -lvpx -lg722_1 -lspeex -lspeexdsp -Wl,-Bdynamic -lgsm -lssl -lcrypto -lpthread -lMagick++-6.Q16 -lbz2 -lopencore-amrnb -lopencore-amrwb
+endif
 	LDXMLFLAGS+= $(ADDLIBPATH)/lib/libxmlrpc_abyss.a $(ADDLIBPATH)/lib/libxmlrpc_server.a $(ADDLIBPATH)/lib/libxmlrpc.a $(ADDLIBPATH)/lib/libxmlrpc_xmlparse.a  $(ADDLIBPATH)/lib/libxmlrpc_xmltok.a $(ADDLIBPATH)/lib/libxmlrpc_util.a
 endif
     

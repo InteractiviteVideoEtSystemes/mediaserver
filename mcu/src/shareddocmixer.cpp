@@ -316,7 +316,7 @@ bool SharedDocMixer::StartBfcpServer(int confId, Participant *part)
 			if (part != NULL)
 			{
 				
-					if ( bfcp_server->OpenTcpConnection( NULL,Port,NULL,0,BFCPConnectionRole::PASSIVE) )
+					if ( bfcp_server->OpenTcpConnection( "0.0.0.0",Port,NULL,0,BFCPConnectionRole::PASSIVE) )
 					{
 						Log("StartBfcpServer on TCP success \n");
 					
@@ -342,7 +342,7 @@ bool SharedDocMixer::StartBfcpServer(int confId, Participant *part)
 							bfcp_server->AddUser(  part->GetPartId() );
 
 					
-					if ( bfcp_server->OpenUdpConnection(part->GetPartId(),NULL, Port))
+					if ( bfcp_server->OpenUdpConnection(part->GetPartId(),"0.0.0.0", Port))
 					{
 						Log("StartBfcpServer on UDP success \n");
 					
@@ -461,7 +461,7 @@ int SharedDocMixer::getAvailablePort()
 	close(simSocket);
 	//No socket
 	simSocket = FD_INVALID;
-	
+	Debug("SharedDocMixer::getAvailablePort %i \n",port);	
 	return port;
 		
 }

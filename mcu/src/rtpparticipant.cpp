@@ -344,14 +344,15 @@ int RTPParticipant::SetMute(MediaFrame::Type media, bool isMuted,MediaFrame::Med
 void RTPParticipant::onNewStream( RTPSession *session, DWORD newSsrc, bool receiving )
 {
 	if ( ! receiving) return;
+
+	Debug("RTPParticipant::onNewStream ssrc=%x\n",newSsrc);
+	session->AddStream(receiving,newSsrc);
+	
 	if (GetDocSharingMode() == Participant::BFCP_TCP || GetDocSharingMode() == Participant::BFCP_UDP)
 	{
-		Log("< SetRTPSession \n");
-                session->AddStream(receiving,newSsrc);
-		Debug("RTPParticipant::onNewStream ssrc=%x\n",newSsrc);
-		session->AddStream(receiving,newSsrc);
 		video[MediaFrame::VIDEO_SLIDES]->SetRTPSession(session,newSsrc);
 	}
+	
 		
 }
 

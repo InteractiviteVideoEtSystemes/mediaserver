@@ -49,7 +49,7 @@ private:
 	// Admissible port range
 	static DWORD minLocalPort;
 	static DWORD maxLocalPort;
-
+	
 public:
 	RTPSession(MediaFrame::Type media,Listener *listener, MediaFrame::MediaRole role = MediaFrame::VIDEO_MAIN);
 	~RTPSession();
@@ -349,9 +349,12 @@ private:
 	bool 			useRtcpFIR;
 
 	RTPOrderedPackets	rtxs;
-	Use			rtxUse;
-	Use			streamUse;
-        bool                    resetRequested;
+	Use				rtxUse;
+	Use				streamUse;
+    bool        	resetRequested;
+	
+	DWORD			lastRecSSRC;
+
 };
 
 #endif

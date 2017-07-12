@@ -173,6 +173,8 @@ RTPSession::RTPSession(MediaFrame::Type media,Listener *listener,MediaFrame::Med
 	
 	useExtFIR		=false;
 	useRtcpFIR		=true;
+	
+	lastRecSSRC		=0;
 }
 
 /*************************
@@ -293,7 +295,6 @@ int RTPSession::SetLocalCryptoSDES(const char* suite, const BYTE* key,const DWOR
 	//policy.allow_repeat_tx  = 1; <--- Not all srtp libs containts it
     policy.key		= (BYTE*)key;
 	policy.next		= NULL;
-
 	srtp_t session;
 	err = srtp_create(&session,&policy);	
 	//Check error
@@ -920,7 +921,7 @@ int RTPSession::SendPacket(RTPPacket &packet,DWORD timestamp)
 			return 0;
 		}
 	}
-
+	
 	//Check if we need to send SR
 	if (isZeroTime(&lastSR) || getDifTime(&lastSR)>4000000)
 		//Send it
@@ -931,7 +932,17 @@ int RTPSession::SendPacket(RTPPacket &packet,DWORD timestamp)
 
 	//Init send packet
 	headers->version = RTP_VERSION;
+	
+	//if we detect a change of ssrc in packet , we change the ssrc
+	if (lastRecSSRC != 0 && lastRecSSRC != packet.GetSSRC())
+	{
+		Debug("Changing sending SSRC - lastRecSSRC=%x, packet ssrc=%x \n",lastRecSSRC,packet.GetSSRC());
+		sendSSRC = random();	
+	}
+	
 	headers->ssrc = htonl(sendSSRC);
+	lastRecSSRC = packet.GetSSRC();
+	
 /* Simulate SSRC change - for test purporse only
         if ( (sendSeq%50) == 0
 	     ||
@@ -949,7 +960,6 @@ int RTPSession::SendPacket(RTPPacket &packet,DWORD timestamp)
 	// in case of bridging , we don't change the seq num of the packet.
 	if ( useOriSeqNum && this->media != MediaFrame::Text)
 	{
-		
 		sendSeq = packet.GetSeqNum();
 		headers->seq=htons(sendSeq);	
 	}
@@ -1009,13 +1019,18 @@ int RTPSession::SendPacket(RTPPacket &packet,DWORD timestamp)
 			Debug("-RTPSession: encryption is not yet setup.\n");
 			return 0;
 		}
+		err_status_t err;
+		
 		//Encript
-		err_status_t err = srtp_protect(sendSRTPSession,sendPacket,&len);
+		err = srtp_protect(sendSRTPSession,sendPacket,&len);
 		//Check error
 		if (err!=err_status_ok)
+		{
 			//Nothing
-			return Error("Error protecting RTP packet [%d]\n",err);
-		//Log("Encrpt\n");
+			Error("Error protecting RTP packet for %s with recSSRC=%x  and for session=%p : [%d]\n",MediaFrame::TypeToString(media),packet.GetSSRC(),this, err);
+		
+			return -1;
+		}
 	}
 
 	//Add it rtx queue
@@ -1590,23 +1605,23 @@ int RTPSession::ReadRTP()
 	    if ( stream == NULL )
 	    {
                 streamUse.DecUse();
-		if ( defaultStream == NULL && ssrc > 0)
-		{
-                    	Log("-creating default strezm SSRC [new:%x]\n",ssrc);
-                        SetDefaultStream(true, ssrc);
-		}
-                else if (listener) //call listener
-		{
-			listener->onNewStream(this, ssrc, true);
-		}
-                else
-                {
-                    Log("-No Listner. Adding new SSRC [new:%x]\n",ssrc);
-                    if (defaultStream == NULL) 
-                        SetDefaultStream(true, ssrc);
-                    else
-                        ChangeStream( defaultSSRC, ssrc );
-                }
+				if ( defaultStream == NULL && ssrc > 0)
+				{
+					Log("-Creating default stream SSRC [new:%x] for RTPSession=%p \n",ssrc,this);
+					SetDefaultStream(true, ssrc);
+				}
+				else if (listener) //call listener
+				{
+					listener->onNewStream(this, ssrc, true);
+				}
+				else
+				{
+					Log("-No Listener. Adding new SSRC [new:%x]\n",ssrc);
+					if (defaultStream == NULL) 
+						SetDefaultStream(true, ssrc);
+					else
+						ChangeStream( defaultSSRC, ssrc );
+				}
 
                 streamUse.IncUse();
                 stream = getStream(ssrc);
@@ -2254,9 +2269,10 @@ bool RTPSession::AddStream( bool receiving, DWORD ssrc )
     if ( streamUse.WaitUnusedAndLock(500) )
     {
 	RTPStream* stream = getStream(ssrc);
-	if ( stream == NULL)
+	if ( stream == NULL )
 	{
 		stream = new RTPStream(this,ssrc);
+		
 		streams[ssrc]=stream;
 		//If remote estimator
 		if (remoteRateEstimator)
@@ -2342,6 +2358,7 @@ bool RTPSession::ChangeStream( DWORD oldssrc, DWORD newssrc )
 	streams.erase(oldssrc);
 	stream->SetRecSSRC(newssrc);
 	streams[newssrc] =stream;
+
 	return true;
 }
 
@@ -2471,6 +2488,7 @@ int RTPSession::SendSenderReport()
 void RTPSession::Listener::onNewStream( RTPSession *session, DWORD newSsrc, bool receiving )
 {
 	if ( ! receiving) return;
+	
 	
 	DWORD oldssrc = session->GetDefaultStream(true);
 	

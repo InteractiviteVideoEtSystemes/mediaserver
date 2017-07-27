@@ -1600,10 +1600,10 @@ int RTPSession::ReadRTP()
 
         if (!isRTX)
         {
-            //Send SR to old one
-            SendSenderReport();
 	    if ( stream == NULL )
 	    {
+                //Send SR to old one
+                SendSenderReport();
                 streamUse.DecUse();
 				if ( defaultStream == NULL && ssrc > 0)
 				{

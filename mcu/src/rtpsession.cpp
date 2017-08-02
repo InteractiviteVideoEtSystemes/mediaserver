@@ -904,7 +904,7 @@ int RTPSession::SendPacket(RTPPacket &packet,DWORD timestamp)
 	if (sendAddr.sin_addr.s_addr == INADDR_ANY)
 	{
 		//Do we have rec ip?
-		if (recIP!=INADDR_ANY)
+		if (recIP!=INADDR_ANY )
 		{
 			//Do NAT
 			sendAddr.sin_addr.s_addr = recIP;
@@ -920,6 +920,12 @@ int RTPSession::SendPacket(RTPPacket &packet,DWORD timestamp)
 			//Exit
 			return 0;
 		}
+	}
+	else if ( recIP != INADDR_ANY && recIP != sendAddr.sin_addr.s_addr )
+        {
+//		sendAddr.sin_addr.s_addr = recIP;
+//		sendAddr.sin_port = htons(recPort);
+		Log("-RTPSession NAT: WARNING Receiving from [%s] but still sending %s to [%s:%d].\n",recIP,  MediaFrame::TypeToString(media),inet_ntoa(sendAddr.sin_addr), recPort);
 	}
 	
 	//Check if we need to send SR
@@ -1427,6 +1433,7 @@ int RTPSession::ReadRTP()
 			Debug("-RTPSession DTLS: packet empty no need to send it\n");
 			return 1;	
 		}
+
 		sendto(simSocket,buffer,len,0,(sockaddr *)&from_addr,sizeof(struct sockaddr_in));
 		return 1;
 	}

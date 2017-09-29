@@ -883,8 +883,13 @@ int RTPSession::SendPacket(RTCPCompoundPacket &rtcp)
 
 	//Check error
 	if (ret<0)
+	{
+		int err = errno;
+
+		Error("-Error sending RTP packet [%d]\n",err);
 		//Return
-		return Error("-Error sending RTP packet [%d]\n",errno);
+		return 0;
+	}
 
 	//Exit
 	return 1;

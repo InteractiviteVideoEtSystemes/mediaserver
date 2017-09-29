@@ -7,6 +7,8 @@
 
 
 #define X264_REOPEN 1
+#define ABR_VBV_ENCODING 0
+#define CRF_VBV_ENCODING 1
 //////////////////////////////////////////////////////////////////////////
 //Encoder
 // 	Codificador H264
@@ -176,9 +178,22 @@ int H264Encoder::SetFrameRate(int frames,int kbits,int intraPeriod)
 		params.i_keyint_max         = intraPeriod ;
 		params.i_frame_reference    = 1;
 		params.rc.i_rc_method	    = X264_RC_ABR;
+#if ABR_VBV_ENCODING
+		Log("-H264Encoder | SetFrameRate: Use ABR VBV encoding b=%d, mb=%d, vbv=%d\n", (int)params.rc.i_bitrate, (int)params.rc.i_vbv_max_bitrate, (int)params.rc.i_vbv_buffer_size);
+		params.rc.i_bitrate         = 0.6*bitrate; // Use 60% of the targeted bitrate for bitrate peaks limiting
+		params.rc.i_vbv_max_bitrate = params.rc.i_bitrate;
+		params.rc.i_vbv_buffer_size = params.rc.i_vbv_max_bitrate;
+#elif CRF_VBV_ENCODING
+		Log("-H264Encoder | SetFrameRate: Use CRF VBV encoding crf=%d, mb=%d, vbv=%d\n", (int)params.rc.f_rf_constant, (int)params.rc.i_vbv_max_bitrate, (int)params.rc.i_vbv_buffer_size);
+		params.rc.i_rc_method	    = X264_RC_CRF;
+		params.rc.i_vbv_max_bitrate = 0.6*bitrate; // Use 60% of the targeted bitrate for bitrate peaks limiting
+		params.rc.i_vbv_buffer_size = params.rc.i_vbv_max_bitrate;
+		params.rc.f_rf_constant 	= 23;
+#else
 		params.rc.i_bitrate         = 0.8*bitrate;
 		params.rc.i_vbv_max_bitrate = 1.1*bitrate;
 		params.rc.i_vbv_buffer_size = 1.1*bitrate/fps;
+#endif
 		params.rc.f_vbv_buffer_init = 0;
 		params.rc.f_rate_tolerance  = 0.2;
 		params.i_fps_num	    	= fps;
@@ -227,9 +242,22 @@ int H264Encoder::OpenCodec()
 	params.i_keyint_max         = intraPeriod;
 	params.i_frame_reference    = 1;
 	params.rc.i_rc_method	    = X264_RC_ABR;
+#if ABR_VBV_ENCODING
+	params.rc.i_bitrate         = 0.6*bitrate; // Use 60% of the targeted bitrate for bitrate peaks limiting
+	params.rc.i_vbv_max_bitrate = params.rc.i_bitrate;
+	params.rc.i_vbv_buffer_size = params.rc.i_vbv_max_bitrate;
+	Log("-H264Encoder: Use ABR VBV encoding b=%d, mb=%d, vbv=%d\n", (int)params.rc.i_bitrate, (int)params.rc.i_vbv_max_bitrate, (int)params.rc.i_vbv_buffer_size);
+#elif CRF_VBV_ENCODING
+	params.rc.i_rc_method	    = X264_RC_CRF;
+	params.rc.i_vbv_max_bitrate = 0.6*bitrate; // Use 60% of the targeted bitrate for bitrate peaks limiting
+	params.rc.i_vbv_buffer_size = params.rc.i_vbv_max_bitrate;
+	params.rc.f_rf_constant 	= 23;
+	Log("-H264Encoder: Use CRF VBV encoding crf=%d, mb=%d, vbv=%d\n", (int)params.rc.f_rf_constant, (int)params.rc.i_vbv_max_bitrate, (int)params.rc.i_vbv_buffer_size);
+#else
 	params.rc.i_bitrate         = 0.8*bitrate;
 	params.rc.i_vbv_max_bitrate = 1.1*bitrate;
 	params.rc.i_vbv_buffer_size = (1.1*bitrate)/fps;
+#endif
 	params.rc.f_vbv_buffer_init = 0;
 	params.rc.f_rate_tolerance  = 0.2;
 	params.rc.b_stat_write      = 0;

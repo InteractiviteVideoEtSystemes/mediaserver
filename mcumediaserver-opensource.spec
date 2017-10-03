@@ -76,6 +76,8 @@ echo "Now restarting mediaserver"
 /etc/init.d/mediaserver restart
 
 %changelog
+* Fri Sep 29 2017 Jeremy Huart <jeremy.huart@ives.fr>
+- Fixed quantization flash by adding CFR_VBV encoding mode
 * Tue Feb 03 2016 Thomas Carvello <thomas.carvello@ives.fr>
 - Fixed ticket size mosaic
 - Fixed deprecated function for ffmpeg

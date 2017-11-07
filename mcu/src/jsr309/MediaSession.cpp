@@ -805,7 +805,7 @@ int MediaSession::EndpointAttachToEndpoint(int endpointId,int sourceId,MediaFram
         Endpoint* endpoint = it->second;
 
 	//Log endpoint tag name
-	Log("-EndpointAttachToEndpoint [%ls]\n",endpoint->GetName().c_str());
+	Log("-EndpointAttachToEndpoint [%ls] for media\n",endpoint->GetName().c_str());
 
 	//Get source endpoint
         it = endpoints.find(sourceId);
@@ -817,6 +817,9 @@ int MediaSession::EndpointAttachToEndpoint(int endpointId,int sourceId,MediaFram
         //Get it
         Endpoint* source = it->second;
 
+	Log("-EndpointAttachToEndpoint: activating TS transparency.\n");
+	endpoint->SetRTPTsTransparency(media, true, MediaFrame::VIDEO_MAIN);
+	source->SetRTPTsTransparency(media, true, MediaFrame::VIDEO_MAIN);
 	//Attach
 	return endpoint->Attach(media,MediaFrame::VIDEO_MAIN,source->GetJoinable(media));
 }

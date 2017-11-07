@@ -104,6 +104,7 @@ public:
 	int SetLocalSTUNCredentials(MediaFrame::Type media,const char* username, const char* pwd, MediaFrame::MediaRole role =  MediaFrame::VIDEO_MAIN);
 	int SetRemoteSTUNCredentials(MediaFrame::Type media,const char* username, const char* pwd, MediaFrame::MediaRole role =  MediaFrame::VIDEO_MAIN);
 	int SetRTPProperties(MediaFrame::Type media,const Properties& properties, MediaFrame::MediaRole role =  MediaFrame::VIDEO_MAIN);
+	int SetRTPTsTransparency(MediaFrame::Type media, bool transparency, MediaFrame::MediaRole role =  MediaFrame::VIDEO_MAIN);
 
 	//Attach
 	int Attach(MediaFrame::Type media, MediaFrame::MediaRole role, Joinable *join);

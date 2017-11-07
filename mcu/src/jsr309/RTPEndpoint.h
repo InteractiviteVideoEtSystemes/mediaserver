@@ -52,7 +52,11 @@ public:
 	virtual void onFPURequested(RTPSession *session);
 	virtual void onReceiverEstimatedMaxBitrate(RTPSession *session,DWORD bitrate);
 	virtual void onTempMaxMediaStreamBitrateRequest(RTPSession *session,DWORD bitrate,DWORD overhead);
-        
+        void SetTsTransparency(bool transparent)
+	{
+		tsTransparency = transparent;
+	}
+	
 protected:
 	int Run();
 
@@ -68,9 +72,7 @@ private:
 	timeval prev;
 	DWORD prevts;
 	bool reseted;
-
-	
-
+	bool tsTransparency;
 };
 
 class ExternalFIRRequestedEvent: public JSR309Event

@@ -1889,6 +1889,7 @@ void RTPSession::ProcessRTCPPacket(RTCPCompoundPacket *rtcp)
 				switch(fb->GetFeedbackType())
 				{
 					case RTCPRTPFeedback::NACK:
+						//Debug("-Nack received\n");
 						for (BYTE i=0;i<fb->GetFieldCount();i++)
 						{
 							//Get field

@@ -337,6 +337,19 @@ int Endpoint::SetRTPProperties(MediaFrame::Type media,const Properties& properti
 	return Error("Unknown media [%d]\n",media);
 }
 
+int Endpoint::SetRTPTsTransparency(MediaFrame::Type media, bool transparency, MediaFrame::MediaRole role)
+{
+	RTPEndpoint* rtp = GetRTPEndpoint(media, role);
+
+	if (rtp)
+	{
+		rtp->SetTsTransparency(transparency);
+		return 1;
+	}
+	
+	return Error("Unknown media [%d] - cannot set transparency\n",media);
+}
+
 int Endpoint::SetRemoteSTUNCredentials(MediaFrame::Type media,const char* username, const char* pwd, MediaFrame::MediaRole role)
 {
 	RTPEndpoint* rtp = GetRTPEndpoint(media, role);

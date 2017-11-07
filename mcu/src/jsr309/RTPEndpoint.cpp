@@ -16,6 +16,7 @@ RTPEndpoint::RTPEndpoint(MediaFrame::Type type) : Port(type, MediaFrame::RTP), R
 {
 	//Not reset
 	reseted = false;
+	tsTransparency = false;
 	//No time
 	prevts = 0;
 	timestamp = 0;
@@ -228,7 +229,10 @@ void RTPEndpoint::onRTPPacket(RTPPacket &packet)
 	prevts = packet.GetTimestamp();
 
         //Send it
-        RTPSession::SendPacket(packet,timestamp);
+        if (tsTransparency)
+		RTPSession::SendPacket(packet,prevts);
+	else
+		RTPSession::SendPacket(packet,timestamp);
 }
 
 void RTPEndpoint::onResetStream()

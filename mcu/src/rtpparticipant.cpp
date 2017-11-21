@@ -9,7 +9,7 @@
 
 RTPParticipant::RTPParticipant(DWORD partId,const std::wstring &tag) :
 	Participant(Participant::RTP,partId),
-	audio(NULL),
+	audio(this),
 	text(NULL),
 	estimator(tag)
 {
@@ -47,6 +47,12 @@ int RTPParticipant::SendVideoFPU(MediaFrame::MediaRole role)
 {
 	//Send it
 	return video[role]->SendFPU();
+}
+
+int RTPParticipant::SendDTMF(DTMFMessage* dtmf)
+{
+	//Send it
+	return audio.SendDTMF(dtmf);
 }
 
 MediaStatistics RTPParticipant::GetStatistics(MediaFrame::Type type,MediaFrame::MediaRole role)
@@ -322,6 +328,14 @@ void RTPParticipant::onRequestFPU()
 		listener->onRequestFPU(this);
 }
 
+void RTPParticipant::onDTMF( DTMFMessage* dtmf)
+{
+	//Check
+	if (listener)
+		//Call listener
+		listener->onDTMF(this, dtmf);
+}
+
 int RTPParticipant::SetMute(MediaFrame::Type media, bool isMuted,MediaFrame::MediaRole role)
 {
 	//Depending on the type
@@ -376,7 +390,7 @@ int RTPParticipant::DumpInfo(std::string& info)
     sprintf(partInfo,
             "  Video: nb packets rcved %d, nb packets sent %d, lost packets %d, is_receiving=%d, is_sending=%d\n",
             s.numRecvPackets, s.numSendPackets, s.lostRecvPackets,
-            video[9]->IsReceiving(), video[0]->IsSending());
+            video[0]->IsReceiving(), video[0]->IsSending());
 
     info += partInfo;
 

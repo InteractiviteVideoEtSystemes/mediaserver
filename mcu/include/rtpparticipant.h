@@ -18,7 +18,7 @@
 
 #define MAX_VIDEO_STREAM 2
 
-class RTPParticipant : public Participant, public VideoStream::Listener
+class RTPParticipant : public Participant, public VideoStream::Listener, public AudioStream::Listener
 {
 public:
 	RTPParticipant(DWORD partId,const std::wstring &uuid);
@@ -29,6 +29,8 @@ public:
 	virtual int SetTextCodec(TextCodec::Type codec);
 
 	virtual int SendVideoFPU(MediaFrame::MediaRole role = MediaFrame::VIDEO_MAIN);
+	virtual int SendDTMF(DTMFMessage* dtmf);
+	
 	virtual MediaStatistics GetStatistics(MediaFrame::Type type,MediaFrame::MediaRole role = MediaFrame::VIDEO_MAIN);
 
 	virtual int SetVideoInput(VideoInput* input,MediaFrame::MediaRole role = MediaFrame::VIDEO_MAIN)	{  video[role]->SetVideoInput(input); return 1;	}
@@ -65,6 +67,7 @@ public:
 	virtual void onTempMaxMediaStreamBitrateRequest(RTPSession *session,DWORD bitrate,DWORD overhead);
 	virtual void onRequestFPU();
 	virtual void onNewStream( RTPSession *session, DWORD newSsrc, bool receiving );
+	virtual void onDTMF(DTMFMessage* dtmf);
 	
         virtual int DumpInfo(std::string & info);
 		

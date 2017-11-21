@@ -10,17 +10,22 @@
 #include "tools.h"
 #include "audio.h"
 #include "audiostream.h"
+#include "dtmfmessage.h"
 
 /**********************************
 * AudioStream
 *	Constructor
 ***********************************/
-AudioStream::AudioStream(RTPSession::Listener* listener) : rtp(MediaFrame::Audio,listener)
+AudioStream::AudioStream(Listener* listener) : rtp(MediaFrame::Audio,listener)
 {
 	sendingAudio=TaskIdle;
 	receivingAudio=TaskIdle;
 	audioCodec=AudioCodec::PCMU;
+	this->listener = listener;
 	muted = 0;
+	
+	//Create objects
+	pthread_mutex_init(&mutex,NULL);
 }
 
 /*******************************
@@ -29,6 +34,7 @@ AudioStream::AudioStream(RTPSession::Listener* listener) : rtp(MediaFrame::Audio
 ********************************/
 AudioStream::~AudioStream()
 {
+	pthread_mutex_destroy(&mutex);
 }
 
 /***************************************
@@ -37,6 +43,10 @@ AudioStream::~AudioStream()
 ***************************************/
 int AudioStream::SetAudioCodec(AudioCodec::Type codec,const Properties& properties)
 {
+	//For DTMF , we still use the main codec
+	if (codec == AudioCodec::TELEPHONE_EVENT )
+			return 1;
+	
 	//Colocamos el tipo de audio
 	audioCodec = codec;
 
@@ -331,7 +341,20 @@ int AudioStream::RecAudio()
 
 		//Get type
 		type = (AudioCodec::Type)packet->GetCodec();
-
+		
+		
+		//Handling DTMF EVENT
+		if (type == AudioCodec::TELEPHONE_EVENT )
+		{
+			DTMFMessage *dtmf = DTMFMessage::Parse(packet);
+	
+			if (listener && dtmf)
+				listener->onDTMF(dtmf);
+			
+			lastTime = packet->GetTimestamp();
+			continue;
+		}
+		
 		//Comprobamos el tipo
 		if ((codec==NULL) || (type!=codec->type))
 		{
@@ -402,6 +425,8 @@ int AudioStream::RecAudio()
 int AudioStream::SendAudio()
 {
 	RTPPacket	packet(MediaFrame::Audio,audioCodec,audioCodec);
+	
+	RTPPacket	dtmfpacket(MediaFrame::Audio,AudioCodec::TELEPHONE_EVENT,AudioCodec::TELEPHONE_EVENT);
 	SWORD 		recBuffer[512];
         int 		sendBytes=0;
         struct timeval 	before;
@@ -458,14 +483,15 @@ int AudioStream::SendAudio()
 
 	//Set it
 	packet.SetClockRate(clock);
-
-
+	dtmfpacket.SetClockRate(clock);
+	
 	//Get ts multiplier
 	float multiplier = (float) clock/ (float) rate;
 	sendingAudio = TaskRunning;
 	//Mientras tengamos que capturar
 	while(sendingAudio == TaskRunning)
 	{
+				
 		//Incrementamos el tiempo de envio
 		frameTime += codec->numFrameSamples*multiplier;
 
@@ -495,6 +521,31 @@ int AudioStream::SendAudio()
 
 		//Lo enviamos
 		rtp.SendPacket(packet,frameTime);
+		
+		
+		//DTMF handling
+		pthread_mutex_lock(&mutex);
+		while (!dtmfBuffer.empty() )
+		{
+			DTMFMessage* dtmfmsg = dtmfBuffer.front();
+			
+			dtmfpacket.SetType(dtmfmsg->type);
+			dtmfpacket.SetPayload(dtmfmsg->data,dtmfmsg->size);
+			dtmfpacket.SetMark(dtmfmsg->mark);
+			
+			frameTime += dtmfmsg->size*multiplier;
+			
+			//Set frametime
+			dtmfpacket.SetTimestamp(frameTime);
+			
+			//Lo enviamos
+			rtp.SendPacket(dtmfpacket);
+			
+			dtmfBuffer.erase(dtmfBuffer.begin());
+		}
+		
+		pthread_mutex_unlock(&mutex);
+		
 	}
 
 	Log("-SendAudio cleanup[%d]\n",sendingAudio);
@@ -524,6 +575,13 @@ MediaStatistics AudioStream::GetStatistics()
 
 	//Return it
 	return stats;
+}
+
+int AudioStream::SendDTMF(DTMFMessage* dtmf)
+{
+	 pthread_mutex_lock(&mutex);
+	 dtmfBuffer.push_back(dtmf);
+	 pthread_mutex_unlock(&mutex);
 }
 
 int AudioStream::SetMute(bool isMuted)

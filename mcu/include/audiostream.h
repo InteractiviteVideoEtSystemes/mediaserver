@@ -2,15 +2,25 @@
 #define _AUDIOSTREAM_H_
 
 #include <pthread.h>
+#include <vector>
 #include "config.h"
 #include "codecs.h"
 #include "rtpsession.h"
 #include "audio.h"
+#include "dtmfmessage.h"
+
+#define MAX_DTMF_BUFFER 64
 
 class AudioStream
 {
 public:
-	AudioStream(RTPSession::Listener* listener);
+class Listener : public RTPSession::Listener
+{
+public:
+	virtual void onDTMF( DTMFMessage* dtmf) = 0;
+};
+public:
+	AudioStream(Listener* listener);
 	~AudioStream();
 
 	int Init(AudioInput *input,AudioOutput *output);
@@ -32,6 +42,8 @@ public:
 	int IsSending()	  { return sendingAudio;  }
 	int IsReceiving() { return receivingAudio;}
 	MediaStatistics GetStatistics();
+	
+	int SendDTMF(DTMFMessage* dtmf);
 
 protected:
 	int SendAudio();
@@ -41,6 +53,9 @@ private:
 	//Funciones propias
 	static void *startSendingAudio(void *par);
 	static void *startReceivingAudio(void *par);
+
+
+	Listener* listener;
 
 	//Los objectos gordos
 	RTPSession	rtp;
@@ -55,10 +70,14 @@ private:
 	pthread_t 	recAudioThread;
 	pthread_t 	sendAudioThread;
 
+	pthread_mutex_t mutex;
+
 	//Controlamos si estamos mandando o no
 	enum TaskState 	sendingAudio;
 	enum TaskState 	receivingAudio;
-
+	std::vector<DTMFMessage*> dtmfBuffer;
+	
 	bool		muted;
+
 };
 #endif

@@ -29,6 +29,7 @@ public:
 
 	int SetCodecProperties(MediaFrame::Type media, const Properties & properties);
 	virtual int SendVideoFPU(MediaFrame::MediaRole role = MediaFrame::VIDEO_MAIN);
+	virtual int SendDTMF(DTMFMessage* dtmf);
 	virtual MediaStatistics GetStatistics(MediaFrame::Type type,MediaFrame::MediaRole role = MediaFrame::VIDEO_MAIN);
 
 	virtual int SetVideoInput(VideoInput* input,MediaFrame::MediaRole role = MediaFrame::VIDEO_MAIN)	{ videoInput	= input;	}

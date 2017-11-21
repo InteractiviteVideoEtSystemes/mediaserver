@@ -940,7 +940,18 @@ int RTPSession::SendPacket(RTPPacket &packet,DWORD timestamp)
 	
 	//Modificamos las cabeceras del packete
 	rtp_hdr_t *headers = (rtp_hdr_t *)sendPacket;
-
+	
+	// if the codec of the packet we want to send is not the same than defined, we changed it
+	if (rtpMapOut->find(sendType) != rtpMapOut->end() )
+	{
+		if ( (*rtpMapOut)[sendType] != packet.GetCodec() )
+		{
+			sendType 	=  packet.GetType();
+			headers->pt =  packet.GetType();
+		}
+	}
+	
+	
 	//Init send packet
 	headers->version = RTP_VERSION;
 	
@@ -987,7 +998,7 @@ int RTPSession::SendPacket(RTPPacket &packet,DWORD timestamp)
 
 	//Calculamos el inicio
 	int ini = sizeof(rtp_hdr_t);
-
+	
 	//If we have are using any sending extensions
 	if (useAbsTime)
 	{
@@ -1043,7 +1054,7 @@ int RTPSession::SendPacket(RTPPacket &packet,DWORD timestamp)
 			return -1;
 		}
 	}
-
+	
 	//Add it rtx queue
 	if (useNACK)
 	{
@@ -1083,6 +1094,8 @@ int RTPSession::SendPacket(RTPPacket &packet,DWORD timestamp)
 		ret = sendto(simSocket,sendPacket,len,0,(sockaddr *)&sendAddr,sizeof(struct sockaddr_in));
 	}
 	*/	
+	
+	
 	//Send packet
 	int ret = sendto(simSocket,sendPacket,len,0,(sockaddr *)&sendAddr,sizeof(struct sockaddr_in));
 
@@ -1095,6 +1108,7 @@ int RTPSession::SendPacket(RTPPacket &packet,DWORD timestamp)
 		//Inc stats
 		numSendPackets++;
 		totalSendBytes += packet.GetMediaLength();
+		
 	}
 
 	//Exit

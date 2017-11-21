@@ -107,6 +107,12 @@ int RTMPParticipant::SendVideoFPU(MediaFrame::MediaRole role)
 	//Send it
 	return true;
 }
+int RTMPParticipant::SendDTMF(DTMFMessage* dtmf)
+{
+	
+	return true;
+}
+
 
 int RTMPParticipant::Init()
 {

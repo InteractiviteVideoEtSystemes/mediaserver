@@ -15,6 +15,7 @@
 // #include "websockets.h"
 #include "appmixer.h"
 #include "shareddocmixer.h"
+#include "dtmfmessage.h"
 #include <map>
 #include <string>
 
@@ -60,6 +61,7 @@ public:
 		virtual ~Listener(){};
 		virtual void onParticipantRequestFPU(MultiConf *conf,int partId,void *param) = 0;
 		virtual void onParticipantRequestDocSharing(MultiConf *conf,int partId,std::wstring status, void *param) = 0;
+		
 		
 	};
 	
@@ -152,6 +154,7 @@ public:
 	/** Participants event */
 	void onRequestFPU(Participant *part);
 	void onRequestDocSharing(int partId, std::wstring status);
+	void onDTMF(Participant *part, DTMFMessage* dtmf);
 
 	/** RTMPNetConnection */
 	//virtual void Connect(RTMPNetConnection::Listener* listener); -> Not needed to be overriden yet

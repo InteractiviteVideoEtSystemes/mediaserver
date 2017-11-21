@@ -13,6 +13,7 @@
 #include "text.h"
 #include "rtpsession.h"
 #include "logo.h"
+#include "dtmfmessage.h"
 
 class Participant
 {
@@ -25,6 +26,7 @@ public:
 	{
 	public:
 		virtual void onRequestFPU(Participant *part) = 0;
+		virtual void onDTMF(Participant *part,DTMFMessage* dtmf) = 0;
 	};
 public:
 	Participant(Type type,int partId)
@@ -86,7 +88,8 @@ public:
 	virtual MediaStatistics GetStatistics(MediaFrame::Type media,MediaFrame::MediaRole role = MediaFrame::VIDEO_MAIN) = 0;
 	virtual int SetMute(MediaFrame::Type media, bool isMuted,MediaFrame::MediaRole role = MediaFrame::VIDEO_MAIN) = 0;
 	virtual int SendVideoFPU(MediaFrame::MediaRole role = MediaFrame::VIDEO_MAIN) = 0;
-
+	virtual int SendDTMF(DTMFMessage* dtmf) = 0;
+	
 	virtual int Init() = 0;
 	virtual int End() = 0;
 	

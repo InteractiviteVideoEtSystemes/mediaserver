@@ -2322,6 +2322,25 @@ void MultiConf::onRequestFPU(Participant *part)
 		listener->onParticipantRequestFPU(this,part->GetPartId(),this->param);
 }
 
+void MultiConf::onDTMF(Participant *part, DTMFMessage* dtmf)
+{
+	//Get lock
+	participantsLock.WaitUnusedAndLock();
+	
+	//Destroy all participants
+	for(Participants::iterator it=participants.begin(); it!=participants.end(); it++)
+	{
+		//Destroy it
+		//if (part->GetPartId() != it->first ) 
+			it->second->SendDTMF(dtmf);
+	}
+
+	//Unlock
+	participantsLock.Unlock();
+	
+}
+
+
 void MultiConf::onRequestDocSharing(int partId,std::wstring status)
 {
 

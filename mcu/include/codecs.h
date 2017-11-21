@@ -23,6 +23,7 @@ public:
 			case G722:	return "G722";
 			case G7221:	return "G722.1";
 			case AAC:	return "AAC";
+			case TELEPHONE_EVENT: return "TELEPHONE_EVENT";
 			default:	return "unknown";
 		}
 	}

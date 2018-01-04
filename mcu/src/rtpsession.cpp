@@ -1486,12 +1486,12 @@ int RTPSession::ReadRTP()
 	DWORD defaultSSRC = GetDefaultStream(true);
 	
 	//This should be improbed
-	if (useNACK && defaultSSRC && defaultSSRC!=RTPPacket::GetSSRC(buffer))
+	/*if (useNACK && defaultSSRC && defaultSSRC!=RTPPacket::GetSSRC(buffer))
 	{
 		Debug("-----nacked %x %x\n",defaultSSRC,RTPPacket::GetSSRC(buffer));
 		//It is a retransmited packet
 		isRTX = true;
-	}
+	}*/
 	
 	//Check if it is encripted
 	if (decript )

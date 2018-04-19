@@ -14,6 +14,7 @@ import javax.media.mscontrol.join.Joinable;
 import javax.media.mscontrol.join.JoinableContainer;
 import javax.media.mscontrol.join.JoinableStream;
 import org.murillo.mscontrol.mediagroup.PlayerJoinableStream;
+import org.murillo.mscontrol.mediagroup.RecorderJoinableStream;
 import org.murillo.mscontrol.mixer.MixerAdapterJoinableStreamAudio;
 import org.murillo.mscontrol.mixer.MixerAdapterJoinableStreamVideo;
 import org.murillo.mscontrol.networkconnection.NetworkConnectionJoinableStream;
@@ -145,6 +146,8 @@ public abstract class JoinableStreamImpl extends JoinableImpl implements Joinabl
         else if (stream instanceof MixerAdapterJoinableStreamVideo)
             //Attach
              attachMixer((MixerAdapterJoinableStreamVideo)stream);
+        else if (stream instanceof RecorderJoinableStream)
+        	attachRecorder((RecorderJoinableStream)stream);
     }
 
     @Override
@@ -186,6 +189,8 @@ public abstract class JoinableStreamImpl extends JoinableImpl implements Joinabl
     protected abstract void attachMixer(MixerAdapterJoinableStreamAudio mixerAdapterJoinableStreamAudio) throws MsControlException;
     protected abstract void attachMixer(MixerAdapterJoinableStreamVideo mixerAdapterJoinableStreamVideo) throws MsControlException;
     protected abstract void dettach()                         throws MsControlException;
+
+	protected abstract void attachRecorder(RecorderJoinableStream recorderJoinableStream) throws MsControlException;
 
 
 }

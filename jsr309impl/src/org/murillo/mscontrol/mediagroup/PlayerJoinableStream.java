@@ -86,4 +86,9 @@ public class PlayerJoinableStream extends JoinableStreamImpl implements Joinable
     @Override
     protected void attachMixer(MixerAdapterJoinableStreamVideo mixerAdapterJoinableStreamVideo) throws MsControlException {
     }
+	@Override
+	protected void attachRecorder(RecorderJoinableStream recorderJoinableStream) throws MsControlException {
+		// TODO Auto-generated method stub
+		
+	}
 }

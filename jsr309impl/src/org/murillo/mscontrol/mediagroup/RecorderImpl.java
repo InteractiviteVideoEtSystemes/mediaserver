@@ -27,7 +27,7 @@ import org.murillo.mscontrol.MediaSessionImpl;
  *
  * @author Sergio
  */
-class RecorderImpl implements Recorder {
+public class RecorderImpl implements Recorder {
 
     private enum State {IDLE,RECORDING};
 
@@ -58,6 +58,7 @@ class RecorderImpl implements Recorder {
             //Trhow it
             throw new MsControlException("Could not create player",ex);
         }
+       
     }
 
     @Override
@@ -74,8 +75,9 @@ class RecorderImpl implements Recorder {
         MediaServer mediaServer = sess.getMediaServer();
 
         try {
-            //Close filename
+            group.ConnectRecorder();
             recording = mediaServer.RecorderRecord(sess.getSessionId(), recorderId, uri.getPath());
+       
         } catch (XmlRpcException ex) {
             //Log
             Logger.getLogger(RecorderImpl.class.getName()).log(Level.SEVERE, "Could not close file XMLRCPC exception: {0}", ex.getMessage());
@@ -94,6 +96,7 @@ class RecorderImpl implements Recorder {
         }
         //Set state
         state = State.RECORDING;
+       
     }
 
     @Override

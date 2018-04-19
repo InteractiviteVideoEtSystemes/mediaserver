@@ -17,6 +17,7 @@ import org.murillo.MediaServer.XmlRPCJSR309Client;
 import org.murillo.mscontrol.JoinableStreamImpl;
 import org.murillo.mscontrol.MediaSessionImpl;
 import org.murillo.mscontrol.mediagroup.PlayerJoinableStream;
+import org.murillo.mscontrol.mediagroup.RecorderJoinableStream;
 import org.murillo.mscontrol.mixer.MixerAdapterJoinableStreamAudio;
 import org.murillo.mscontrol.mixer.MixerAdapterJoinableStreamVideo;
 
@@ -150,4 +151,20 @@ public class NetworkConnectionJoinableStream extends JoinableStreamImpl implemen
             throw new MsControlException("Could not dettach stream",ex);
         }
     }
+    @Override
+    protected void attachRecorder(RecorderJoinableStream stream) throws MsControlException {
+        //Get Media session
+        MediaSessionImpl mediaSession = (MediaSessionImpl)conn.getMediaSession();
+        //Get xml rpc client
+        XmlRPCJSR309Client client = mediaSession.getMediaServer();
+        try {
+            //And attach
+            client.RecorderAttachToEndpoint(mediaSession.getSessionId(), conn.getEndpointId(), stream.getRecorder().getRecorderId(), media);
+        } catch (XmlRpcException ex) {
+            Logger.getLogger(NetworkConnectionJoinableStream.class.getName()).log(Level.SEVERE, null, ex);
+            //Trhow it
+            throw new MsControlException("Could not attach stream",ex);
+        }
+    }
+
 }

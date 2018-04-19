@@ -28,95 +28,115 @@ import org.murillo.mscontrol.MediaSessionImpl;
  */
 public class MediaGroupImpl extends ContainerImpl implements MediaGroup {
 
-    public final static MediaConfig PLAYER_CONFIG = PlayerConfigImpl.getConfig();
-    private final PlayerImpl player;
-    private final RecorderImpl recorder;
-    
-    
-    public MediaGroupImpl(MediaSessionImpl session,URI uri,Parameters params) throws MsControlException {
-        //Call parent
-        super(session,uri,params);
-        //Create player
-        player = new PlayerImpl(session,this,createChildUri("player",uri));
-        //Create recorder
-        recorder = new RecorderImpl(session,this,createChildUri("recorder",uri));
-        //Add streams
-        AddStream(StreamType.audio, new PlayerJoinableStream(session,player,StreamType.audio));
-        AddStream(StreamType.video, new PlayerJoinableStream(session,player,StreamType.video));
-        AddStream(StreamType.message, new PlayerJoinableStream(session,player,StreamType.message));
-    }
+	public final static MediaConfig PLAYER_CONFIG = PlayerConfigImpl.getConfig();
+	private final PlayerImpl player;
+	private final RecorderImpl recorder;
+	
 
-    @Override
-    public Player getPlayer() throws MsControlException {
-        //Return player
-        return player;
-    }
 
-    @Override
-    public Recorder getRecorder() throws MsControlException {
-        //Return recorder
-        return recorder;
-    }
+	public MediaGroupImpl(MediaSessionImpl session,URI uri,Parameters params) throws MsControlException {
+		super(session,uri,params);
+		player = new PlayerImpl(session,this,createChildUri("player",uri));
+		//Create recorder
+		recorder = new RecorderImpl(session,this,createChildUri("recorder",uri));
+		
+		ConnectPlayer();
+	
+	
+	}
 
-    @Override
-    public SignalDetector getSignalDetector() throws MsControlException {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
+	@Override
+	public Player getPlayer() throws MsControlException {
+		return player;
+	}
 
-    @Override
-    public SignalGenerator getSignalGenerator() throws MsControlException {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
+	@Override
+	public Recorder getRecorder() throws MsControlException {
+		return recorder;
+		
+	}
+	
 
-    @Override
-    public void stop() {
-        //Stop all
-        player.stop(true);
-        recorder.stop();
-    }
+	/** 
+	 * allow to Connect EndpointAttachToPlayer
+	 * 	 */
+	public void ConnectPlayer() {
+		
+		AddStream(StreamType.audio, new PlayerJoinableStream(session,player,StreamType.audio));
+		AddStream(StreamType.video, new PlayerJoinableStream(session,player,StreamType.video));
+		AddStream(StreamType.message, new PlayerJoinableStream(session,player,StreamType.message));
+	}
+	
+	/** 
+	 * allow to Connect RecorderAttachToEndpoint
+	 * 	 */
+	public void ConnectRecorder() {
+		
+		AddStream(StreamType.audio, new RecorderJoinableStream(session,recorder,StreamType.audio));
+		AddStream(StreamType.video, new RecorderJoinableStream(session,recorder,StreamType.video));
+		AddStream(StreamType.message, new RecorderJoinableStream(session,recorder,StreamType.message));
+	
+	}
 
-    @Override
-    public void triggerAction(Action action) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
+	@Override
+	public SignalDetector getSignalDetector() throws MsControlException {
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
 
-    @Override
-    public <R> R getResource(Class<R> type) throws MsControlException {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
+	@Override
+	public SignalGenerator getSignalGenerator() throws MsControlException {
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
 
-    @Override
-    public MediaConfig getConfig() {
-        return PLAYER_CONFIG;
-    }
+	@Override
+	public void stop() {
+		//Stop all
+		player.stop(true);
+		recorder.stop();
+	}
 
-    
-    @Override
-    public void release() {
-        //Free joins
-        releaseJoins();
-        //Delete player
-        player.release();
-        //Delete recorder
-        recorder.release();
-    }
+	@Override
+	public void triggerAction(Action action) {
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
 
-    @Override
-    public Iterator<MediaObject> getMediaObjects() {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
+	@Override
+	public <R> R getResource(Class<R> type) throws MsControlException {
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
 
-    @Override
-    public <T extends MediaObject> Iterator<T> getMediaObjects(Class<T> type) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
+	@Override
+	public MediaConfig getConfig() {
+		return PLAYER_CONFIG;
+	}
 
-    private URI createChildUri(String child, URI uri) {
-        try {
-            //Create dummy
-            return  new URI(uri.getScheme(), uri.getUserInfo(), uri.getHost(), uri.getPort(), uri.getPath() + "/"+child, null, null);
-        } catch (URISyntaxException ex) {
-        }
-        return null;
-    }
+
+	@Override
+	public void release() {
+		//Free joins
+		releaseJoins();
+		//Delete player
+		player.release();
+		//Delete recorder
+		recorder.release();
+	}
+
+	@Override
+	public Iterator<MediaObject> getMediaObjects() {
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
+
+	@Override
+	public <T extends MediaObject> Iterator<T> getMediaObjects(Class<T> type) {
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
+
+	private URI createChildUri(String child, URI uri) {
+		try {
+			//Create dummy
+			return  new URI(uri.getScheme(), uri.getUserInfo(), uri.getHost(), uri.getPort(), uri.getPath() + "/"+child, null, null);
+		} catch (URISyntaxException ex) {
+		}
+		return null;
+	}
 }

@@ -174,7 +174,7 @@ RTPSession::RTPSession(MediaFrame::Type media,Listener *listener,MediaFrame::Med
 	useExtFIR		=false;
 	useRtcpFIR		=true;
 	
-	lastRecSSRC		=0;
+	lastSendSSRC		=0;
 }
 
 /*************************
@@ -942,28 +942,24 @@ int RTPSession::SendPacket(RTPPacket &packet,DWORD timestamp)
 	rtp_hdr_t *headers = (rtp_hdr_t *)sendPacket;
 	
 	// if the codec of the packet we want to send is not the same than defined, we changed it
-	if (rtpMapOut->find(sendType) != rtpMapOut->end() )
+
+	if (rtpMapOut->find(sendType) == rtpMapOut->end() || (*rtpMapOut)[sendType] != packet.GetCodec())
 	{
-		if ( (*rtpMapOut)[sendType] != packet.GetCodec() )
-		{
-			sendType 	=  packet.GetType();
-			headers->pt =  packet.GetType();
-		}
-	}
-	
-	
+		this->SetSendingCodec( packet.GetCodec());
+	} 
+
 	//Init send packet
 	headers->version = RTP_VERSION;
 	
 	//if we detect a change of ssrc in packet , we change the ssrc
-	if (lastRecSSRC != 0 && lastRecSSRC != packet.GetSSRC())
+	if (lastSendSSRC != 0 && lastSendSSRC != packet.GetSSRC())
 	{
-		Debug("Changing sending SSRC - lastRecSSRC=%x, packet ssrc=%x \n",lastRecSSRC,packet.GetSSRC());
+		Debug("Changing sending SSRC - lastRecSSRC=%x, packet ssrc=%x \n",lastSendSSRC,packet.GetSSRC());
 		sendSSRC = random();	
 	}
 	
 	headers->ssrc = htonl(sendSSRC);
-	lastRecSSRC = packet.GetSSRC();
+	lastSendSSRC = packet.GetSSRC();
 	
 /* Simulate SSRC change - for test purporse only
         if ( (sendSeq%50) == 0
@@ -1490,12 +1486,12 @@ int RTPSession::ReadRTP()
 	DWORD defaultSSRC = GetDefaultStream(true);
 	
 	//This should be improbed
-	if (useNACK && defaultSSRC && defaultSSRC!=RTPPacket::GetSSRC(buffer))
+	/*if (useNACK && defaultSSRC && defaultSSRC!=RTPPacket::GetSSRC(buffer))
 	{
 		Debug("-----nacked %x %x\n",defaultSSRC,RTPPacket::GetSSRC(buffer));
 		//It is a retransmited packet
 		isRTX = true;
-	}
+	}*/
 	
 	//Check if it is encripted
 	if (decript )

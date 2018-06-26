@@ -353,7 +353,7 @@ private:
 	Use				streamUse;
     bool        	resetRequested;
 	
-	DWORD			lastRecSSRC;
+	DWORD			lastSendSSRC;
 
 };
 

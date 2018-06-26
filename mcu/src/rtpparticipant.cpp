@@ -364,7 +364,16 @@ void RTPParticipant::onNewStream( RTPSession *session, DWORD newSsrc, bool recei
 	
 	if (GetDocSharingMode() == Participant::BFCP_TCP || GetDocSharingMode() == Participant::BFCP_UDP)
 	{
+		session->AddStream(receiving,newSsrc);
 		video[MediaFrame::VIDEO_SLIDES]->SetRTPSession(session,newSsrc);
+	}
+	else
+	{
+		DWORD oldssrc = session->GetDefaultStream(true);
+		if (oldssrc == 0 ) 
+			session->SetDefaultStream(true, newSsrc);
+		else
+			session->ChangeStream( oldssrc , newSsrc);
 	}
 	
 		

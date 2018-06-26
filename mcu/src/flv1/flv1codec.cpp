@@ -45,7 +45,7 @@ FLV1Encoder::FLV1Encoder(const Properties& properties)
  
 	//Alocamos el conto y el picture
 	ctx = avcodec_alloc_context3(codec);
-	picture = avcodec_alloc_frame();
+	picture = av_frame_alloc();
 }
 
 /***********************
@@ -76,7 +76,7 @@ int FLV1Encoder::SetSize(int width, int height)
 	Log("-SetSize [%d,%d]\n",width,height);
 
 	// Set pixel format 
-	ctx->pix_fmt		= PIX_FMT_YUV420P;
+	ctx->pix_fmt		= AV_PIX_FMT_YUV420P;
 	ctx->width 		= width;
 	ctx->height 		= height;
 
@@ -194,7 +194,12 @@ VideoFrame* FLV1Encoder::EncodeFrame(BYTE *in,DWORD len)
 		Error("FLV1 encoder not opened");
 		return NULL;
 	}
-
+	
+	AVPacket pkt;
+	av_init_packet(&pkt);
+	pkt.data = frame->GetData();
+	pkt.size = frame->GetMaxMediaLength();
+	
 	int numPixels = ctx->width*ctx->height;
 
 	//Comprobamos el tama�o
@@ -209,18 +214,24 @@ VideoFrame* FLV1Encoder::EncodeFrame(BYTE *in,DWORD len)
 	picture->data[1] = in+numPixels;
 	picture->data[2] = in+numPixels*5/4;
 
-	//Codificamos
-	bufLen=avcodec_encode_video(ctx,frame->GetData(),frame->GetMaxMediaLength(),picture);
+		//Codificamos
+	int got_pkt;
+	int ret = avcodec_encode_video2(ctx,&pkt,picture,&got_pkt);
+
+	//Check
+	if (ret<0 || got_pkt == 0)
+		//Exit
+		return (VideoFrame*) Error("%d\n",ret);
 
 	//Set length
-	frame->SetLength(bufLen);
+	frame->SetLength(pkt.size);
 
 	//Set width and height
 	frame->SetWidth(ctx->width);
 	frame->SetHeight(ctx->height);
 
 	//Is intra
-	frame->SetIntra(ctx->coded_frame->key_frame);
+	frame->SetIntra( (pkt.flags & AV_PKT_FLAG_KEY) != 0 );
 
 	//Unset fpu
 	picture->key_frame = 0;
@@ -280,7 +291,7 @@ FLV1Decoder::FLV1Decoder()
 
 	//Alocamos el contxto y el picture
 	ctx = avcodec_alloc_context3(codec);
-	picture = avcodec_alloc_frame();
+	picture = av_frame_alloc();
 
 	//POnemos los valores del contexto
 	ctx->workaround_bugs 	= 255*255;

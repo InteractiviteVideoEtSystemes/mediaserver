@@ -18,11 +18,9 @@ NellyEncoder::NellyEncoder(const Properties &properties)
 {
 	//NO ctx yet
 	ctx = NULL;
+	frame = NULL;
 	///Set type
 	type = AudioCodec::NELLY8;
-
-	//Register all
-	avcodec_register_all();
 
 	// Get encoder
 	codec = avcodec_find_encoder(AV_CODEC_ID_NELLYMOSER);
@@ -45,18 +43,33 @@ NellyEncoder::NellyEncoder(const Properties &properties)
 
 	//Get the number of samples
 	numFrameSamples = ctx->frame_size;
+
+	//Create frame
+	frame = av_frame_alloc();
+	//Set defaults
+	frame->nb_samples     = ctx->frame_size;
+	frame->format         = ctx->sample_fmt;
+	frame->channel_layout = ctx->channel_layout;
 }
 
 NellyEncoder::~NellyEncoder()
 {
 	//Check
-	if (ctx)
+	if (ctx) {
 		//Close
 		avcodec_close(ctx);
+		av_free(ctx);
+		ctx = NULL;
+	}
+	if (frame)
+		av_frame_free(&frame);
 }
 
 int NellyEncoder::Encode (SWORD *in,int inLen,BYTE* out,int outLen)
 {
+	AVPacket pkt;
+	int got_output;
+
 	SWORD buffer[512];
 	DWORD len = 512;
 	float bufferf[512];
@@ -72,10 +85,32 @@ int NellyEncoder::Encode (SWORD *in,int inLen,BYTE* out,int outLen)
 	//For each one
 	for (int i=0;i<ctx->frame_size;++i)
 		//Convert to float
-		bufferf[i] = ((float) buffer[i] / 32767.0f );
+		bufferf[i] = buffer[i] * (1.0 / (1<<15));
 
-	//Encode
-	return avcodec_encode_audio(ctx, out, outLen, (SWORD*)bufferf);
+	//Fill data
+	if ( avcodec_fill_audio_frame(frame, ctx->channels, ctx->sample_fmt, (BYTE*)bufferf, ctx->frame_size*sizeof(SWORD), 0)<0)
+		//Exit
+		return Error("NELLY: could not fill audio frame\n");
+
+	//Reset packet
+	av_init_packet(&pkt);
+
+	//Set output
+	pkt.data = out;
+	pkt.size = outLen;
+
+	//Encode audio
+	if (avcodec_encode_audio2(ctx, &pkt, frame, &got_output)<0)
+		//Exit
+		return Error("NELLY: could not encode audio frame\n");
+
+	//Check if we got output
+	if (!got_output)
+		//Exit
+		return Error("NELLY: could not get output packet\n");
+
+	//Return encoded size
+	return pkt.size;
 }
 
 
@@ -83,11 +118,9 @@ NellyEncoder11Khz::NellyEncoder11Khz(const Properties &properties)
 {
 	//NO ctx yet
 	ctx = NULL;
+	frame = NULL;
 	///Set type
 	type = AudioCodec::NELLY11;
-
-	//Register all
-	avcodec_register_all();
 
 	// Get encoder
 	codec = avcodec_find_encoder(AV_CODEC_ID_NELLYMOSER);
@@ -111,26 +144,37 @@ NellyEncoder11Khz::NellyEncoder11Khz(const Properties &properties)
 
 	//Get the number of samples
 	numFrameSamples = ctx->frame_size;
+
+	//Create frame
+	frame = av_frame_alloc();
+	//Set defaults
+	frame->nb_samples     = ctx->frame_size;
+	frame->format         = ctx->sample_fmt;
+	frame->channel_layout = ctx->channel_layout;
 }
 
 NellyEncoder11Khz::~NellyEncoder11Khz()
 {
 	//Check
-	if (ctx)
+	if (ctx) {
 		//Close
 		avcodec_close(ctx);
-}
+		av_free(ctx);
+		ctx = NULL;
+	}
 
-DWORD NellyEncoder11Khz::TrySetRate(DWORD rate)
-{
-	//return real rate
-	return GetRate();
+	if (frame)
+		av_frame_free(&frame);
 }
-
 
 int NellyEncoder11Khz::Encode (SWORD *in,int inLen,BYTE* out,int outLen)
 {
+	AVPacket pkt;
+	int got_output;
+
+	SWORD buffer8[512];
 	SWORD buffer11[512];
+	DWORD len8 = 512;
 	DWORD len11 = 512;
 	float bufferf[512];
 
@@ -138,7 +182,16 @@ int NellyEncoder11Khz::Encode (SWORD *in,int inLen,BYTE* out,int outLen)
 	if (inLen>0)
 	{
 		//Push
-		samples11.push(in,inLen);
+		samples8.push(in,inLen);
+		//Get length
+		len8 = samples8.length();
+		//Peek all
+		samples8.peek(buffer8,len8);
+		
+		//Remove
+		samples8.remove(len8);
+		//Push
+		samples11.push(buffer11,len11);
 	}
 
 	//If not enought samples
@@ -149,14 +202,32 @@ int NellyEncoder11Khz::Encode (SWORD *in,int inLen,BYTE* out,int outLen)
 	samples11.pop(buffer11,ctx->frame_size);
 	//For each one
 	for (int i=0;i<ctx->frame_size;++i)
-	{
-		//Convert to float and apply a gain
-		bufferf[i] = (((float) buffer11[i])*5.0f) / (32767.0f);
-		//if ( bufferf[i] > 1.0f) bufferf[i] = 1.0f;
-		//else if ( bufferf[i] < -1.0f) bufferf[i] = -1.0f;
-	}
-	//Encode
-	return avcodec_encode_audio(ctx, out, outLen, (SWORD*)bufferf);
+		//Convert to float
+		bufferf[i] = buffer11[i] * (1.0 / (1<<15));
+	//Fill data
+	if ( avcodec_fill_audio_frame(frame, ctx->channels, ctx->sample_fmt, (BYTE*)bufferf, ctx->frame_size*sizeof(SWORD), 0)<0)
+		//Exit
+		return Error("NELLY: could not fill audio frame\n");
+
+	//Reset packet
+	av_init_packet(&pkt);
+	
+	//Set output
+	pkt.data = out;
+	pkt.size = outLen;
+
+	//Encode audio
+	if (avcodec_encode_audio2(ctx, &pkt, frame, &got_output)<0)
+		//Exit
+		return Error("NELLY: could not encode audio frame\n");
+
+	//Check if we got output
+	if (!got_output)
+		//Exit
+		return Error("NELLY: could not get output packet\n");
+
+	//Return encoded size
+	return pkt.size;
 }
 
 NellyDecoder11Khz::NellyDecoder11Khz()
@@ -165,9 +236,6 @@ NellyDecoder11Khz::NellyDecoder11Khz()
 	ctx = NULL;
 	///Set type
 	type = AudioCodec::NELLY11;
-
-	//Register all
-	avcodec_register_all();
 
 	// Get encoder
 	codec = avcodec_find_decoder(AV_CODEC_ID_NELLYMOSER);
@@ -179,50 +247,47 @@ NellyDecoder11Khz::NellyDecoder11Khz()
 	//Alocamos el conto y el picture
 	ctx = avcodec_alloc_context3(codec);
 
+	
 	//Set params
 	ctx->request_sample_fmt		= AV_SAMPLE_FMT_S16;
+
 	//OPEN it
 	if (avcodec_open2(ctx, codec, NULL) < 0)
 	         Error("could not open codec\n");
 
 	//Set number of channels
 	ctx->channels = 1;
-	
+
 	//Get the number of samples
-	if ( ctx->frame_size > 0 ) 
-		numFrameSamples = ctx->frame_size;
-	else
-	{
-		numFrameSamples = 256;
-		ctx->frame_size = numFrameSamples;
-	}
+	numFrameSamples = 160;
 }
 
 NellyDecoder11Khz::~NellyDecoder11Khz()
 {
 	//Check
-	if (ctx)
+	if (ctx) {
 		//Close
 		avcodec_close(ctx);
-}
-
-DWORD NellyDecoder11Khz::TrySetRate(DWORD rate)
-{
-
-
-	return GetRate();
+		av_free(ctx);
+		ctx = NULL;
+	}
+	
 }
 
 int NellyDecoder11Khz::Decode(BYTE *in, int inLen, SWORD* out, int outLen)
 {
+	AVFrame frame;
 	int got_frame;
+	SWORD buffer8[512];
 	SWORD buffer11[512]; 
+	DWORD len8 = 512;
+	
 	//If we have input
 	if (inLen>0)
 	{
 		//Create packet
 		AVPacket packet;
-		AVFrame* frame = av_frame_alloc();
+
 		//Init it
 		av_init_packet(&packet);
 
@@ -231,48 +296,33 @@ int NellyDecoder11Khz::Decode(BYTE *in, int inLen, SWORD* out, int outLen)
 		packet.size = inLen;
 
 		//Decode it
-		if (avcodec_decode_audio4(ctx,frame,&got_frame,&packet)<0)
-		{
-			av_frame_free(&frame);
+		if (avcodec_decode_audio4(ctx,&frame,&got_frame,&packet)<0)
 			//nothing
 			return Error("Error decoding nellymoser\n");
-        }
-		
+
 		//If we got a frame
 		if (got_frame)
 		{
 			//Get data
-			float *fbuffer11 = (float *) frame->extended_data[0];
+			float *fbuffer11 = (float *) frame.extended_data[0];
+			DWORD len11 = frame.nb_samples;
 
 			//Convert to SWORD
-			DWORD len11 = 0;
-			for (int i=0; i<frame->nb_samples; ++i)
-			{   
-				buffer11[len11++] = (SWORD) (fbuffer11[i] * 32767.0f * 0.8f);
-				if (len11 > 512)
-				{
-					// Internal buffer is full, flush them
-					samples.push(buffer11,len11);
-					len11 = 0;
-				}
-			}
+			for (int i=0; i<len11; ++i)
+				buffer11[i] = (fbuffer11[i] * (1<<15));
 			
 			//Append to samples
-			samples.push(buffer11,len11);
+			samples.push(buffer8,len8);
 		}
-		av_frame_free(&frame);
+
 	}
+	//Check size
+	if (samples.length()<numFrameSamples)
+		//Nothing yet
+		return 0;
 
-        DWORD lenbuf = samples.length();
-        if (lenbuf < numFrameSamples)
-        //Nothing yet
-            	return 0;
-
-        //return decoded samples
-        if ( outLen > lenbuf ) outLen = lenbuf;
-        	samples.pop(out,outLen);
-
+	//Pop 160
+	samples.pop(out,numFrameSamples);
 	//Return number of samples
-	return outLen;
+	return numFrameSamples;
 }
-

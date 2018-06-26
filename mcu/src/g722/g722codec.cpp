@@ -74,7 +74,7 @@ G722Encoder::G722Encoder(const Properties &properties)
 	}
 
         av_init_packet(&outData);
-        outData.destruct = g722_packetdestruct;
+        //outData.destruct = g722_packetdestruct;
         //inSamples = avcodec_alloc_frame();
 }
 
@@ -118,7 +118,7 @@ int G722Encoder::Encode (SWORD *in,int inLen,BYTE* out,int outLen)
         //Encode
         outData.data = out;
         outData.size = outLen;
-        outData.destruct = NULL;
+        //outData.destruct = NULL;
 
     ret = avcodec_encode_audio2(ctx, &outData, &inSamples, &got_packet_ptr);
     if ( ret == 0 )

@@ -40,7 +40,7 @@ H263Encoder::H263Encoder(const Properties& properties)
  
 	//Alocamos el conto y el picture
 	ctx = avcodec_alloc_context3(codec);
-	picture = avcodec_alloc_frame();
+	picture = av_frame_alloc();
 }
 
 /***********************
@@ -71,7 +71,7 @@ int H263Encoder::SetSize(int width, int height)
 	Log("-SetSize [%d,%d]\n",width,height);
 
 	// Set pixel format 
-	ctx->pix_fmt		= PIX_FMT_YUV420P;
+	ctx->pix_fmt		= AV_PIX_FMT_YUV420P;
 	ctx->width 		= width;
 	ctx->height 		= height;
 
@@ -173,6 +173,10 @@ VideoFrame* H263Encoder::EncodeFrame(BYTE *in,DWORD len)
 	//Check if we are opened
 	if (!opened)
 		return NULL;
+	AVPacket pkt;
+	av_init_packet(&pkt);
+	pkt.data = frame->GetData();
+	pkt.size = frame->GetMaxMediaLength();
 	
 	int numPixels = ctx->width*ctx->height;
 
@@ -186,25 +190,23 @@ VideoFrame* H263Encoder::EncodeFrame(BYTE *in,DWORD len)
 	picture->data[2] = in+numPixels*5/4;
 
 	//Codificamos
-	int ret = avcodec_encode_video(ctx,frame->GetData(),frame->GetMaxMediaLength(),picture);
+	int got_pkt;
+	int ret = avcodec_encode_video2(ctx,&pkt,picture,&got_pkt);
 
 	//Check
-	if (ret<0)
+	if (ret<0 || got_pkt == 0)
 		//Exit
-		return (VideoFrame*)Error("%d\n",frame->GetMaxMediaLength());
-
-	//Set lenfht
-	DWORD bufLen = ret;
+		return (VideoFrame*) Error("%d\n",ret);
 
 	//Set length
-	frame->SetLength(bufLen);
+	frame->SetLength(pkt.size);
 
 	//Set width and height
 	frame->SetWidth(ctx->width);
 	frame->SetHeight(ctx->height);
 
 	//Is intra
-	frame->SetIntra(ctx->coded_frame->key_frame);
+	frame->SetIntra( (pkt.flags & AV_PKT_FLAG_KEY) != 0 );
 
 	//Unset fpu
 	picture->key_frame = 0;
@@ -223,18 +225,24 @@ VideoFrame* H263Encoder::EncodeFrame(BYTE *in,DWORD len)
 	frame->ClearRTPPacketizationInfo();
 
 	//Copy all
-	while(ini<bufLen)
+	DWORD lenpkt;
+	bool mark ;
+	
+	while(ini<pkt.size)
 	{
+		mark = false;
 		//The mtu
-		DWORD len = RTPPAYLOADSIZE-2;
-
+		lenpkt = RTPPAYLOADSIZE-2;
 		//Check length
-		if (len+ini>bufLen)
+		if (lenpkt+ini >= pkt.size)
+		{
+			mark = true;
 			//Fix it
-			len=bufLen-ini;
+			lenpkt=pkt.size-ini;
+		}
 		
 		//Add rtp packet
-		frame->AddRtpPacket(ini,len,prefix,2);
+		frame->AddRtpPacket(ini,lenpkt,prefix,2 );
 
 		//If it is first
 		if (ini==2)
@@ -245,7 +253,7 @@ VideoFrame* H263Encoder::EncodeFrame(BYTE *in,DWORD len)
 		}
 		
 		//Increase pointer
-		ini += len;
+		ini += lenpkt;
 	}
 	
 	return frame;
@@ -299,7 +307,7 @@ H263Decoder::H263Decoder()
 
 	//Alocamos el contxto y el picture
 	ctx = avcodec_alloc_context3(codec);
-	picture = avcodec_alloc_frame();
+	picture = av_frame_alloc();
 
 	//POnemos los valores del contexto
 	ctx->workaround_bugs 	= 255*255;

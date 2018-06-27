@@ -190,7 +190,7 @@ static int ConvertToYUVA(Magick::Blob & imgRGBA, BYTE *yuvaData, int width, int 
 {
     AVFrame* rgbaFrame = NULL;
 
-    rgbaFrame = avcodec_alloc_frame();
+    rgbaFrame = av_frame_alloc();
     int numpixels = width*height;
     
     rgbaFrame->data[0] = (BYTE *) imgRGBA.data();
@@ -217,7 +217,7 @@ static int ConvertToYUVA(AVFrame * imgRGBA, BYTE *yuvaData, int width, int heigh
     
     //First from to RGBA to YUVB
     sws = sws_getContext( width, height, AV_PIX_FMT_RGBA,
-			  width, height, PIX_FMT_YUVA420P,
+			  width, height, AV_PIX_FMT_YUVA420P,
 			  SWS_FAST_BILINEAR, 0, 0, 0);
     if (sws == NULL)
     {
@@ -228,7 +228,7 @@ static int ConvertToYUVA(AVFrame * imgRGBA, BYTE *yuvaData, int width, int heigh
     }
 
     //Allocate new one
-    logo = avcodec_alloc_frame();
+    logo = av_frame_alloc();
     if (logo == NULL)
     {
 	//Set errror

@@ -189,15 +189,14 @@ endif
 
 ifeq ($(FEWSTATICDEPS),yes)
     # Use of dynamic libs (on FC20 ...)
-    LDFLAGS += -Wl,-Bstatic -lmp4v2 -lsrtp -lavcodec -lswscale -lswresample -lavformat -lavutil -lavdevice -lpostproc -lfdk-aac -lx264 -lvpx -lg722_1 -lspeex -lspeexdsp -Wl,-Bdynamic -lgsm -lssl -lcrypto -lpthread -lMagick++-6.Q16 -lbz2 -lopencore-amrnb -lopencore-amrwb
+    LDFLAGS += -Wl,-Bstatic -lsrtp -lfdk-aac -lx264 -lvpx -lg722_1 -lspeex -lspeexdsp -Wl,-Bdynamic -lavcodec -lswscale -lavfilter -lswresample -lavformat -lavutil -lavdevice -lpostproc -lmp4v2 -lgsm -lssl -lcrypto -lpthread -lMagick++-6.Q16 -lbz2 -lopencore-amrnb -lopencore-amrwb
 	LDXMLFLAGS+= -lxmlrpc_abyss -lxmlrpc_server -lxmlrpc -lxmlrpc_util
 else
     # Usin static libs (CentOS)
 ifeq ($(DISTRO), el5)   
-  LDFLAGS += -Wl,-Bstatic -lmp4v2 -lsrtp -lavcodec -lswscale -lswresample -lavformat -lavutil -lavdevice -lpostproc -lfdk-aac -lx264 -lvpx -lg722_1 -lspeex -lspeexdsp -Wl,-Bdynamic -lgsm -lssl -lcrypto -lpthread -lMagick++-6.Q16 -lbz2 -lopencore-amrnb -lopencore-amrwb
+	LDFLAGS += -Wl,-Bstatic -lmp4v2 -lsrtp -lavcodec -lswscale -lavfilter -lswresample -lavformat -lavutil -lavdevice -lpostproc -lfdk-aac -lx264 -lvpx -lg722_1 -lspeex -lspeexdsp -Wl,-Bdynamic -lmp4v2 -lgsm -lssl -lcrypto -lpthread -lMagick++-6.Q16 -lbz2 -lopencore-amrnb -lopencore-amrwb
 else 
-LDFLAGS += -Wl,-Bstatic -lmp4v2 -lsrtp -lavcodec -lswscale -lswresample -lavformat -lavutil -lavdevice -lpostproc  -lfdk-aac -lx264 -lvpx -lg722_1 -lspeex -lspeexdsp -Wl,-Bdynamic -lgsm -lssl -lcrypto -lpthread -lMagick++-6.Q16 -lbz2 -lopencore-amrnb -lopencore-amrwb
-LDFLAGS += -Wl,-Bstatic -lmp4v2 -lsrtp -lavcodec -lswscale -lswresample -lavformat -lavutil -lavdevice -lpostproc  -lfdk-aac -lx264 -lvpx -lg722_1 -lspeex -lspeexdsp -Wl,-Bdynamic -lgsm -lssl -lcrypto -lpthread -lMagick++-6.Q16 -lbz2 -lopencore-amrnb -lopencore-amrwb
+	LDFLAGS += -Wl,-Bstatic -lsrtp -lfdk-aac -lx264 -lvpx -lg722_1 -lspeex -lspeexdsp -Wl,-Bdynamic  -lavcodec -lswscale -lavfilter -lswresample -lavformat -lavutil -lavdevice -lpostproc -lmp4v2 -lgsm -lssl -lcrypto -lpthread -lMagick++-6.Q16 -lbz2 -lopencore-amrnb -lopencore-amrwb
 endif
 	LDXMLFLAGS+= $(ADDLIBPATH)/lib/libxmlrpc_abyss.a $(ADDLIBPATH)/lib/libxmlrpc_server.a $(ADDLIBPATH)/lib/libxmlrpc.a $(ADDLIBPATH)/lib/libxmlrpc_xmlparse.a  $(ADDLIBPATH)/lib/libxmlrpc_xmltok.a $(ADDLIBPATH)/lib/libxmlrpc_util.a
 endif

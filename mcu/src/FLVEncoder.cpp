@@ -481,7 +481,7 @@ int FLVEncoder::EncodeAudio()
 	//Delete buffer
 	if (recBuffer)
 		//Delete
-		delete(recBuffer);
+		free(recBuffer);
 
 	//Check codec
 	if (encoder)

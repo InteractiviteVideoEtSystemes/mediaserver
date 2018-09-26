@@ -178,6 +178,7 @@ public:
 
 	inline DWORD GetCached(DWORD n)
 	{
+		if (n==0) return 0; 
 		//Get bits
 		DWORD ret = cache >> (32-n);
 		//Skip thos bits

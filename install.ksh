@@ -373,28 +373,6 @@ function local_compile
 		cd $BASESRCDIR
 	fi
 
-	# compiler mp4v2 en statique
-	BASESRCDIR=$PWD
-	if [ ! -f staticdeps/lib/libmp4v2.a ]
-	then
-		echo "compilation MP4V"
-		if [ ! -r $HOME/mp4v2-src ]
-		then
-			cd $HOME
-			#svn export http://svn.ives.fr/svn-libs-dev/asterisk/libsmedia/mp4v2/tags/1.9.2 $HOME/mp4v2-src
-			rm -f  mp4v2-2.0.0.tar*
-			wget https://mp4v2.googlecode.com/files/mp4v2-2.0.0.tar.bz2
-			bzip2 -d mp4v2-2.0.0.tar.bz2
-			tar xf mp4v2-2.0.0.tar
-			#rm -f mp4v2-2.0.0.tar
-			mv mp4v2-2.0.0 mp4v2-src
-		fi
-		cd $HOME/mp4v2-src
-			./configure --prefix=$BASESRCDIR/staticdeps --exec-prefix=$BASESRCDIR/staticdeps --enable-shared=no
-		make
-		make install
-		cd $BASESRCDIR
-	fi
 
 	# http://xmlrpc-c.svn.sourceforge.net/viewvc/xmlrpc-c/super_stable?view=tar
 	if [ ! -f staticdeps/lib/libxmlrpc_abyss.a ]

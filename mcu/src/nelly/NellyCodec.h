@@ -37,14 +37,13 @@ public:
 	NellyEncoder11Khz(const Properties &properties);
 	virtual ~NellyEncoder11Khz();
 	virtual int Encode(SWORD *in,int inLen,BYTE* out,int outLen);
-	virtual DWORD TrySetRate(DWORD rate)	{ return 8000;	}
-	virtual DWORD GetRate()			{ return 8000;	}
+	virtual DWORD TrySetRate(DWORD rate);
+	virtual DWORD GetRate()			{ return 11025;	}
 	virtual DWORD GetClockRate()		{ return 11025;	}
 private:
 	AVCodec 	*codec;
 	AVCodecContext	*ctx;
 	AVFrame         *frame;
-	fifo<SWORD,1024>  samples8;
 	fifo<SWORD,1024>  samples11;
 };
 
@@ -54,8 +53,8 @@ public:
 	NellyDecoder11Khz();
 	virtual ~NellyDecoder11Khz();
 	virtual int Decode(BYTE *in,int inLen,SWORD* out,int outLen);
-	virtual DWORD TrySetRate(DWORD rate)	{ return 8000;	}
-	virtual DWORD GetRate()			{ return 8000;	}
+	virtual DWORD TrySetRate(DWORD rate);
+	virtual DWORD GetRate()			{ return 11025;	}
 private:
 	AVCodec 	*codec;
 	AVCodecContext	*ctx;

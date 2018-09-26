@@ -170,7 +170,7 @@ RTPSession::RTPSession(MediaFrame::Type media,Listener *listener,MediaFrame::Med
 	defaultStream = NULL;
 	
 	useOriSeqNum	=false;
-	
+	useOriTS		=false;
 	useExtFIR		=false;
 	useRtcpFIR		=true;
 	
@@ -375,8 +375,8 @@ int RTPSession::SetProperties(const Properties& properties)
 		}
 		else if (it->first.compare("useOriSeqNum")==0) {
 			//Set numerotation of seqNum
-			useOriSeqNum = atoi(it->second.c_str());
-			
+			useOriSeqNum 	= atoi(it->second.c_str());
+			useOriTS 	= atoi(it->second.c_str());
 		}
 		else if (it->first.compare("useExtFIR")==0) {
 			//Set use of SIP INFO FIR
@@ -968,12 +968,21 @@ int RTPSession::SendPacket(RTPPacket &packet,DWORD timestamp)
 	     || 
 	     (sendSeq%50) == 4 ) headers->ssrc = random();
 */
-	//Calculate last timestamp
-	sendLastTime = sendTime + timestamp;
+	// in case of bridging , we don't change the timestamp of the packet.
+	if ( useOriTS && this->media != MediaFrame::Text)
+	{ 
+		sendLastTime = packet.GetTimestamp();
+		headers->ts  = htonl(packet.GetTimestamp());
+	}
+	else
+	{
+		//Calculate last timestamp
+		sendLastTime = sendTime + timestamp;
 
-	//POnemos el timestamp
-	headers->ts=htonl(sendLastTime);
-
+		//POnemos el timestamp
+		headers->ts=htonl(sendLastTime);
+	}
+	
 	//Incrementamos el numero de secuencia
 	// in case of bridging , we don't change the seq num of the packet.
 	if ( useOriSeqNum && this->media != MediaFrame::Text)

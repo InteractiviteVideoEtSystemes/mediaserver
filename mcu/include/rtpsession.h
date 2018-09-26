@@ -345,6 +345,7 @@ private:
 	bool			sendBitrateFeedback;
 	bool			useAbsTime;
 	bool 			useOriSeqNum;
+	bool 			useOriTS;
 	bool 			useExtFIR;
 	bool 			useRtcpFIR;
 

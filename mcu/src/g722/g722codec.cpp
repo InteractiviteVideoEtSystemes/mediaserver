@@ -75,13 +75,14 @@ G722Encoder::G722Encoder(const Properties &properties)
 
         av_init_packet(&outData);
         //outData.destruct = g722_packetdestruct;
-        //inSamples = avcodec_alloc_frame();
+        inSamples = av_frame_alloc(();
 }
 
 G722Encoder::~G722Encoder()
 {
     av_free_packet(&outData);
-
+	av_frame_free(inSamples);
+	
     //Check
     if (ctx)
     {
@@ -102,7 +103,7 @@ int G722Encoder::Encode (SWORD *in,int inLen,BYTE* out,int outLen)
 		//Exit
 		return Error("G722: sample size %d is not correct. Should be %d\n", inLen, numFrameSamples);
 
-	ret = avcodec_fill_audio_frame(&inSamples, ctx->channels, ctx->sample_fmt,
+	ret = avcodec_fill_audio_frame(inSamples, ctx->channels, ctx->sample_fmt,
                                        (BYTE *) in, inLen*sizeof(SWORD), 0);
 
 	if ( ret < 0 )

@@ -51,6 +51,8 @@ G722Encoder::G722Encoder(const Properties &properties)
 	ctx->channels		= 1;
 	ctx->sample_rate	= 16000;
 	ctx->sample_fmt		=  AV_SAMPLE_FMT_S16;
+	
+	inSamples = av_frame_alloc();
 
 	//OPEN it
 	if (avcodec_open2(ctx, codec, NULL) < 0)
@@ -69,19 +71,16 @@ G722Encoder::G722Encoder(const Properties &properties)
 			numFrameSamples = 20 * 16; // 20 ms @ 16 Khz = 320 samples
 			ctx->frame_size = numFrameSamples;
 		}
-                inSamples.nb_samples = numFrameSamples;
+                inSamples->nb_samples = numFrameSamples;
 		Log("G722: Encoder open with frame size %d.\n", numFrameSamples);
 	}
 
-        av_init_packet(&outData);
         //outData.destruct = g722_packetdestruct;
-        inSamples = av_frame_alloc(();
 }
 
 G722Encoder::~G722Encoder()
 {
-    av_free_packet(&outData);
-	av_frame_free(inSamples);
+    av_frame_free(&inSamples);
 	
     //Check
     if (ctx)
@@ -94,6 +93,7 @@ G722Encoder::~G722Encoder()
 
 int G722Encoder::Encode (SWORD *in,int inLen,BYTE* out,int outLen)
 {
+	AVPacket        outData;
         int got_packet_ptr, ret;
 	if (ctx == NULL)
 		return Error("G722: no context.\n");
@@ -116,12 +116,13 @@ int G722Encoder::Encode (SWORD *in,int inLen,BYTE* out,int outLen)
 		return 0;
 	}
         
+	av_init_packet(&outData);
         //Encode
         outData.data = out;
         outData.size = outLen;
         //outData.destruct = NULL;
 
-    ret = avcodec_encode_audio2(ctx, &outData, &inSamples, &got_packet_ptr);
+    ret = avcodec_encode_audio2(ctx, &outData, inSamples, &got_packet_ptr);
     if ( ret == 0 )
     {
         if (got_packet_ptr)

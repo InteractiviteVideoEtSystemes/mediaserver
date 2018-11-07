@@ -24,7 +24,6 @@ import org.apache.xmlrpc.XmlRpcException;
 import org.apache.xmlrpc.client.XmlRpcClientConfigImpl;
 import java.util.HashMap;
 import java.util.Map;
-import org.murillo.MediaServer.XmlRpcMcuClient.ConferenceInfo;
 
 /**
  *

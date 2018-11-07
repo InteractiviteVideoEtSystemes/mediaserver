@@ -11,8 +11,6 @@ import org.apache.xmlrpc.XmlRpcException;
 import org.apache.xmlrpc.client.XmlRpcClientConfigImpl;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  *
@@ -100,7 +98,7 @@ public class XmlRpcMediaGatewayClient {
         //Execute
         HashMap response = (HashMap) client.execute("StartReceivingVideo", request);
         //Get result
-        Object[] returnVal = (Object[]) response.get(new String("returnVal"));
+        Object[] returnVal = (Object[]) response.get("returnVal");
         //Return port
         return (Integer)returnVal[0];
     }
@@ -184,7 +182,7 @@ public class XmlRpcMediaGatewayClient {
         //Execute
         HashMap response = (HashMap) client.execute("StartReceivingText", request);
         //Get result
-        Object[] returnVal = (Object[]) response.get(new String("returnVal"));
+        Object[] returnVal = (Object[]) response.get("returnVal");
         //Return port
         return (Integer)returnVal[0];
     }

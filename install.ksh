@@ -104,45 +104,29 @@ function create_rpm
     cp ../../mcumediaserver-opensource.spec .
     cd ../../
 	
-	# we remove the tag locally
-	git tag -d $VERSION
-	# we recover latest tags
-	git fetch --tags
+	git pull
 	
-	#we create a branch from the tag
-	git checkout -b $VERSION $VERSION
-	
-	#we check if anything has not been commited
-	git status | grep nothing
-	if [ $? == 0 ]
-    then
-		if [[ -z $1 || $1 -ne nosign ]]
-		then
-		rpmbuild -bb --sign $PWD/rpmbuild/SPECS/mcumediaserver-opensource.spec
-		else
-			rpmbuild -bb $PWD/rpmbuild/SPECS/mcumediaserver-opensource.spec
-		fi
-		if [ $? == 0 ]
-		then
-			echo "************************* fin du rpmbuild ****************************"
-			#Recuperation du rpm
-			mv -f $PWD/rpmbuild/RPMS/i386/*.rpm $PWD/.
-			mv -f $PWD/rpmbuild/RPMS/i586/*.rpm $PWD/.
-			mv -f $PWD/rpmbuild/RPMS/i686/*.rpm $PWD/.
-			mv -f $PWD/rpmbuild/RPMS/x86_64/*.rpm $PWD/.
-		clean
-		else
-		clean
-		echo "*** error during build ***"
-		exit 20
-		fi
+	if [[ -z $1 || $1 -ne nosign ]]
+	then
+	rpmbuild -bb --sign $PWD/rpmbuild/SPECS/mcumediaserver-opensource.spec
 	else
-        clean
-		echo "*** error during build - some source files are not commited ***"
-		exit 20
-    fi
-	
-    
+		rpmbuild -bb $PWD/rpmbuild/SPECS/mcumediaserver-opensource.spec
+	fi
+	if [ $? == 0 ]
+	then
+		echo "************************* fin du rpmbuild ****************************"
+		#Recuperation du rpm
+		mv -f $PWD/rpmbuild/RPMS/i386/*.rpm $PWD/.
+		mv -f $PWD/rpmbuild/RPMS/i586/*.rpm $PWD/.
+		mv -f $PWD/rpmbuild/RPMS/i686/*.rpm $PWD/.
+		mv -f $PWD/rpmbuild/RPMS/x86_64/*.rpm $PWD/.
+	clean
+	else
+	clean
+	echo "*** error during build ***"
+	exit 20
+	fi
+	   
 }
 
 function clean

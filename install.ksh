@@ -104,8 +104,6 @@ function create_rpm
     cp ../../mcumediaserver-opensource.spec .
     cd ../../
 	
-	git pull
-	
 	if [[ -z $1 || $1 -ne nosign ]]
 	then
 	rpmbuild -bb --sign $PWD/rpmbuild/SPECS/mcumediaserver-opensource.spec
@@ -137,13 +135,7 @@ function clean
 	cd mcu 
 	make -f Makefile.rpm clean
 	cd -
-	
-	#we clean the repo git
-	git checkout master
-	git pull
-	
-	#we delete the branch no longer used
-	git branch -D $VERSION
+
 }
 
 function compile_webrtc_from_google

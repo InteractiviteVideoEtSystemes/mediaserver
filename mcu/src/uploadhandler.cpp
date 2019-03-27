@@ -38,13 +38,13 @@ int UploadHandler::ProcessRequest(TRequestInfo *req,TSession * const ses)
 	DWORD size = 0;
 	std::string boundary;
 	std::string line;
-	char* type = NULL;
+	const char* type = NULL;
 	ContentType* contentType = NULL;
 
 	Log("-ProcessRequest [%s]\n",req->uri);
 
 	//Get content length header
-	const char * content_length = RequestHeaderValue(ses, (char*)"content-length");
+	const char * content_length = RequestHeaderValue(ses, "content-length");
 
 	//Check content length
 	if (!content_length)
@@ -66,7 +66,7 @@ int UploadHandler::ProcessRequest(TRequestInfo *req,TSession * const ses)
 	StringParser parser(buffer,size);
 
 	//Get content type
-	type = RequestHeaderValue(ses, (char*)"content-type");
+	type = RequestHeaderValue(ses, "content-type");
 
 	//Check type
 	if (!type)

@@ -31,8 +31,13 @@ void WSEndpoint::onOpen(WebSocket *ws)
 {
     if ( _ws == NULL )
     {
-		gettimeofday(&clock,NULL);
-		_ws = ws;
+	gettimeofday(&clock,NULL);
+	_ws = ws;
+    }
+    else
+    {
+    	_ws->Close();
+	_ws = ws;
     }
 }
 

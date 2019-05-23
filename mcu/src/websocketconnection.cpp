@@ -34,6 +34,7 @@ WebSocketConnection::WebSocketConnection(Listener *listener)
 	request = NULL;
 	response = NULL;
 	header = NULL;
+	wsl = NULL;
 	//Set initial time
 	gettimeofday(&startTime,0);
 	//Init mutex
@@ -116,13 +117,18 @@ void WebSocketConnection::Close()
 
 int WebSocketConnection::End()
 {
+	//lock now
+	pthread_mutex_lock(&mutex);
+	
 	//Check we have been inited
 	if (wsl != NULL)
 	{
 		wsl->onClose(this);
 		wsl = NULL;
 	}
-	
+	//unlock now
+	pthread_mutex_unlock(&mutex);
+		
 	if (!inited)
 		//Exit
 		return 0;
@@ -270,10 +276,21 @@ int WebSocketConnection::Run()
 	}
 
 	//If we were opened
-	if (upgraded && wsl != NULL)
-		//Send close
-		wsl->onClose(this);
-
+	if (upgraded)
+	{
+		//lock now
+		pthread_mutex_lock(&mutex);
+	
+		if ( wsl != NULL)
+		{	
+			//Send close
+			Log("WSL: We receive a new connection , we close the old one\n");
+			wsl->onClose(this);
+		}
+		
+		//unlock now
+		pthread_mutex_unlock(&mutex);
+	}
 	Log("<Run WebSocket connection\n");
 	
 	//If got listener
@@ -406,7 +423,11 @@ void WebSocketConnection::ProcessData(BYTE *data,DWORD size)
 							break;
 						case WebSocketFrameHeader::TextFrame:
 							//Start frame
+							//lock now
+							pthread_mutex_lock(&mutex);
 							if (wsl) wsl->onMessageStart(this,WebSocket::Text,header->GetPayloadLength());
+							//unlock now
+							pthread_mutex_unlock(&mutex);
 							break;
 						case WebSocketFrameHeader::Close:
 							//Log
@@ -416,7 +437,11 @@ void WebSocketConnection::ProcessData(BYTE *data,DWORD size)
 							break;
 						case WebSocketFrameHeader::BinaryFrame:
 							//Start frame
+							//lock now
+							pthread_mutex_lock(&mutex);
 							if (wsl) wsl->onMessageStart(this,WebSocket::Binary,header->GetPayloadLength());
+							//unlock now
+							pthread_mutex_unlock(&mutex);
 							break;
 						case WebSocketFrameHeader::Ping:
 							//Debug
@@ -453,7 +478,11 @@ void WebSocketConnection::ProcessData(BYTE *data,DWORD size)
 					case WebSocketFrameHeader::TextFrame:
 					case WebSocketFrameHeader::BinaryFrame:
 						//Send data
+						//lock now
+						pthread_mutex_lock(&mutex);
 						if (wsl) wsl->onMessageData(this,data,len);
+						//unlock now
+						pthread_mutex_unlock(&mutex);
 						break;
 					case WebSocketFrameHeader::Ping:
 						//data here to the PONG
@@ -477,7 +506,12 @@ void WebSocketConnection::ProcessData(BYTE *data,DWORD size)
 							//Check if it is end frame for message
 							if (header->IsFin())
 								//Send data
+								//lock now
+								pthread_mutex_lock(&mutex);
 								if (wsl) wsl->onMessageEnd(this);
+								//unlock now
+								pthread_mutex_unlock(&mutex);
+								
 							break;
 						case WebSocketFrameHeader::Ping:
 							//Debug
@@ -690,7 +724,12 @@ void WebSocketConnection::Accept(WebSocket::Listener *wsl)
 	//We are upgraded
 	upgraded = true;
 	//We are opened
+	//lock now
+	pthread_mutex_lock(&mutex);
 	if (wsl) wsl->onOpen(this);
+	//unlock now
+	pthread_mutex_unlock(&mutex);
+	
 }
 
 void WebSocketConnection::Reject(const WORD code, const char* reason)

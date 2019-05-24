@@ -930,7 +930,7 @@ int RTPSession::SendPacket(RTPPacket &packet,DWORD timestamp)
         {
 //		sendAddr.sin_addr.s_addr = recIP;
 //		sendAddr.sin_port = htons(recPort);
-		Log("-RTPSession NAT: WARNING Receiving from [%s] but still sending %s to [%s:%d].\n",recIP,  MediaFrame::TypeToString(media),inet_ntoa(sendAddr.sin_addr), recPort);
+		Log("-RTPSession NAT: WARNING Trying to send packet from different ip address than receiving one.\n");
 	}
 	
 	//Check if we need to send SR

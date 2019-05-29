@@ -222,7 +222,7 @@ public class Codecs {
 
     public static final Integer MaxH264SupportedProfile = 66;
 
-    /*public static CodecInfo getCodecInfoForname(String name)
+    public static CodecInfo getCodecInfoForname(String name)
     {
          if (name.equalsIgnoreCase("PCMU"))         return new CodecInfo(MediaType.AUDIO,PCMU);
          if (name.equalsIgnoreCase("PCMA"))         return new CodecInfo(MediaType.AUDIO,PCMA);
@@ -244,7 +244,7 @@ public class Codecs {
          if (name.equalsIgnoreCase("RED"))         return new CodecInfo(MediaType.TEXT,T140RED);
          if (name.equalsIgnoreCase("T140"))        return new CodecInfo(MediaType.TEXT,T140);
          return null;
-    }*/
+    }
 
     public static Integer getCodecForName(String media,String name)
     {

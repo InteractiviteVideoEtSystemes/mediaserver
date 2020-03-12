@@ -1,4 +1,4 @@
-ï»¿#!/bin/bash
+#!/bin/bash
 
 PROJET=mcumediaserver
 VERSION=1.7.0
@@ -45,7 +45,7 @@ function prepare_spec
        sed s/ives_archi/${SRVARCH}/g ${PROJET}.spec.tmp > ${PROJET}.spec
        rm ${PROJET}.spec.tmp
     else
-       echo "Erreur: On n'a pas trouvé de distribution Fedora, ou CentOS !"
+       echo "Erreur: On n'a pas trouv.e distribution Fedora, ou CentOS !"
        exit
     fi
 }
@@ -129,7 +129,7 @@ function create_rpm
 
 function clean
 {
-  	# On efface les liens ainsi que le package precedemment créé
+  	# On efface les liens ainsi que le package precedemment cr.
   	echo Effacement des fichiers et liens gnupg rpmbuild ${PROJET}.rpm ${TEMPDIR}/${PROJET}
   	rm -rf gnupg rpmbuild ${TEMPDIR}/${PROJET}
 	cd mcu 
@@ -562,3 +562,4 @@ case $1 in
   		echo "  clean		Nettoie tous les fichiers cree ce script, liens, tar.gz et rpm";;
 
 esac
+

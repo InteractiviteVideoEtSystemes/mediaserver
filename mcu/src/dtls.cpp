@@ -31,7 +31,7 @@ static inline
 void on_ssl_info(const SSL* ssl, int where, int ret)
 {
 	DTLSConnection *conn = (DTLSConnection*)SSL_get_ex_data(ssl, 0);
-	conn->onSSLInfo(where, ret);
+	conn->onSSLInfo(where, ret);  
 }
 
 
@@ -53,14 +53,12 @@ int DTLSConnection::ClassInit()
 	EC_KEY* ecdh = NULL;
 
 	/* Create a single SSL context. */
-
-	DTLSConnection::ssl_ctx = SSL_CTX_new(DTLSv1_method());
+	DTLSConnection::ssl_ctx = SSL_CTX_new(DTLS_method());
 	if (! ssl_ctx) {
 		// Print SSL error.
 		ERR_print_errors_fp(stderr);
 		return Error("-DTLSConnection::ClassInit() | No SSL context\n");
 	}
-
 	// Set certificate.
 	if (! SSL_CTX_use_certificate_file(ssl_ctx, certfile.c_str(), SSL_FILETYPE_PEM))
 		return Error("-DTLSConnection::ClassInit() | Specified certificate file '%s' could not be used\n", certfile.c_str());
@@ -98,12 +96,13 @@ int DTLSConnection::ClassInit()
 
 	// Require cert from client (mandatory for WebRTC).
 	SSL_CTX_set_verify(ssl_ctx, SSL_VERIFY_PEER | SSL_VERIFY_FAIL_IF_NO_PEER_CERT, on_ssl_certificate_verify);
-
+	// Require cert from client (mandatory for WebRTC).
+	
 	// Set SSL info callback.
 	SSL_CTX_set_info_callback(ssl_ctx, on_ssl_info);
 
 	// Set suite.
-	switch(suite) {
+	/*switch(suite) {
 		case AES_CM_128_HMAC_SHA1_80:
 			SSL_CTX_set_tlsext_use_srtp(ssl_ctx, "SRTP_AES128_CM_SHA1_80");
 			break;
@@ -112,7 +111,12 @@ int DTLSConnection::ClassInit()
 			break;
 		default:
 			return Error("-DTLSConnection::ClassInit() | Unsupported suite [%d] specified for DTLS-SRTP\n",suite);
-	}
+	}*/
+
+	// Try to use GCM suite
+	if (SSL_CTX_set_tlsext_use_srtp(ssl_ctx, "SRTP_AES128_CM_SHA1_80;SRTP_AEAD_AES_128_GCM;SRTP_AEAD_AES_256_GCM")!=0)
+		//Set it without GCM
+		SSL_CTX_set_tlsext_use_srtp(ssl_ctx, "SRTP_AES128_CM_SHA1_80");
 
 
 	/* Map for local certificate fingerprints. */
@@ -438,7 +442,8 @@ int DTLSConnection::SetupSRTP()
 	BYTE material[SRTP_MASTER_LENGTH * 2];
 	BYTE localMasterKey[SRTP_MASTER_LENGTH];
 	BYTE remoteMasterKey[SRTP_MASTER_LENGTH];
-	BYTE *local_key, *local_salt, *remote_key, *remote_salt;
+	BYTE *local_key, *local_salt, *remote_key, *remote_salt
+;
 
 	if (!(certificate = SSL_get_peer_certificate(ssl)))
 		return Error("-DTLSConnection::SetupSRTP() | no certificate was provided by the peer\n");
@@ -491,20 +496,28 @@ int DTLSConnection::SetupSRTP()
 		local_key = material;
 		remote_key = local_key + SRTP_MASTER_KEY_LENGTH;
 		local_salt = remote_key + SRTP_MASTER_KEY_LENGTH;
-		remote_salt = local_salt + SRTP_MASTER_SALT_LENGTH;
+		remote_salt = local_salt + SRTP_MASTER_SALT_LENGTH
+
+
+;
 	} else	{
 		remote_key = material;
 		local_key = remote_key + SRTP_MASTER_KEY_LENGTH;
 		remote_salt = local_key + SRTP_MASTER_KEY_LENGTH;
-		local_salt = remote_salt + SRTP_MASTER_SALT_LENGTH;
+		local_salt = remote_salt + SRTP_MASTER_SALT_LENGTH
+
+
+;
 	}
 
 	//Create local master key
 	memcpy(localMasterKey,local_key,SRTP_MASTER_KEY_LENGTH);
-	memcpy(localMasterKey+SRTP_MASTER_KEY_LENGTH,local_salt,SRTP_MASTER_SALT_LENGTH);
+	memcpy(localMasterKey+SRTP_MASTER_KEY_LENGTH,local_salt,SRTP_MASTER_SALT_LENGTH)
+;
 	//Create remote master key
 	memcpy(remoteMasterKey,remote_key,SRTP_MASTER_KEY_LENGTH);
-	memcpy(remoteMasterKey+SRTP_MASTER_KEY_LENGTH,remote_salt,SRTP_MASTER_SALT_LENGTH);
+	memcpy(remoteMasterKey+SRTP_MASTER_KEY_LENGTH,remote_salt,SRTP_MASTER_SALT_LENGTH)
+;
 
 	//Fire event
 	listener.onDTLSSetup(suite,localMasterKey,SRTP_MASTER_LENGTH,remoteMasterKey,SRTP_MASTER_LENGTH);

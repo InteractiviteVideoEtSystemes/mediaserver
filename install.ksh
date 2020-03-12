@@ -1,7 +1,7 @@
 #!/bin/bash
 
 PROJET=mcumediaserver
-VERSION=1.6.29
+VERSION=1.7.0
 #Repertoire d'installation des includes
 DESTDIR_INC=/usr/include/
 #Repertoire d'installation des librairies
@@ -307,6 +307,29 @@ function local_compile
 		exit 20
 	fi
 
+	# compiler openssl en statique
+	BASESRCDIR=$PWD
+	if [ ! -f staticdeps/lib/libssl.a ]
+	then
+		echo "on doit compiler openssl 1.1.1d"
+		if [ ! -r $HOME/openssl ]
+		then
+			cd $HOME
+			rm -f OpenSSL_1_1_1d.tar.gz
+			wget https://github.com/openssl/openssl/archive/OpenSSL_1_1_1d.tar.gz
+
+			tar xzf OpenSSL_1_1_1d.tar.gz
+			mv openssl-OpenSSL_1_1_1d openssl
+			cd $HOME/openssl
+		fi
+		cd $HOME/openssl
+		./config --prefix=$BASESRCDIR/staticdeps --openssldir=$BASESRCDIR/staticdeps shared zlib
+		make
+		make install
+		cd $BASESRCDIR
+	fi
+
+	
 	# compiler speex en statique
 	BASESRCDIR=$PWD
 	if [ ! -f staticdeps/lib/libspeex.a ]

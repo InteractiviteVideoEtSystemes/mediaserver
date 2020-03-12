@@ -1,4 +1,4 @@
-#!/bin/bash
+﻿#!/bin/bash
 
 PROJET=mcumediaserver
 VERSION=1.7.0

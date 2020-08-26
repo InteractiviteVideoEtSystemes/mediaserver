@@ -1,7 +1,7 @@
 #!/bin/bash
 
 PROJET=mcumediaserver
-VERSION=1.8.0
+VERSION="1.8.1"
 #Repertoire d'installation des includes
 DESTDIR_INC=/usr/include/
 #Repertoire d'installation des librairies
@@ -532,8 +532,15 @@ case $1 in
   		echo "Nettoyage des liens et du package crees par la cible dev"
   		clean ;;
   	"rpm")
-  		echo "Creation du rpm"
-  		create_rpm $2 ;;
+		echo "Creation du rpm"
+		create_rpm "$@";;
+	"export")
+        echo "{" >> build.properties
+        echo "'VERSION': '$VERSION'," >> build.properties
+        echo "'PROJET':'$PROJET'," >> build.properties
+        echo "'DESTDIR':'$DESTDIR'" >> build.properties
+        echo "}" >> build.properties
+       ;;
 	"localcompile")
 		local_compile;;
 

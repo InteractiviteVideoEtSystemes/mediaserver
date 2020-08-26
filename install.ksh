@@ -75,7 +75,9 @@ function create_rpm
     #Creation des macros rpmbuild
     rm ~/.rpmmacros
     touch ~/.rpmmacros
-	 echo "%_version" $VERSION >> ~/.rpmmacros
+	
+	echo "%name" $PROJET >> ~/.rpmmacros
+	echo "%_version" $VERSION >> ~/.rpmmacros
     echo "%_topdir" $PWD"/rpmbuild" >> ~/.rpmmacros
     echo "%_tmppath %{_topdir}/TMP" >> ~/.rpmmacros
     echo "%_signature gpg" >> ~/.rpmmacros
@@ -101,14 +103,14 @@ function create_rpm
     mkdir -p rpmbuild/RPMS/x86_64
     #Recuperation de la description du package 
     cd ./rpmbuild/SPECS/
-    cp ../../mcumediaserver-opensource.spec .
+    cp ../../mcumediaserver.spec .
     cd ../../
 	
 	if [[ -z $1 || $1 -ne nosign ]]
 	then
-	rpmbuild -bb --sign $PWD/rpmbuild/SPECS/mcumediaserver-opensource.spec
+	rpmbuild -bb --sign $PWD/rpmbuild/SPECS/mcumediaserver.spec
 	else
-		rpmbuild -bb $PWD/rpmbuild/SPECS/mcumediaserver-opensource.spec
+		rpmbuild -bb $PWD/rpmbuild/SPECS/mcumediaserver.spec
 	fi
 	if [ $? == 0 ]
 	then
@@ -135,6 +137,7 @@ function clean
 	cd mcu 
 	make -f Makefile.rpm clean
 	cd -
+
 
 }
 

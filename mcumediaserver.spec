@@ -3,7 +3,7 @@ Version:   %{version}
 #Ne pas enlever le .ives a la fin de la release !
 #Cela est utilise par les scripts de recherche de package.
 Release:   1.ives%{?dist}
-Summary:   [IVeS] librairies partagées pour asterisk de Fontventa.
+Summary:   [IVeS] librairies partagê¦³ pour asterisk de Fontventa.
 Vendor:    IVeS / Fontventa
 Group:     Applications/Internet
 License:   GPL
@@ -16,10 +16,8 @@ BuildRequires: ffmpeg-devel, x264-devel, gcc-c++, bzip2-devel, ImageMagick-c++-d
 Requires: fonts-chinese, fonts-japanese
 %endif
 
-
 %description
 Mediaserver controlled by sailfin applications
-  
 %clean
 echo "############################# Clean"
 echo Clean du repertoire $RPM_BUILD_ROOT
@@ -27,7 +25,6 @@ echo Clean du repertoire $RPM_BUILD_ROOT
 cd %_topdir
 cd ../mcu
 make -f Makefile.rpm clean
-
 %prep
 cd %_topdir
 cd ..
@@ -425,4 +422,3 @@ echo "Now restarting mediaserver"
 - hardcoded intra period of 10 sec (flash2sip)
 * Thu Dec 1 2011 Emmanuel BUU <emmanuel.buu@ives.fr>
 - Initial package
-

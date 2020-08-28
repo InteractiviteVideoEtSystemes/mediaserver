@@ -18,6 +18,10 @@ pipeline {
           VERSION = props['VERSION']
           PROJET = props['PROJET']
           DESTDIR = props['DESTDIR']
+		 
+		  build "/pltf/ffmpeg"
+          build "/pltf/libbfcp"
+		  build "/pltf/mp4v2"
         }
 
         sh "svn export https://svn.ives.fr/svn-libs-dev/gnupg"

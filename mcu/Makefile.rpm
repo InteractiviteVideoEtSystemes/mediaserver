@@ -198,7 +198,7 @@ ifeq ($(DISTRO), el5)
 else 
 	LDFLAGS += -Wl,-Bstatic -lsrtp -lfdk-aac -lx264 -lvpx -lg722_1 -lspeex -lspeexdsp -Wl,-Bdynamic  -lavcodec -lswscale -lavfilter -lswresample -lavformat -lavutil -lavdevice -lpostproc -lmp4v2 -lgsm -lMagick++-6.Q16 -lbz2 -lopencore-amrnb -lopencore-amrwb
 endif
-	LDXMLFLAGS+= $(ADDLIBPATH)/lib/libxmlrpc_abyss.a $(ADDLIBPATH)/lib/libxmlrpc_server.a $(ADDLIBPATH)/lib/libxmlrpc.a $(ADDLIBPATH)/lib/libxmlrpc_xmlparse.a  $(ADDLIBPATH)/lib/libxmlrpc_xmltok.a $(ADDLIBPATH)/lib/libxmlrpc_util.a $(ADDLIBPATH)/lib/libssl.a $(ADDLIBPATH)/lib/libcrypto.a -lpthread
+	LDXMLFLAGS+=  $(ADDLIBPATH)/lib/libssl.a $(ADDLIBPATH)/lib/libcrypto.a $(ADDLIBPATH)/lib/libxmlrpc_abyss.a $(ADDLIBPATH)/lib/libxmlrpc_server.a $(ADDLIBPATH)/lib/libxmlrpc.a $(ADDLIBPATH)/lib/libxmlrpc_xmlparse.a  $(ADDLIBPATH)/lib/libxmlrpc_xmltok.a $(ADDLIBPATH)/lib/libxmlrpc_util.a -lpthread
 endif
     
 

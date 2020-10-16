@@ -387,7 +387,7 @@ function local_compile
 			svn export svn://svn.code.sf.net/p/xmlrpc-c/code/stable xmlrpc-c
 		fi
 		cd xmlrpc-c
-		./configure --prefix=$BASESRCDIR/staticdeps --exec-prefix=$BASESRCDIR/staticdeps --enable-shared=no
+		./configure --disable-abyss-openssl --prefix=$BASESRCDIR/staticdeps --exec-prefix=$BASESRCDIR/staticdeps --enable-shared=no
 		make
 		make install
 		cd $BASESRCDIR

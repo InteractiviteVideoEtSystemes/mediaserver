@@ -895,9 +895,8 @@ int AsymmetricMosaic::GetLeft(int pos)
 			{
 				case 0:
 				case 6:
-					return 0;
 				case 4:
-					return 5;
+					return 0;
 				case 5:
 					index = 6;
 					//outline =5;

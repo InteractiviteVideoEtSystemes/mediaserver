@@ -5,6 +5,13 @@ def SLACKALREADYSENT = false
 import hudson.model.*
 import jenkins.model.*
 import hudson.tasks.test.AbstractTestResultAction
+import groovy.json.JsonSlurper
+
+def getJobStatus(String jobName){
+    def request = httpRequest "https://<JENKINS_ADDRESS>/job/pltf/job/${jobName}/lastBuild/api/json"
+    def requestJson = new JsonSlurper().parseText(request.getContent())
+    return requestJson['result']
+}
 
 pipeline {
   agent any
@@ -18,10 +25,38 @@ pipeline {
           VERSION = props['VERSION']
           PROJET = props['PROJET']
           DESTDIR = props['DESTDIR']
-		 
-		  build "/pltf/ffmpeg"
-          build "/pltf/libbfcp"
-		  build "/pltf/mp4v2"
+		  jobStatus = getJobStatus(ffmpeg)
+		  echo jobStatus
+		  if(jobStatus == "SUCCESS" ){
+			any_success = true
+			break
+		  }
+		  else
+		  {
+			build "/pltf/ffmpeg"
+		  }
+		  
+		  jobStatus = getJobStatus(libbfcp)
+		  echo jobStatus
+		  if(jobStatus == "SUCCESS" ){
+			any_success = true
+			break
+		  }
+		  else
+		  {
+			  build "/pltf/libbfcp"
+		  }
+		  
+		  jobStatus = getJobStatus(mp4v2)
+		  echo jobStatus
+		  if(jobStatus == "SUCCESS" ){
+			any_success = true
+			break
+		  }
+		  else
+		  {
+			 build "/pltf/mp4v2"
+		  }
         }
 
         sh "svn export https://svn.ives.fr/svn-libs-dev/gnupg"

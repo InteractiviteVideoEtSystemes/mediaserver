@@ -25,7 +25,7 @@ pipeline {
           VERSION = props['VERSION']
           PROJET = props['PROJET']
           DESTDIR = props['DESTDIR']
-		  jobStatus = getJobStatus(ffmpeg)
+		  jobStatus = getJobStatus("ffmpeg")
 		  echo jobStatus
 		  if(jobStatus == "SUCCESS" ){
 			any_success = true
@@ -36,7 +36,7 @@ pipeline {
 			build "/pltf/ffmpeg"
 		  }
 		  
-		  jobStatus = getJobStatus(libbfcp)
+		  jobStatus = getJobStatus("libbfcp")
 		  echo jobStatus
 		  if(jobStatus == "SUCCESS" ){
 			any_success = true
@@ -47,7 +47,7 @@ pipeline {
 			  build "/pltf/libbfcp"
 		  }
 		  
-		  jobStatus = getJobStatus(mp4v2)
+		  jobStatus = getJobStatus("mp4v2")
 		  echo jobStatus
 		  if(jobStatus == "SUCCESS" ){
 			any_success = true

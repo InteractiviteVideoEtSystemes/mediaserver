@@ -8,7 +8,7 @@ import hudson.tasks.test.AbstractTestResultAction
 import groovy.json.JsonSlurper
 
 def getJobStatus(String jobName){
-    def request = httpRequest "https://<JENKINS_ADDRESS>/job/pltf/job/${jobName}/lastBuild/api/json"
+    def request = httpRequest "http://localhost:8080/job/pltf/job/${jobName}/lastBuild/api/json"
     def requestJson = new JsonSlurper().parseText(request.getContent())
     return requestJson['result']
 }

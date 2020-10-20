@@ -77,14 +77,14 @@ function create_rpm
     touch ~/.rpmmacros
 	
 	echo "%name" $PROJET >> ~/.rpmmacros
-	echo "%_version" $VERSION >> ~/.rpmmacros
+	echo "%version" $VERSION >> ~/.rpmmacros
     echo "%_topdir" $PWD"/rpmbuild" >> ~/.rpmmacros
     echo "%_tmppath %{_topdir}/TMP" >> ~/.rpmmacros
     echo "%_signature gpg" >> ~/.rpmmacros
     echo "%_gpg_name IVeSkey" >> ~/.rpmmacros
     echo "%_gpg_path" $PWD"/gnupg" >> ~/.rpmmacros
     echo "%vendor IVeS" >> ~/.rpmmacros
-	if [[ -z $1 || $1 -ne nosign ]]
+	if [[ -z $2 || $2 -ne nosign ]]
 	then
 		#Import de la clef gpg IVeS
 		svn export https://svn.ives.fr/svn-libs-dev/gnupg
@@ -106,7 +106,7 @@ function create_rpm
     cp ../../mcumediaserver.spec .
     cd ../../
 	
-	if [[ -z $1 || $1 -ne nosign ]]
+	if [[ -z $2 || $2 -ne nosign ]]
 	then
 	rpmbuild -bb --sign $PWD/rpmbuild/SPECS/mcumediaserver.spec
 	else

@@ -28,30 +28,30 @@ pipeline {
           PROJET = props['PROJET']
           DESTDIR = props['DESTDIR']
 
-			  jobStatus = getJobStatus("/pltf/ffmpeg")
-				echo "getting latest build from ffmpeg:"
-				echo jobStatus
-			  if(jobStatus == "SUCCESS" )
-				{
-					build "/pltf/ffmpeg"
-			  }
+				  jobStatus = getJobStatus("/pltf/ffmpeg")
+					echo "getting latest build from ffmpeg:"
+					echo jobStatus
+				  if(jobStatus != "SUCCESS" )
+					{
+						build "/pltf/ffmpeg"
+				  }
 
-			  jobStatus = getJobStatus("/pltf/libbfcp")
-				echo "getting latest build from libbfcp:"
-				echo jobStatus
-			  if(jobStatus != "SUCCESS" )
-				{
-				  build "/pltf/libbfcp"
-			  }
+				  jobStatus = getJobStatus("/pltf/libbfcp")
+					echo "getting latest build from libbfcp:"
+					echo jobStatus
+				  if(jobStatus != "SUCCESS" )
+					{
+					  build "/pltf/libbfcp"
+				  }
 
-			  jobStatus = getJobStatus("/pltf/mp4v2")
-				echo "getting latest build from mp4v2:"
-				echo jobStatus
-			  if(jobStatus != "SUCCESS" )
-			  {
-				 build "/pltf/mp4v2"
-			  }
-
+				  jobStatus = getJobStatus("/pltf/mp4v2")
+					echo "getting latest build from mp4v2:"
+					echo jobStatus
+				  if(jobStatus != "SUCCESS" )
+				  {
+					 build "/pltf/mp4v2"
+				  }
+				}
         sh "svn export https://svn.ives.fr/svn-libs-dev/gnupg"
         sh """
         mkdir -p rpmbuild

@@ -9,7 +9,7 @@ import groovy.json.JsonSlurper
 
 def getJobStatus(String jobName){
 	def job_data = Jenkins.instance.getItemByFullName(jobName)
-    if (job_data.getLastBuild()) 
+    if (job_data.getLastBuild())
 	{
 		return job_data.getLastBuild().getResult().toString()
 	}
@@ -27,39 +27,30 @@ pipeline {
           VERSION = props['VERSION']
           PROJET = props['PROJET']
           DESTDIR = props['DESTDIR']
-		  jobStatus = getJobStatus("/pltf/ffmpeg")
-		  echo jobStatus
-		  if(jobStatus == "SUCCESS" ){
-			any_success = true
-			break
-		  }
-		  else
-		  {
-			build "/pltf/ffmpeg"
-		  }
-		  
-		  jobStatus = getJobStatus("/pltf/libbfcp")
-		  echo jobStatus
-		  if(jobStatus == "SUCCESS" ){
-			any_success = true
-			break
-		  }
-		  else
-		  {
-			  build "/pltf/libbfcp"
-		  }
-		  
-		  jobStatus = getJobStatus("/pltf/mp4v2")
-		  echo jobStatus
-		  if(jobStatus == "SUCCESS" ){
-			any_success = true
-			break
-		  }
-		  else
-		  {
-			 build "/pltf/mp4v2"
-		  }
-        }
+
+			  jobStatus = getJobStatus("/pltf/ffmpeg")
+				echo "getting latest build from ffmpeg:"
+				echo jobStatus
+			  if(jobStatus == "SUCCESS" )
+				{
+					build "/pltf/ffmpeg"
+			  }
+
+			  jobStatus = getJobStatus("/pltf/libbfcp")
+				echo "getting latest build from libbfcp:"
+				echo jobStatus
+			  if(jobStatus != "SUCCESS" )
+				{
+				  build "/pltf/libbfcp"
+			  }
+
+			  jobStatus = getJobStatus("/pltf/mp4v2")
+				echo "getting latest build from mp4v2:"
+				echo jobStatus
+			  if(jobStatus != "SUCCESS" )
+			  {
+				 build "/pltf/mp4v2"
+			  }
 
         sh "svn export https://svn.ives.fr/svn-libs-dev/gnupg"
         sh """
@@ -93,10 +84,10 @@ pipeline {
 
         sh "rpmbuild -bb rpmbuild/SPECS/${PROJET}.spec"
 		sh "mv $WORKSPACE/rpmbuild/RPMS/x86_64/*.rpm $WORKSPACE/."
-       
+
       }
     }
-  
+
   stage('Sign') {
     when {
       buildingTag()

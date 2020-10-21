@@ -8,7 +8,7 @@ import hudson.tasks.test.AbstractTestResultAction
 import groovy.json.JsonSlurper
 
 def getJobStatus(String jobName){
-    def request = httpRequest authentication: 'credentialsID', url: "http://jenkins2.dev.ives.fr:8082/job/pltf/job/${jobName}/lastBuild/api/json"
+    def request = httpRequest authentication: 'jenkins', url: "http://jenkins2.dev.ives.fr:8082/job/pltf/job/${jobName}/lastBuild/api/json"
     def requestJson = new JsonSlurper().parseText(request.getContent())
     return requestJson['result']
 }

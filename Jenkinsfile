@@ -11,7 +11,7 @@ def getJobStatus(String jobName){
 	def job_data = Jenkins.instance.getItemByFullName(jobName)
     if (job_data.getLastBuild()) 
 	{
-		return job_data.getLastBuild().getResult()
+		return job_data.getLastBuild().getResult().toString()
 	}
 }
 

@@ -9,8 +9,10 @@ import groovy.json.JsonSlurper
 
 def getJobStatus(String jobName){
 	def job_data = Jenkins.instance.getItemByFullName(jobName)
-    if (job_data.getLastBuild()) {
+    if (job_data.getLastBuild()) 
+	{
 		return job_data.getLastBuild().getResult()
+	}
 }
 
 pipeline {

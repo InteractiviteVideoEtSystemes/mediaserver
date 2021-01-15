@@ -57,7 +57,7 @@ int Logo::Load(const char* fileName)
 	AVFrame *logoRGB = NULL;
 	AVFrame* logo = NULL;
 	SwsContext *sws = NULL;
-	AVPacket packet;
+	AVPacket * packet = av_packet_alloc();
 	int res = 0;
 	int gotLogo = 0;
 	int numpixels = 0;
@@ -107,7 +107,7 @@ int Logo::Load(const char* fileName)
 	}
 
 	//Read logo frame
-	if (av_read_frame(fctx, &packet)<0)
+	if (av_read_frame(fctx, packet)<0)
 	{
 		//Set errror
 		res = Error("Couldn't read frame from the image file...\n");
@@ -125,15 +125,15 @@ int Logo::Load(const char* fileName)
 	}
 	ctx->thread_count = 1;
 	//Decode logo
-	if (avcodec_decode_video2(ctx, logoRGB, &gotLogo, &packet)<0)
+	if (avcodec_decode_video2(ctx, logoRGB, &gotLogo, packet)<0)
 	{
 		//Set errror
 		res = Error("Couldn't decode logo\n");
-		 av_free_packet(&packet);
+		av_packet_unref(packet);
 		//Free resources
 		goto end;
 	}
-	av_free_packet(&packet);
+	av_packet_unref(packet);
 	//If it we don't have a logo
 	if (!gotLogo)
 	{

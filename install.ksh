@@ -227,13 +227,6 @@ function compile_webrtc_ives
                 make out/Release/obj.target/webrtc/common_audio/libvad.a
 	fi
 
-	if [ ! -r out/Release/obj.host/third_party/protobuf/protoc ]
-	then
-		make out/Release/obj.target/third_party/protobuf/libprotobuf_lite.a
-		make out/Release/obj.target/third_party/protobuf/libprotobuf_full_do_not_use.a
-		make out/Release/obj.target/third_party/protobuf/protoc
-
-        fi
 	cd $MEDIASERVERPATH
 }
 
@@ -253,19 +246,13 @@ function compile_webrtc
 
         if [ ! -r out/Release/obj.target/webrtc/common_audio/libsignal_processing.a ]
         then
+		echo "Compiling VAD and signal processing from webrtc"
                 make out/Release/obj.target/webrtc/common_audio/libsignal_processing.a
 		git reset --hard
                 make out/Release/obj.target/webrtc/common_audio/libsignal_processing.a
                 make out/Release/obj.target/webrtc/common_audio/libvad.a
 	fi
 
-	if [ ! -r out/Release/obj.host/third_party/protobuf/protoc ]
-	then
-		make out/Release/obj.target/third_party/protobuf/libprotobuf_lite.a
-		make out/Release/obj.target/third_party/protobuf/libprotobuf_full_do_not_use.a
-		make out/Release/obj.target/third_party/protobuf/protoc
-
-        fi
 	cd $MEDIASERVERPATH
 }
 
@@ -401,10 +388,6 @@ function local_compile
 		if [ ! -f srtp ]
 		then
 			 git clone https://github.com/InteractiviteVideoEtSystemes/patchedLibSRTP.git srtp
-			 #svn export http://svn.ives.fr/svn-libs-dev/srtp/trunk srtp
-			 #wget http://srtp.sourceforge.net/srtp-1.4.2.tgz
-			 #tar xzf srtp-1.4.2.tgz
-			 #mv srtp-1.4.2 srtp
 		fi
 		cd srtp
 		chmod 755 configure
@@ -444,21 +427,21 @@ function local_compile
 		fi
 		cd libg722_1
 		./configure --prefix=$BASESRCDIR/staticdeps --exec-prefix=$BASESRCDIR/staticdeps --enable-shared=no
+		make clean
 		make
 		make install
 		cd $BASESRCDIR
 	fi
 	
-    echo "Compiling VP8 codec"
 	if [ ! -r staticdeps/lib/libvpx.a ]
 	then
+    		echo "Compiling VP8 codec"
 		#cd $HOME/webrtc/trunk/third_party/libvpx/source/libvpx
 		cd $HOME
-		wget http://storage.googleapis.com/downloads.webmproject.org/releases/webm/libvpx-1.5.0.tar.bz2
-		bzip2 -d libvpx-1.5.0.tar.bz2
-		tar xf libvpx-1.5.0.tar
-		mv libvpx-1.5.0 libvpx
+		rm -f libvpx
+		git clone https://chromium.googlesource.com/webm/libvpx
 		cd libvpx
+		git checkout 1.7.0
 		chmod 750 configure
 		./configure --disable-shared --enable-static --prefix=$BASESRCDIR/staticdeps  --enable-vp8 --enable-error-concealment  --disable-multithread 
 		make

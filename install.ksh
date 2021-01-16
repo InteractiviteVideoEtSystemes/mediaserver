@@ -35,11 +35,11 @@ function create_rpm
     echo "%_gpg_name IVeSkey" >> ~/.rpmmacros
     echo "%_gpg_path" $PWD"/gnupg" >> ~/.rpmmacros
     echo "%vendor IVeS" >> ~/.rpmmacros
-	if [[ -z $2 || $2 -ne nosign ]]
+    if [[ -z $2 || $2 -ne nosign ]]
 	then
 		#Import de la clef gpg IVeS
 		svn export https://svn.ives.fr/svn-libs-dev/gnupg
-	fi
+    fi
     mkdir -p rpmbuild
     mkdir -p rpmbuild/SOURCES
     mkdir -p rpmbuild/SPECS
@@ -56,8 +56,10 @@ function create_rpm
     cd ./rpmbuild/SPECS/
     cp ../../mcumediaserver.spec .
     cd ../../
+    rm -rf $HOME/xmlrpc-c
+    rm -f staticdeps/lib/libxmlrpc*.a
 	
-	if [[ -z $2 || $2 -ne nosign ]]
+    if [[ -z $2 || $2 -ne nosign ]]
 	then
 	rpmbuild -bb --sign $PWD/rpmbuild/SPECS/mcumediaserver.spec
 	else
@@ -88,9 +90,6 @@ function clean
 	cd mcu 
 	make -f Makefile.rpm clean
 	cd -
-	rm -rf $HOME/xmlrpc-c
-	rm -f staticdeps/lib/libxmlrpc*.a
-
 }
 
 function compile_webrtc_from_google
@@ -496,6 +495,8 @@ case $1 in
 
 	"upload")
 		upload_rpm ;;
+	"prereq")
+		sudo yum install -y gsm-devel ;;
   	*)
   		echo "usage: install.ksh [options]" 
   		echo "options :"

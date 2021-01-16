@@ -29,7 +29,6 @@ make -f Makefile.rpm clean
 %prep
 cd %_topdir
 cd ..
-./install.ksh clean
 ./install.ksh webrtc
 
 %build

@@ -33,6 +33,7 @@ UploadHandler::UploadHandler(Listener *listener)
 int UploadHandler::ProcessRequest(TRequestInfo *req,TSession * const ses)
 {
 	char filename[1024];
+	int fd = -1;
 	int code = 404;
 	char* buffer = NULL;
 	DWORD size = 0;
@@ -119,7 +120,7 @@ int UploadHandler::ProcessRequest(TRequestInfo *req,TSession * const ses)
 		Headers headers;
 
 		//Not in file
-		int fd = -1;
+		fd = -1;
 
 		//Check next line
 		if (!parser.ParseLine())
@@ -154,11 +155,23 @@ int UploadHandler::ProcessRequest(TRequestInfo *req,TSession * const ses)
 			if (bodyType && bodyDisposition && bodyDisposition->HasParameter("filename"))
 			{
 				//Create filename
-				snprintf(filename,1024,"%s%s",tmpnam(NULL),basename(bodyDisposition->GetParameter("filename").c_str()));
+				snprintf(filename,1024,"/tmp/%s-XXXXXX", 
+                                         basename(bodyDisposition->GetParameter("filename").c_str()));
+				// Open
+				fd = mkostemp(filename, O_CREAT|O_WRONLY|O_TRUNC);
+				//fd = open(filename,O_CREAT|O_WRONLY|O_TRUNC, 0664);
 				//Log
-				Log("-Got content %s/%s saving to %s\n",bodyType->GetType().c_str(),bodyType->GetSubType().c_str(),filename);
-				//Open
-				fd = open(filename,O_CREAT|O_WRONLY|O_TRUNC, 0664);
+				if (fd > 0) 
+				{
+				    Log("-Got content %s/%s saving to %s\n",
+					bodyType->GetType().c_str(),
+					bodyType->GetSubType().c_str(),filename);
+				}
+				else
+				{
+				    Error("Got content but failed to create a temp file to save it. errno=%d.", errno);
+				    goto error;
+				}
 			}
 		}
 		
@@ -182,6 +195,8 @@ int UploadHandler::ProcessRequest(TRequestInfo *req,TSession * const ses)
 		{
 			//Close
 			close(fd);
+			chmod(filename, 0664);
+
 			//Check listener
 			if (listener)
 			{
@@ -212,14 +227,16 @@ int UploadHandler::ProcessRequest(TRequestInfo *req,TSession * const ses)
 	return 1;
 error:
 	//check
-	if (contentType)
-		//Delete
-		delete(contentType);
+	if (contentType) delete(contentType);
 
 	//LIberamos el buffer
-	if (buffer)
-		free(buffer);
+	if (buffer) free(buffer);
 
+	if (fd > 0)
+	{
+		close(fd);
+		if (filename[0]) unlink(filename);
+	}
 	//Send Error
 	return XmlRpcServer::SendError(ses,500,"Error processing request");
 }

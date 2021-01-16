@@ -25,9 +25,11 @@ echo Clean du repertoire $RPM_BUILD_ROOT
 cd %_topdir
 cd ../mcu
 make -f Makefile.rpm clean
+
 %prep
 cd %_topdir
 cd ..
+./install.ksh clean
 ./install.ksh webrtc
 
 %build

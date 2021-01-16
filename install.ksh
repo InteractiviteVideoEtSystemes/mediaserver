@@ -19,37 +19,6 @@ DESTDIR_BIN=/usr/bin/
 #Repertoire temporaire utiliser pour preparer les packages
 TEMPDIR=/tmp
 
-#Preparation du fichier spec de packaging rpm
-function prepare_spec
-{
-    #Architecture
-    SRVARCH=`uname -i`
-    #Check Fedora
-    rpm -q fedora-release > /dev/null
-    fcres=$?
-    #Check CentOS
-    rpm -q centos-release > /dev/null
-    cosres=$?
-    #Fedora Core Version
-    if [ ${fcres} -eq 0 ]
-       then
-       FCV=`rpm -q fedora-release | sed s/fedora-release-// | sed s/-.*//`
-       sed s/ives_distrib/ives.fc${FCV}/g ${PROJET}.spec.ives > ${PROJET}.spec.tmp
-       sed s/ives_archi/${SRVARCH}/g ${PROJET}.spec.tmp > ${PROJET}.spec
-       rm ${PROJET}.spec.tmp
-    #CentOS Version
-    elif [ ${cosres} -eq 0 ]
-       then
-       COSV=`rpm -q centos-release | sed s/centos-release-// | sed s/-.*//`
-       sed s/ives_distrib/ives.el${COSV}/g ${PROJET}.spec.ives > ${PROJET}.spec.tmp
-       sed s/ives_archi/${SRVARCH}/g ${PROJET}.spec.tmp > ${PROJET}.spec
-       rm ${PROJET}.spec.tmp
-    else
-       echo "Erreur: On n'a pas trouv.e distribution Fedora, ou CentOS !"
-       exit
-    fi
-}
-
 #Copie des fichiers composants le rpm dans un repertoire temporaire
 # Le premier parametre donne le repertoire destination
 function copy_rpmInstall
@@ -137,7 +106,8 @@ function clean
 	cd mcu 
 	make -f Makefile.rpm clean
 	cd -
-
+	rm -rf $HOME/xmlrpc-c
+	rm -f staticdeps/lib/libxmlrpc*.a
 
 }
 

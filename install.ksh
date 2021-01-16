@@ -19,24 +19,6 @@ DESTDIR_BIN=/usr/bin/
 #Repertoire temporaire utiliser pour preparer les packages
 TEMPDIR=/tmp
 
-#Copie des fichiers composants le rpm dans un repertoire temporaire
-# Le premier parametre donne le repertoire destination
-function copy_rpmInstall
-{
-    if [ ! -d $1 ]
-      then 
-        echo "[ERROR] Veuillez passer en parametre a install.ksh le repertoire temporaire de destination"
-        return
-    fi
-    if [ ! -d ./$PROJET ]
-      then
-        echo "[ERROR] Repertoire projet inexistant. Verifier le checkout dans " $PWD
-        return
-    fi
-  
-    echo "Fin de la copie des fichiers dans " $1
-}
-
 #Creation de l'environnement de packaging rpm
 function create_rpm
 {
@@ -45,8 +27,8 @@ function create_rpm
     rm ~/.rpmmacros
     touch ~/.rpmmacros
 	
-	echo "%name" $PROJET >> ~/.rpmmacros
-	echo "%version" $VERSION >> ~/.rpmmacros
+    echo "%name" $PROJET >> ~/.rpmmacros
+    echo "%version" $VERSION >> ~/.rpmmacros
     echo "%_topdir" $PWD"/rpmbuild" >> ~/.rpmmacros
     echo "%_tmppath %{_topdir}/TMP" >> ~/.rpmmacros
     echo "%_signature gpg" >> ~/.rpmmacros

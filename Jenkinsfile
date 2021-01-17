@@ -50,7 +50,7 @@ pipeline {
               steps {
 		sh """
 		svn export https://svn.ives.fr/svn-libs-dev/gnupg
-		echo \"${params.PASSPHRASE}\" | rpm --resign ${PROJET}*.rpm"
+		echo \"${params.PASSPHRASE}\" | rpm --resign ${PROJET}*.rpm
           	rm -rf ./gnupg
 		"""
               }

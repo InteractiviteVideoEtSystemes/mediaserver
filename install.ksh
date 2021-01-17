@@ -261,7 +261,7 @@ function local_compile
 
 			tar xzf OpenSSL_1_1_1d.tar.gz
 			mv openssl-OpenSSL_1_1_1d openssl
-			cd $HOME/openssl
+			rm -f OpenSSL_1_1_1d.tar.gz
 		fi
 		cd $HOME/openssl
 		./config --prefix=$BASESRCDIR/staticdeps --openssldir=$BASESRCDIR/staticdeps shared zlib
@@ -358,6 +358,7 @@ function local_compile
 		then
 			wget http://downloads.xiph.org/releases/opus/opus-1.1.tar.gz
 			tar xzf opus-1.1.tar.gz
+			rm -f  opus-1.1.tar.gz  opus-1.1.tar
 		fi
 		cd opus-1.1
 		./configure --prefix=$BASESRCDIR/staticdeps --exec-prefix=$BASESRCDIR/staticdeps --enable-shared=no

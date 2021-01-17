@@ -72,7 +72,7 @@ pipeline {
                    buildingTag()
                }
                steps {
-                   archiveArtifacts(artifacts: '${PROJET}*.rpm,vrn.html', onlyIfSuccessful: true)
+                   archiveArtifacts(artifacts: '*.rpm,vrn.html', onlyIfSuccessful: true)
                }
            }
         } // stages 

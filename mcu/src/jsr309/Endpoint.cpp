@@ -14,7 +14,7 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 
-Endpoint::Endpoint(std::wstring name,bool audioSupported,bool videoSupported,bool textSupported) : estimator(name)
+Endpoint::Endpoint(std::wstring name,bool audioSupported,bool videoSupported,bool textSupported) : eventSource(name)
 {
 	//Store name
 	this->name = name;
@@ -32,13 +32,15 @@ Endpoint::Endpoint(std::wstring name,bool audioSupported,bool videoSupported,boo
 	{
 		//Create endpoint
 		ports[MediaFrame::Video] = new RTPEndpoint(MediaFrame::Video);
-		ports2[MediaFrame::Video] = new RTPEndpoint(MediaFrame::Video);
+		ports2[MediaFrame::Video] = new RTPEndpoint(MediaFrame::Video, MediaFrame::VIDEO_SLIDES);
 	}
 	//If video
 	if (textSupported)
 	{
 		ports[MediaFrame::Text] = new RTPEndpoint(MediaFrame::Text);
 	}
+	estimator.SetEventSource(&eventSource);
+	estimator2.SetEventSource(&eventSource);
 }
 
 Endpoint::~Endpoint()
@@ -71,7 +73,7 @@ int Endpoint::Init()
 		if ( i == MediaFrame::Video && ports2[i]->GetTransport() == MediaFrame::RTP) 
 		{
 		    RTPEndpoint * rtp = (RTPEndpoint *) ports2[i];
-		    rtp->SetRemoteRateEstimator(&estimator);
+		    rtp->SetRemoteRateEstimator(&estimator2);
 		}
 	    }
 	}

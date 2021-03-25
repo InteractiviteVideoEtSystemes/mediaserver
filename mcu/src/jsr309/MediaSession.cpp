@@ -434,14 +434,14 @@ int MediaSession::EndpointCreate(std::wstring name,bool audioSupported,bool vide
 	if (audioSupported)
 	{
 		eventContextId = maxEventContextId++;
-		eventContexts[eventContextId]= new JSR309EventContext( endpointId,MediaFrame::Video, MediaFrame::VIDEO_MAIN);
-		endpoint->SetEventContextId(MediaFrame::Video, MediaFrame::VIDEO_MAIN, eventContextId);
+		eventContexts[eventContextId]= new JSR309EventContext( endpointId,MediaFrame::Audio, MediaFrame::VIDEO_MAIN);
+		endpoint->SetEventContextId(MediaFrame::Audio, MediaFrame::VIDEO_MAIN, eventContextId);
 	}
 	if (videoSupported)
 	{
 		eventContextId = maxEventContextId++;
-		eventContexts[eventContextId]= new JSR309EventContext( endpointId,MediaFrame::Audio, MediaFrame::VIDEO_MAIN);
-		endpoint->SetEventContextId(MediaFrame::Audio, MediaFrame::VIDEO_MAIN, eventContextId);
+		eventContexts[eventContextId]= new JSR309EventContext( endpointId,MediaFrame::Video, MediaFrame::VIDEO_MAIN);
+		endpoint->SetEventContextId(MediaFrame::Video, MediaFrame::VIDEO_MAIN, eventContextId);
 	}
 	if(textSupport)
 	{

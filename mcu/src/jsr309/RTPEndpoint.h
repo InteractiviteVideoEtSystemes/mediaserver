@@ -21,7 +21,7 @@ class RTPEndpoint :
 	public RTPSession::Listener
 {
 public:
-	RTPEndpoint(MediaFrame::Type type);
+	RTPEndpoint(MediaFrame::Type type, MediaFrame::MediaRole role = MediaFrame::VIDEO_MAIN);
 	virtual ~RTPEndpoint();
 
 	virtual int Init();

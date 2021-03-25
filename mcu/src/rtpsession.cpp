@@ -335,12 +335,14 @@ int RTPSession::SetLocalCryptoSDES(const char* suite, const char* key64)
 
 int RTPSession::SetProperties(const Properties& properties)
 {
-	//Clean extension map
+	mutex.lock();
+	//Clean txtension map
 	extMap.clear();
 	//For each property
 	for (Properties::const_iterator it=properties.begin();it!=properties.end();++it)
 	{
-		Log("Setting RTP property [%s:%s]\n",it->first.c_str(),it->second.c_str());
+		Log("Setting RTP property [%s:%s] on %s %s stream %p\n",it->first.c_str(),it->second.c_str(),
+		    MediaFrame::RoleToString(role), MediaFrame::TypeToString(media),this);
 		
 		//Check
 		if (it->first.compare("rtcp-mux")==0)
@@ -351,7 +353,7 @@ int RTPSession::SetProperties(const Properties& properties)
 		else if (it->first.compare("tmmbr")==0)
 		{
 			sendBitrateFeedback = atoi(it->second.c_str());
-			if ( sendBitrateFeedback ) Log("Activated bitrate feedback.\n");
+			if ( sendBitrateFeedback ) Log("Activated bitrate feedback on %s stream %p.\n", MediaFrame::TypeToString(media), this);
 		}
 		else if (it->first.compare("ssrc")==0) {
 			//Set ssrc for sending
@@ -404,7 +406,7 @@ int RTPSession::SetProperties(const Properties& properties)
 			Error("Unknown RTP property [%s]\n",it->first.c_str());
 		}
 	}
-	
+	mutex.unlock();	
 	return 1;
 }
 
@@ -713,7 +715,7 @@ int RTPSession::Init()
 {
 	int retries = 0;
 	simPort=0;	
-	Log(">Init RTPSession\n");
+	Log(">Init RTPSession %p for media %s and role %s\n", this, MediaFrame::TypeToString(media), MediaFrame::RoleToString(role));
 
 	sockaddr_in recAddr;
 
@@ -1218,7 +1220,7 @@ int RTPSession::ReadRTCP()
 	//Check packet
 	if (rtcp)
 		//Handle incomming rtcp packets
-		ProcessRTCPPacket(rtcp);
+		ProcessRTCPPacket(rtcp, inet_ntoa(from_addr.sin_addr));
 	
 	//OK
 	return 1;
@@ -1432,7 +1434,7 @@ int RTPSession::ReadRTP()
 		//Check packet
 		if (rtcp)
 			//Handle incomming rtcp packets
-			ProcessRTCPPacket(rtcp);
+			ProcessRTCPPacket(rtcp,inet_ntoa(from_addr.sin_addr));
 		
 		//Skip
 		return 1;
@@ -1660,7 +1662,7 @@ int RTPSession::ReadRTP()
 
             if ( stream != NULL )
             {
-                stream->Add(packet);
+                stream->Add(packet, size);
             }
         }
         else /* RTP retransmission enabled. We do not handle multi stream in that case */
@@ -1676,7 +1678,7 @@ int RTPSession::ReadRTP()
                 SetDefaultStream(true, ssrc);
                 streamUse.IncUse();
             }
-            defaultStream->Add(packet);
+            defaultStream->Add(packet,size);
         }
         streamUse.DecUse();
 	//OK
@@ -1833,7 +1835,7 @@ void RTPSession::ResetPacket(DWORD & ssrc, bool clear)
     if (s) s->Reset(clear);
     streamUse.DecUse();
 }
-void RTPSession::ProcessRTCPPacket(RTCPCompoundPacket *rtcp)
+void RTPSession::ProcessRTCPPacket(RTCPCompoundPacket *rtcp, const char * fromAddr)
 {
 	//For each packet
 	for (int i = 0; i<rtcp->GetPacketCount();i++)
@@ -1924,7 +1926,7 @@ void RTPSession::ProcessRTCPPacket(RTCPCompoundPacket *rtcp)
 						}
 						break;
 					case RTCPRTPFeedback::TempMaxMediaStreamBitrateRequest:
-						Log("-TempMaxMediaStreamBitrateRequest received\n");
+						Log("-TempMaxMediaStreamBitrateRequest received from [%s] on %s stream\n", fromAddr, MediaFrame::TypeToString(media));
 						for (BYTE i=0;i<fb->GetFieldCount();i++)
 						{
 							//Get field
@@ -1936,7 +1938,7 @@ void RTPSession::ProcessRTCPPacket(RTCPCompoundPacket *rtcp)
 						}
 						break;
 					case RTCPRTPFeedback::TempMaxMediaStreamBitrateNotification:
-						Debug("-TempMaxMediaStreamBitrateNotification received\n");
+						Debug("-TempMaxMediaStreamBitrateNotification received from [%s] on %s stream\n", fromAddr, MediaFrame::TypeToString(media));
 						pendingTMBR = false;
 						if (requestFPU)
 						{
@@ -2109,7 +2111,7 @@ void RTPSession::SetRTT(DWORD rtt)
 	if (remoteRateEstimator)
 	{
 		//Update estimator
-		remoteRateEstimator->UpdateRTT(recSSRC,rtt);
+		remoteRateEstimator->UpdateRTT(recSSRC,rtt,getTimeMS());
 	}
 
 	//Check RTT to enable NACK
@@ -2129,10 +2131,16 @@ void RTPSession::SetRTT(DWORD rtt)
 
 void RTPSession::onTargetBitrateRequested(DWORD bitrate)
 {
-    Debug("-RTPSession::onTargetBitrateRequested() %i\n",sendBitrateFeedback);
-    if (sendBitrateFeedback)
+    bool fb;
+
+    // Memory barrier
+    mutex.lock();
+    fb = sendBitrateFeedback;
+    mutex.unlock();
+    Debug("-RTPSession::onTargetBitrateRequested() %i, bitrate [%d] for %s stream %p.\n", fb, bitrate, MediaFrame::TypeToString(media), this);
+    if (fb)
     {
-	Debug("-RTPSession::onTargetBitrateRequested() | [%d]\n",bitrate);
+	Debug("-RTPSession::onTargetBitrateRequested() sending TMMBR\n",bitrate);
 	//Create rtcp sender retpor
 	RTCPCompoundPacket* rtcp = CreateSenderReport();
 	
@@ -2502,6 +2510,7 @@ int RTPSession::SendSenderReport()
 			remb->AddField(RTCPPayloadFeedback::ApplicationLayerFeeedbackField::CreateReceiverEstimatedMaxBitrate(ssrcs,estimation));
 			//Add to packet
 			rtcp->AddRTCPacket(remb);
+			Debug("SR: reporting estimated bandwidth of %d to %s", estimation,  inet_ntoa(sendRtcpAddr.sin_addr));
 		}
 	}
 	
@@ -2534,7 +2543,7 @@ void RTPSession::Listener::onNewStream( RTPSession *session, DWORD newSsrc, bool
 	}
 }
 
-bool RTPSession::RTPStream::Add(RTPTimedPacket *packet)
+bool RTPSession::RTPStream::Add(RTPTimedPacket *packet, DWORD size)
 {
 
 	//Get sec number
@@ -2558,13 +2567,13 @@ bool RTPSession::RTPStream::Add(RTPTimedPacket *packet)
 	//If remote estimator
 	if ( s->GetRemoteRateEstimator() )
 		//Update rate control
-		s->GetRemoteRateEstimator()->Update(recSSRC,packet);
+		s->GetRemoteRateEstimator()->Update(recSSRC,packet,getTimeMS());
 
 	//Increase stats
 	numRecvPackets++;
 	totalRecvPacketsSinceLastSR++;
-	totalRecvBytes += packet->GetSize();
-	totalRecvBytesSinceLastSR += packet->GetSize();
+	totalRecvBytes += size;
+	totalRecvBytesSinceLastSR += size;
         recCodec = packet->GetCodec();
 
 	//Get ext seq
@@ -2589,7 +2598,7 @@ bool RTPSession::RTPStream::Add(RTPTimedPacket *packet)
 			//If remote estimator
 			if ( s->GetRemoteRateEstimator() )
 				//Update estimator
-				s->GetRemoteRateEstimator()->UpdateLost(recSSRC,lost);
+				s->GetRemoteRateEstimator()->UpdateLost(recSSRC,lost, size);
 
 			//If nack is enable t waiting for a PLI/FIR response (to not oeverflow)
 			if (s->IsNACKEnabled() && !s->IsRequestFPU())

@@ -11,11 +11,12 @@ RTPParticipant::RTPParticipant(DWORD partId,const std::wstring &tag) :
 	Participant(Participant::RTP,partId),
 	audio(this),
 	text(NULL),
-	estimator(tag)
+	eventSource(tag)
 {
 	Log("-RTPParticipant [id:%d,tag:%ls]\n",partId,tag.c_str());
 	video[0]	=	new VideoStream(this,logo);
 	video[1]	=	new VideoStream(this,logo,MediaFrame::VIDEO_SLIDES);
+	estimator.SetEventSource(&eventSource);
 }
 
 RTPParticipant::~RTPParticipant()

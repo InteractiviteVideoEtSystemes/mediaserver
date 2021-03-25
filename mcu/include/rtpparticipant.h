@@ -14,7 +14,7 @@
 #include "audiostream.h"
 #include "textstream.h"
 #include "mp4recorder.h"
-
+#include "eventstreaminghandler.h"
 
 #define MAX_VIDEO_STREAM 2
 
@@ -78,6 +78,7 @@ private:
 	AudioStream		audio;
 	TextStream		text;
 	RemoteRateEstimator estimator;
+	EvenSource		eventSource;
 
 	AudioInput*	audioInput;
 	AudioOutput*	audioOutput;

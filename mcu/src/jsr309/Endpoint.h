@@ -167,6 +167,8 @@ private:
 	Port * ports2[4];
 	
 	RemoteRateEstimator estimator;
+	RemoteRateEstimator estimator2;
+	EvenSource eventSource;
         Statistics stats;
 };
 

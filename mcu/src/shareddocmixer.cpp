@@ -449,7 +449,7 @@ int SharedDocMixer::getAvailablePort()
 			//Try to bind to port
 			recAddr.sin_port = htons(port);
 			
-			if(bind(simSocket,(struct sockaddr *)&recAddr,sizeof(struct sockaddr_in))!=0)
+			if(::bind(simSocket,(struct sockaddr *)&recAddr,sizeof(struct sockaddr_in))!=0)
 					//Try again
 					continue;
 			else

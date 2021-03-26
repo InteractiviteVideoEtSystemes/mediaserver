@@ -87,6 +87,11 @@ public:
 		return instant;
 	}
 
+        DWORD IsEmpty() const
+        {
+                return values.empty();
+        }
+
 private:
 	typedef std::pair<QWORD,DWORD>  Value;
 	typedef std::list<Value>	Values;

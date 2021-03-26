@@ -170,6 +170,9 @@ public:
 		//End parameter list
 		va_end(params);
 	}
+
+	const char * GetName() { return source ? source : ""; }
+
 private:
 	char* source;
 };

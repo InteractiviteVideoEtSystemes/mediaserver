@@ -9,7 +9,6 @@
 #define	REMOTERATECONTROL_H
 
 #include "config.h"
-#include "rtp.h"
 #include "acumulator.h"
 #include "eventstreaminghandler.h"
 
@@ -62,7 +61,7 @@ public:
 	}
 public:
 	RemoteRateControl();
-	void Update(RTPTimedPacket* packet);
+	void Update(QWORD time,QWORD ts,DWORD size, bool mark);
 	bool UpdateRTT(DWORD rtt);
 	bool UpdateLost(DWORD num);
 	void SetRateControlRegion(Region region);
@@ -71,21 +70,24 @@ public:
 	void SetEventSource(EvenSource *eventSource) {	this->eventSource = eventSource; }
 
 private:
-	void UpdateKalman(QWORD now,int deltaTime, int deltaTS, int deltaSize);
+	void UpdateKalman(int deltaTime, int deltaSize);
 private:
 	EvenSource *eventSource;
 	Acumulator bitrateCalc;
 	Acumulator fpsCalc;
 	Acumulator packetCalc;
+	Acumulator lostCalc;
 	DWORD rtt;
 	DWORD absSendTimeCycles;
-	DWORD prevTS;
+	QWORD prevTS;
 	QWORD prevTime;
 	DWORD prevSize;
-	DWORD curTS;
+	QWORD curTS;
 	QWORD curTime;
 	DWORD curSize;
 	DWORD prevTarget;
+	int64_t curDelta;
+	int64_t prevDelta;
 	double slope;
 	double offset;
 	double E[2][2];

@@ -4,6 +4,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <mutex>
 #include <map>
 #include <string>
 #include <poll.h>
@@ -169,7 +170,7 @@ private:
 	void Stop();
 	int  ReadRTP();
 	int  ReadRTCP();
-	void ProcessRTCPPacket(RTCPCompoundPacket *packet);
+	void ProcessRTCPPacket(RTCPCompoundPacket *packet, const char * fromAddr);
 	void ReSendPacket(int seq);
 	
 	int SetRemoteCryptoSDES(const char* suite, const BYTE* key, const DWORD len, int keyRank=0);
@@ -202,7 +203,7 @@ protected:
 			jitter = 0;
 			disabled = false;		
 		}
-		bool	Add(RTPTimedPacket *rtp);
+		bool	Add(RTPTimedPacket *rtp, DWORD size);
 		DWORD 	GetRecSSRC(){return recSSRC;};
 		void	SetRecSSRC(DWORD ssrc) {recSSRC = ssrc;}; 
 		
@@ -299,7 +300,7 @@ private:
 	char*	iceLocalUsername;
 	char*	iceLocalPwd;
 	pthread_t thread;
-	pthread_mutex_t mutex;	
+	std::mutex mutex;	
 
 	//Tipos
 	int 	sendType;

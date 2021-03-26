@@ -74,6 +74,11 @@ echo "Now restarting mediaserver"
 /etc/init.d/mediaserver restart
 
 %changelog
+* Fri Mar 26 2021 Emmanuel BUU
+- updated remote bitrate estimation.
+- corrected JSR 309 Endpoint to use remote bitrate regulation properly
+- version 1.8.3
+
 * Fri Sep 29 2017 Jeremy Huart <jeremy.huart@ives.fr>
 - Fixed quantization flash by adding CFR_VBV encoding mode
 * Tue Feb 03 2016 Thomas Carvello <thomas.carvello@ives.fr>

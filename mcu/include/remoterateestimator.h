@@ -8,9 +8,9 @@
 #ifndef REMOTERATEESTIMATOR_H
 #define	REMOTERATEESTIMATOR_H
 
-#include "remoteratecontrol.h"
 #include "use.h"
-
+#include "remoteratecontrol.h"
+#include "rtp.h"
 
 class RemoteRateEstimator
 {
@@ -45,22 +45,24 @@ public:
 		return "Unknown";
 	}
 public:
-	RemoteRateEstimator(const std::wstring& tag);
+	RemoteRateEstimator();
 	~RemoteRateEstimator();
 	void SetListener(Listener *listener);
 	void AddStream(DWORD ssrc);
 	void RemoveStream(DWORD ssrc);
-	void UpdateRTT(DWORD ssrc,DWORD rtt);
-	void UpdateLost(DWORD ssrc,DWORD lost);
-	void Update(DWORD ssrc,RTPTimedPacket* packet);
+	void UpdateRTT(DWORD ssrc,DWORD rtt, QWORD now);
+	void UpdateLost(DWORD ssrc,DWORD lost, QWORD now);
+	void Update(DWORD ssrc, RTPTimedPacket* packet, DWORD size);
+	void Update(DWORD ssrc,QWORD now,QWORD ts,DWORD size, bool mark);
 	DWORD GetEstimatedBitrate();
 	void GetSSRCs(std::list<DWORD> &ssrcs);
 	void SetTemporalMaxLimit(DWORD limit);
 	void SetTemporalMinLimit(DWORD limit);
+	void SetEventSource(EvenSource *eventSource) {	this->eventSource = eventSource; }
 private:
-	double RateIncreaseFactor(QWORD nowMs, QWORD lastMs, DWORD reactionTimeMs) const;
-	void Update(RemoteRateControl::BandwidthUsage usage,bool reactNow);
-	void UpdateChangePeriod(QWORD nowMs);
+	double RateIncreaseFactor(QWORD now, QWORD last, DWORD reactionTime) const;
+	void Update(RemoteRateControl::BandwidthUsage usage,bool reactNow,QWORD now);
+	void UpdateChangePeriod(QWORD now);
 	void UpdateMaxBitRateEstimate(float incomingBitRateKbps);
 	void ChangeState(State newState);
 	void ChangeRegion(RemoteRateControl::Region newRegion);
@@ -68,7 +70,7 @@ private:
 	typedef std::map<DWORD,RemoteRateControl*> Streams;
 private:
 	Listener*	listener;
-	EvenSource	eventSource;
+	EvenSource*	eventSource;
 	Acumulator	bitrateAcu;
 	Streams		streams;
 	Use		lock;
@@ -83,9 +85,10 @@ private:
 	RemoteRateControl::Region region;
 	QWORD lastBitRateChange;
 	DWORD noiseVar;
-
+	QWORD curTS;
+	DWORD absSendTimeCycles;
 	float avgChangePeriod;
-	QWORD lastChangeMs;
+	QWORD lastChange;
 	float beta;
 	DWORD rtt;
 };

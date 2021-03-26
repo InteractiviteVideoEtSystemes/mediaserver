@@ -6,9 +6,11 @@
  */
 
 #include "remoteratecontrol.h"
-#include <math.h>
+#include <cstdlib>
+#include <cmath>
+#include "log.h"
 
-RemoteRateControl::RemoteRateControl() : bitrateCalc(100), fpsCalc(1000), packetCalc(100)
+RemoteRateControl::RemoteRateControl() : bitrateCalc(100), fpsCalc(1000), packetCalc(100), lostCalc(100)
 {
 	eventSource = NULL;
 	rtt = 0;
@@ -19,6 +21,8 @@ RemoteRateControl::RemoteRateControl() : bitrateCalc(100), fpsCalc(1000), packet
 	curTS = 0;
 	curTime = 0;
 	curSize = 0;
+	curDelta = 0;
+	prevDelta = 0;
 	slope = 8.0/512.0;
 	E[0][0] = 100;
 	E[0][1] = 0;
@@ -36,77 +40,55 @@ RemoteRateControl::RemoteRateControl() : bitrateCalc(100), fpsCalc(1000), packet
 	absSendTimeCycles = 0;
 }
 
-void RemoteRateControl::Update(RTPTimedPacket* packet)
+void RemoteRateControl::Update(QWORD time,QWORD ts,DWORD size, bool mark)
 {
-	//Get packet size and time
-	QWORD time = packet->GetTime();
-	DWORD size = packet->GetMediaLength();
 	//Update bitrate calculator
 	bitrateCalc.Update(time, size*8);
 	//Update packet count
 	packetCalc.Update(time, 1);
-	//Get rtp timestamp in ms
-	DWORD ts = packet->GetClockTimestamp();
-
-	/* DO NOT USE IT YET
-	if (packet->HasAbsSentTime())
-	{
-		//Use absolote time instead of rtp time for knowing timestamp at origin
-		ts = packet->GetAbsSendTime()+64000*absSendTimeCycles;
-		//Check if it has been a wrapp arround, absSendTime has 64s wraps
-		if (ts+32000<curTS)
-		{
-			//Increase cycles
-			absSendTimeCycles++;
-			//Fix wrap for this one
-			ts += 64000;
-		}
-	}*/
+	
 //	Debug("ts:%u,time:%llu,%u\n",ts,time,size);
 	
-	//If it is a our of order packet from previous frame
-	if (ts < curTS)
+	//If it is an out of order packet from previous frame
+	if (curTS && ts < curTS)
 		//Exit
 		return;
-
-	//Check if it is from a new frame
-	if (ts > curTS)
-	{
-		//Add new frame
-		fpsCalc.Update(ts,1);
-	//	Debug("+curTime:%llu,prevTime:%llu,ts:%u,curTS:%u,prevTS:%u\n",curTime,prevTime,ts,curTS,prevTS);
-		//If not first one
-		if (prevTime)
-			//Update Kalman filter as per google algorithm from the previous frame
-			UpdateKalman(time,
-				static_cast<int64_t>(curTime) - static_cast<int64_t>(prevTime),
-				static_cast<int>(curTS)   - static_cast<int>(prevTS),
-				static_cast<int>(curSize) - static_cast<int>(prevSize)
-			);
-		//Move
-		prevTS = curTS;
-		prevTime = curTime;
-		prevSize = curSize;
-		curSize = 0;
-	}
+	
 	//Update size of current frame
 	curSize += size;
 	//And reception time
 	curTS	= ts;
 	curTime = time;
-	//Debug("-curTime:%llu,prevTime:%llu,ts:%u,curTS:%u,prevTS:%u\n",curTime,prevTime,ts,curTS,prevTS);
+	
+	//If not first packet
+	if (prevTime)
+		//Increase deltas
+		curDelta += (curTime - prevTime) - (curTS - prevTS);
+				
+	//Add new frame
+	if (mark) 
+	{
+		//New frame
+		fpsCalc.Update(time,1);
+		//Update Kalman filter as per google algorithm from the previous frame
+		UpdateKalman(curDelta - prevDelta, curSize - prevSize);
+		//reset frame stats
+		prevSize = curSize;
+		prevDelta = curDelta;
+		curSize = 0;
+		curDelta = 0;
+	} 
+	//Update current stats
+	prevTS = curTS;
+	prevTime = curTime;
 }
 
-void RemoteRateControl::UpdateKalman(QWORD now,int deltaTime, int deltaTS, int deltaSize)
+void RemoteRateControl::UpdateKalman(int deltaTime, int deltaSize)
 {
-	//Calculate time to timestamp delta
-	const int ttsdelta = deltaTime-deltaTS;
+	//Debug("RemoteRateControl::UpdateKalman() deltas [time:%d size:%d]\n",deltaTime, deltaSize);
 
 	//Get scaling factor
-	double scaleFactor = 1;
-
-	if (fpsCalc.GetAcumulated()>60)
-		scaleFactor = 30.0/fpsCalc.GetInstantAvg();
+	double scaleFactor = 30.0/fpsCalc.GetInstantAvg();
 
 	// Update the Kalman filter
 	E[0][0] += processNoise[0]*scaleFactor;
@@ -126,16 +108,16 @@ void RemoteRateControl::UpdateKalman(QWORD now,int deltaTime, int deltaTS, int d
 		E[1][0]*h[0] + E[1][1]*h[1]
 	};
 
-	const double residual = ttsdelta-slope*h[0]-offset;
+	const double residual = deltaTime-slope*h[0]-offset;
 
 	// Only update the noise estimate if we're not over-using and in stable state
-	if (hypothesis!=OverUsing && (fmin(fpsCalc.GetAcumulated(),60)*fabsf(offset)<threshold))
+	//if (hypothesis!=OverUsing && (fmin(fpsCalc.GetAcumulated(),30)*std::fabs(offset)<threshold))
 	{
 		double residualFiltered = residual;
 
 		// We try to filter out very late frames. For instance periodic key
 		// frames doesn't fit the Gaussian model well.
-		if (fabsf(residual)<3*sqrt(varNoise))
+		if (std::fabs(residual)<3*sqrt(varNoise))
 			residualFiltered = 3*sqrt(varNoise);
 
 		// Faster filter during startup to faster adapt to the jitter level
@@ -173,12 +155,12 @@ void RemoteRateControl::UpdateKalman(QWORD now,int deltaTime, int deltaTS, int d
 	prevOffset = offset;
 	offset = offset+K[1]*residual;
 
-	const double T = fmin(fpsCalc.GetAcumulated(),60)*offset;
+	const double T = !fpsCalc.IsEmpty() ? fmin(fpsCalc.GetInstantAvg(),30)*offset : offset;
 
-	//Debug("BWE: Update tdelta:%d,tsdelta:%d,fsdelta:%d,t:%f,threshold:%f,slope:%f,offset:%f,scale:%f,frames:%lld,fps:%llf,residual:%f\n",deltaTime,deltaTS,deltaSize,T,threshold,slope,offset,scaleFactor,fpsCalc.GetAcumulated(),fpsCalc.GetInstantAvg(),residual);
+	//Debug("BWE: Update tdelta:%d,tsdelta:%d,fsdelta:%d,t:%f,threshold:%f,slope:%f,offset:%f,scale:%f,frames:%lld,fps:%llf,residual:%f\n",deltaTime,deltaTS,deltaSize,T,threshold,slope,offset,scaleFactor,fpsCalc.GetInstantAvg(),fpsCalc.GetInstantAvg(),residual);
 
 	//Compare
-	if (fabsf(T)>threshold)
+	if (std::fabs(T)>threshold)
 	{
 		///Detect overuse
 		if (offset>0)
@@ -189,13 +171,13 @@ void RemoteRateControl::UpdateKalman(QWORD now,int deltaTime, int deltaTS, int d
 				//Check 
 				if (overUseCount>2)
 				{
-					Debug("BWE: Overusing bitrate:%.0llf max:%.0llf min:%.0llf T:%f,threshold:%f\n",bitrateCalc.GetInstantAvg(),bitrateCalc.GetMaxAvg(),bitrateCalc.GetMinAvg(),fabsf(T),threshold);
+					Debug("BWE: Overusing bitrate:%.0llf max:%.0llf min:%.0llf T:%f,threshold:%f\n",bitrateCalc.GetInstantAvg(),bitrateCalc.GetMaxAvg(),bitrateCalc.GetMinAvg(),std::fabs(T),threshold);
 					//Overusing
 					hypothesis = OverUsing;
 					//Reset counter
 					overUseCount=0;
 				} else {
-					Debug("BWE: Overusing bitrate:%.0llf max:%.0llf min:%.0llf T:%f,threshold:%f\n",overUseCount,bitrateCalc.GetInstantAvg(),bitrateCalc.GetMaxAvg(),bitrateCalc.GetMinAvg(),fabsf(T),threshold);
+					Debug("BWE: Overusing bitrate:%.0llf max:%.0llf min:%.0llf T:%f,threshold:%f\n",overUseCount,bitrateCalc.GetInstantAvg(),bitrateCalc.GetMaxAvg(),bitrateCalc.GetMinAvg(),std::fabs(T),threshold);
 					//increase counter
 					overUseCount++;
 				}
@@ -204,7 +186,7 @@ void RemoteRateControl::UpdateKalman(QWORD now,int deltaTime, int deltaTS, int d
 			//If we change state
 			if (hypothesis!=UnderUsing)
 			{
-				Debug("BWE:  UnderUsing bitrate:%.0llf max:%.0llf min:%.0llf T:%d\n",bitrateCalc.GetInstantAvg(),bitrateCalc.GetMaxAvg(),bitrateCalc.GetMinAvg(),fabsf(T));
+				Debug("BWE:  UnderUsing bitrate:%.0llf max:%.0llf min:%.0llf T:%d\n",bitrateCalc.GetInstantAvg(),bitrateCalc.GetMaxAvg(),bitrateCalc.GetMinAvg(),std::fabs(T));
 				//Reset bitrate
 				bitrateCalc.ResetMinMax();
 				//Under using, do nothing until going back to normal
@@ -248,7 +230,11 @@ bool RemoteRateControl::UpdateRTT(DWORD rtt)
 	//Debug
 	Debug("BWE: UpdateRTT rtt:%dms hipothesis:%s\n",rtt,GetName(hypothesis));
 
-	if (eventSource) eventSource->SendEvent("rrc.rtt","[%llu,\"%s\",\"%d\"]",getTimeMS(),GetName(hypothesis),rtt);
+	if (eventSource) 
+	{
+		eventSource->SendEvent("rrc.rtt","[%llu,\"%s\",\"%d\"]",getTimeMS(),GetName(hypothesis),rtt);
+		Debug("BWE: for stream %s\n", eventSource->GetName() );
+	}
 
 	//Return if we are overusing now
 	return hypothesis==OverUsing;
@@ -256,17 +242,36 @@ bool RemoteRateControl::UpdateRTT(DWORD rtt)
 
 bool RemoteRateControl::UpdateLost(DWORD num)
 {
-	//Check lost is more than 2.5%
-	if (packetCalc.GetInstantAvg()<num*40)
+	//Update lost count
+	lostCalc.Update(getTime(),num);
+	
+	//If we are in window
+	if (packetCalc.IsInWindow() && lostCalc.IsInWindow())
 	{
-		//Overusing
-		hypothesis = OverUsing;
-		//Reset counter
-		overUseCount=0;
+		//Get packets
+		long double packets = packetCalc.GetInstantAvg();
+		long double lost    = lostCalc.GetInstantAvg();
+		
+		//Check lost is more than 2.5%
+		if (lost*1000/(packets+lost)>25)
+		{
+			//Check 
+			if (overUseCount>2)
+			{
+				//Overusing
+				hypothesis = OverUsing;
+				//Reset counter
+				overUseCount=0;
+				//Reset lost counter
+				lostCalc.Reset(getTime());
+				//Debug
+				Debug("BWE: UpdateLostlost:%d hipothesis:%s,num:%d,packets:%f,lost:%f\n",num,GetName(hypothesis),num,packets,lost);
+			} else {
+				//increase counter
+				overUseCount++;
+			}
+		}
 	}
-
-	//Debug
-	Debug("BWE: UpdateLostlost:%d hipothesis:%s\n",num,GetName(hypothesis));
 
 	if (eventSource) eventSource->SendEvent("rrc.lost","[%llu,\"%s\",\"%d\"]",getTimeMS(),GetName(hypothesis),rtt);
 

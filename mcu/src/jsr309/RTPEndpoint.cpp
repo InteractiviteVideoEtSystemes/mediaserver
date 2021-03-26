@@ -12,7 +12,7 @@
 #include "rtpsession.h"
 #include "codecs.h"
 
-RTPEndpoint::RTPEndpoint(MediaFrame::Type type) : Port(type, MediaFrame::RTP), RTPSession(type,this)
+RTPEndpoint::RTPEndpoint(MediaFrame::Type type, MediaFrame::MediaRole role) : Port(type, MediaFrame::RTP), RTPSession(type,this,role)
 {
 	//Not reset
 	reseted = false;

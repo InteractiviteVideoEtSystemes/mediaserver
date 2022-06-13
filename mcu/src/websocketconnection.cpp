@@ -117,18 +117,7 @@ void WebSocketConnection::Close()
 
 int WebSocketConnection::End()
 {
-	//lock now
-	pthread_mutex_lock(&mutex);
 	
-	//Check we have been inited
-	if (wsl != NULL)
-	{
-		wsl->onClose(this);
-		wsl = NULL;
-	}
-	//unlock now
-	pthread_mutex_unlock(&mutex);
-		
 	if (!inited)
 		//Exit
 		return 0;

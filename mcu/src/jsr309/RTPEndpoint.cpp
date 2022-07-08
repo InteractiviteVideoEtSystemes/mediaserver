@@ -82,7 +82,7 @@ int RTPEndpoint::End()
         portinited = false;
 	
         //Detach if joined
-	Detach();
+	//Detach();
 
         //Stop
         RTPSession::End();

@@ -19,7 +19,8 @@ pipeline {
        }
        steps {
           sh """
-          svn export https://svn.ives.fr/svn-libs-dev/gnupg
+          git clone --depth 1 git@git.ives.fr:internal/gnupg.git
+          rm -rf gnupg/.git
           echo "${params.PARAPHRASE}" |  gpg -q --local-user IVeSkey --batch --homedir ./gnupg/ --passphrase-fd 0 --sign > /dev/null
           """
        }

@@ -2,3 +2,4 @@ staticdeps
 *.rpm
 bin/
 mcu/media/
+.vs/

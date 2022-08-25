@@ -365,7 +365,7 @@ public:
 	RTPTimedPacket(MediaFrame::Type media,DWORD codec,DWORD type) : RTPPacket(media,codec,type)
 	{
 		//Set time
-		time = ::getTime();
+		time = ::getTime()/1000;
 	}
 
 	RTPTimedPacket* Clone()

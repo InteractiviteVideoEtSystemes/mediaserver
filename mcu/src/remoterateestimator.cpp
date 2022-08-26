@@ -516,9 +516,12 @@ void RemoteRateEstimator::SetTemporalMaxLimit(DWORD limit)
 {
 	Log("-RemoteRateEstimator::SetTemporalMaxLimit() %d\n",limit);
 	//Check if reseting
-	if (limit)
-		//Set maximun bitrate
-		maxConfiguredBitRate = limit;
+	if (limit) 
+	{
+		if( limit > minConfiguredBitRate)
+			//Set maximun bitrate
+			maxConfiguredBitRate = limit;
+	}
 	else
 		//Set default max
 		maxConfiguredBitRate = 1280000000;
@@ -529,12 +532,18 @@ void RemoteRateEstimator::SetTemporalMinLimit(DWORD limit)
 	Log("-RemoteRateEstimator::SetTemporalMinLimit %d\n",limit);
 	//Check if reseting
 	if (limit)
-		//Set maximun bitrate
-		minConfiguredBitRate = limit;
+	{	
+		if( limit < maxConfiguredBitRate)
+		{		
+			//Set maximun bitrate
+			minConfiguredBitRate = limit;
+		}		
+	}	
 	else
 		//Set default min
 		minConfiguredBitRate = 128000;
 }
+
 void RemoteRateEstimator::SetListener(Listener *listener)
 {
 	//Store listener

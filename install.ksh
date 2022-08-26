@@ -270,6 +270,23 @@ function local_compile
 		cd $BASESRCDIR
 	fi
 
+	# compiler mp4v2 en static 
+	if [ ! -f staticdeps/lib/libmp4v2.a ]
+	then
+		echo "compilation libmp4v2"
+		cd $HOME
+		if [ ! -r mp4v2 ]
+		then
+			git clone https://github.com/InteractiviteVideoEtSystemes/mp4v2.git
+		fi
+		cd mp4v2
+		./configure --prefix=$BASESRCDIR/staticdeps --exec-prefix=$BASESRCDIR/staticdeps --enable-shared=no
+		make clean
+		make
+		make install
+		cd $BASESRCDIR
+	fi
+
 	
 	# compiler speex en statique
 	BASESRCDIR=$PWD
@@ -390,7 +407,7 @@ function local_compile
     		echo "Compiling VP8 codec"
 		#cd $HOME/webrtc/trunk/third_party/libvpx/source/libvpx
 		cd $HOME
-		rm -f libvpx
+		rm -rf libvpx
 		git clone https://chromium.googlesource.com/webm/libvpx
 		cd libvpx
 		git checkout v1.7.0

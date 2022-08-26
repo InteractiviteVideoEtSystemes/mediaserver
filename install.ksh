@@ -393,7 +393,7 @@ function local_compile
 		rm -f libvpx
 		git clone https://chromium.googlesource.com/webm/libvpx
 		cd libvpx
-		git checkout 1.7.0
+		git checkout v1.7.0
 		chmod 750 configure
 		./configure --disable-shared --enable-static --prefix=$BASESRCDIR/staticdeps  --enable-vp8 --enable-error-concealment  --disable-multithread 
 		make

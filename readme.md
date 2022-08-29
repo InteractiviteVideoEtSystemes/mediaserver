@@ -1,27 +1,37 @@
-Pour compiler
+# readme.md pour accompagner la generation
 
-./install.ksh
+## Compilation
 
-./install.ksh localcompile
+Un script est present à la racine du projet 'install.ksh'.
 
-recompilation uniquement
-make -f mcu/Makefile.rpm mcu
+Plusieurs arguments sont possibles, pour une compialtion:
 
-resultat dans 'bin/debug/' executable 'mcu'
+```./install.ksh localcompile```
 
-se deplacer dans le répertoire du binaire dans le contexte IVèS
-cd /opt/ives/bin/
+Pour une simple recompilation:
 
-faire une sauvegarde du binaire courant
-mv mediaserver mediaserver.release
+```make -f mcu/Makefile.rpm mcu```
 
-créer un lien symbolique vers ce nouveau binaire fraichement compiler
-ln -s /home/user/mediaserver/bin/debug/mcu mediaserver
+Le binaire resultat de cette compialtion est dans 'bin/debug/' avec comme nom de fichier 'mcu'
 
-redemarrer l'application
-/etc/init.d/mediaserver restart
+## Execution 
 
-suivi de l'execution
-tail -f /var/log/mcu.log
+Pour préparer une utilisation, se deplacer dans le répertoire du binaire (dans le contexte IVèS):
 
+```cd /opt/ives/bin/```
 
+Faire une sauvegarde du binaire courant:
+
+```mv mediaserver mediaserver.release```
+
+Créer un lien symbolique vers ce nouveau binaire fraichement compiler
+
+```ln -s /home/user/mediaserver/bin/debug/mcu mediaserver```
+
+Redemarrer l'application:
+
+```/etc/init.d/mediaserver restart```
+
+Pour suivre l'évolution de l'execution:
+
+```tail -f /var/log/mcu.log```

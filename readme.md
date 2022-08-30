@@ -1,4 +1,4 @@
-# readme.md pour accompagner la generation
+# readme.md pour accompagner la génération
 
 ## Compilation
 
@@ -35,3 +35,11 @@ Redemarrer l'application:
 Pour suivre l'évolution de l'execution:
 
 ```tail -f /var/log/mcu.log```
+
+## Avancé
+
+Une mise à jour de la machine est souvent necessaire pour la compilation, en installant 'libtool' et 'autoconf'
+
+```yum install libtool autoconf```
+
+

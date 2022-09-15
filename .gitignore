@@ -3,9 +3,9 @@ staticdeps
 .vs/
 bin/
 mcu/media/
-/XmlRpcMcuClient/nbproject/private/
 /XmlRpcMcuClient/build/
 /XmlRpcMcuClient/dist/
+/XmlRpcMcuClient/nbproject/private/
 /sdp/build/
 /sdp/dist/
 /sdp/nbproject/private/

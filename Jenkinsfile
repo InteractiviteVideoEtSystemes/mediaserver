@@ -7,36 +7,36 @@ import hudson.tasks.test.AbstractTestResultAction
 
 pipeline {
   agent none
-  parameters {
-    booleanParam(name: 'SIGNRPM', defaultValue: false, description: 'Signer le RPM ?')
-    string(name: 'PARAPHRASE', defaultValue: '' , description: 'Paraphrase de la cle de signature')
-  }
+  //parameters {
+  //  booleanParam(name: 'SIGNRPM', defaultValue: false, description: 'Signer le RPM ?')
+  //  string(name: 'PARAPHRASE', defaultValue: '' , description: 'Paraphrase de la cle de signature')
+  //}
   stages {
-    stage('Verification paraphrase') {
-       agent { label 'centos6' }
-       when {
-          expression { params.SIGNRPM }
-       }
-       steps {
-          sh """
-          git clone --depth 1 git@git.ives.fr:internal/gnupg.git
-          rm -rf gnupg/.git
-          echo "${params.PARAPHRASE}" |  gpg -q --local-user IVeSkey --batch --homedir ./gnupg/ --passphrase-fd 0 --sign > /dev/null
-          """
-       }
-    }
+    //stage('Verification paraphrase') {
+    //   agent { label 'centos6' }
+    //   when {
+    //      expression { params.SIGNRPM }
+    //   }
+    //   steps {
+    //      sh """
+    //      git clone --depth 1 git@git.ives.fr:internal/gnupg.git
+    //      rm -rf gnupg/.git
+    //      echo "${params.PARAPHRASE}" |  gpg -q --local-user IVeSkey --batch --homedir ./gnupg/ --passphrase-fd 0 --sign > /dev/null
+    //      """
+    //   }
+    //}
     stage('CompilEtInstalle') {
       matrix {
         agent { label "${NODELABEL}" }
         axes {
            axis {
                name 'NODELABEL'
-               values 'centos6', 'centos7'
+               //values 'centos6', 'centos7'
+	       values 'centos6'
            }
 	}
 	stages {
 	   stage('Generation RPM') { 
-
                steps {
 	           sh """
 		   ./install.ksh prereq
@@ -44,19 +44,19 @@ pipeline {
 	           """
               }
            }
-           stage('Signer le RPM') {
-              when {
-                 expression { params.SIGNRPM }
-              }
-              steps {
-		sh """
-		git clone --depth 1 git@git.ives.fr:internal/gnupg.git
-        rm -rf gnupg/.git
-		echo \"${params.PASSPHRASE}\" | rpm --resign ${PROJET}*.rpm
-          	rm -rf ./gnupg
-		"""
-              }
-           }
+           //stage('Signer le RPM') {
+           //   when {
+           //      expression { params.SIGNRPM }
+           //   }
+           //   steps {
+	   //     sh """
+	   //     git clone --depth 1 git@git.ives.fr:internal/gnupg.git
+           //     rm -rf gnupg/.git
+	   //     echo \"${params.PASSPHRASE}\" | rpm --resign ${PROJET}*.rpm
+           //     rm -rf ./gnupg
+	   //     """
+           //   }
+           //}
            stage('Inst. le RPM') {
                when {
                    buildingTag()

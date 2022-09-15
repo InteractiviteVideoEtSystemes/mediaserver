@@ -1,5 +1,11 @@
 staticdeps
 *.rpm
+.vs/
 bin/
 mcu/media/
-.vs/
+/XmlRpcMcuClient/nbproject/private/
+/XmlRpcMcuClient/build/
+/XmlRpcMcuClient/dist/
+/sdp/build/
+/sdp/dist/
+/sdp/nbproject/private/

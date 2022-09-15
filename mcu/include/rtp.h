@@ -350,7 +350,7 @@ class RTPTimedPacket:
 	public RTPPacket
 {
 public:
-	RTPTimedPacket(MediaFrame::Type media,DWORD codec) : RTPPacket(media,codec,codec)
+	RTPTimedPacket(MediaFrame::Type media,DWORD codec) : RTPPacket(media,codec)
 	{
 		//Set time
 		time = ::getTime()/1000;

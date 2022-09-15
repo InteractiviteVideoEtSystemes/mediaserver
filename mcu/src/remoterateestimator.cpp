@@ -169,8 +169,8 @@ void RemoteRateEstimator::Update(DWORD ssrc,QWORD now,QWORD ts,DWORD size, bool 
 
 	//If not firs update
 	if (!lastChange)
-		//Skip the first half second
-		lastChange = now+500;
+		//Skip the first half second + TMMBR skiping delay of 60sec
+		lastChange = now+500 + 60000;
 	
 	//Only update once per second or when the stream starts to overuse
 	if (lastChange+1000<now)

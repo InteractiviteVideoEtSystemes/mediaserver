@@ -248,6 +248,13 @@ function local_compile
 		exit 20
 	fi
 
+	rpm -q ffmpeg-devel
+    	if [ $? != 0 ]
+	then
+		echo "installer ffmpeg-devel"
+		exit 20
+	fi
+
 	# compiler openssl en statique
 	BASESRCDIR=$PWD
 	if [ ! -f staticdeps/lib/libssl.a ]
@@ -514,16 +521,16 @@ case $1 in
 	"upload")
 		upload_rpm ;;
 	"prereq")
-		sudo yum install -y gsm-devel ;;
+		sudo yum install -y gsm-devel ffmpeg-devel ;;
   	*)
   		echo "usage: install.ksh [options]" 
   		echo "options :"
-  		echo "  rpm		Generation d'un package rpm"
-		echo "  localcompile    Compilation du logiciel sans creation de paquet rpm"
+  		echo "  rpm				Generation d'un package rpm"
+		echo "  localcompile	Compilation du logiciel sans creation de paquet rpm"
 		echo "  webrtc          Compilation des libs webrtc"
 		echo "  rabbitmq        Compilation des libs RABBITMQ (projet moteli)"
 		echo "  upload          TODO: envoi les paquets RPM dans le repo"
-  		echo "  clean		Nettoie tous les fichiers cree ce script, liens, tar.gz et rpm";;
+  		echo "  clean			Nettoie tous les fichiers cree ce script, liens, tar.gz et rpm";;
 
 esac
 

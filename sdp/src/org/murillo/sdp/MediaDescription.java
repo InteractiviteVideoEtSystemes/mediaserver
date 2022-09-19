@@ -226,7 +226,7 @@ public class MediaDescription {
                 for (Integer i = 0; i<values.length; i++ )
                 {
                     if ( values[i].equals("nack") || values[i].equals("pli") ||
-                         values[i].equals("tmmbr") ||values[i].equals("google-remb") ||
+                         values[i].equals("tmmbr") || values[i].equals("google-remb") ||
                          values[i].equals("ack")  || values[i].equals("fir") )
                     {
                         fbmsg.add(values[i]);

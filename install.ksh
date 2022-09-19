@@ -38,7 +38,9 @@ function create_rpm
     if [[ -z $2 || $2 -ne nosign ]]
 	then
 		#Import de la clef gpg IVeS
-		svn export https://svn.ives.fr/svn-libs-dev/gnupg
+		#svn export https://svn.ives.fr/svn-libs-dev/gnupg
+		rm -rf gnupg
+		git clone git@git.ives.fr:internal/gnupg.git
     fi
     mkdir -p rpmbuild
     mkdir -p rpmbuild/SOURCES
@@ -61,7 +63,7 @@ function create_rpm
 	
     if [[ -z $2 || $2 -ne nosign ]]
 	then
-	rpmbuild -bb --sign $PWD/rpmbuild/SPECS/mcumediaserver.spec
+		rpmbuild -bb --sign $PWD/rpmbuild/SPECS/mcumediaserver.spec
 	else
 		rpmbuild -bb $PWD/rpmbuild/SPECS/mcumediaserver.spec
 	fi
@@ -79,7 +81,6 @@ function create_rpm
 	echo "*** error during build ***"
 	exit 20
 	fi
-	   
 }
 
 function clean
@@ -152,30 +153,28 @@ function compile_webrtc_from_google
 	then
 		make out/Release/obj.target/webrtc/common_audio/libsignal_processing.a
 		make out/Release/obj.target/webrtc/common_audio/libvad.a
-		
 	fi
-
 }
 
 function compile_webrtc_ives
 {
 	MEDIASERVERPATH=$PWD
 	cd $HOME
-        if [ ! -r  webrtc/trunk/webrtc/common_audio ]
-        then
-                echo downloading webrtc
-                mkdir webrtc
-                cd webrtc
-				svn co http://svn.ives.fr/svn-libs-dev/webrtc/tags/$WEBRTCTAG trunk
-                cd trunk
-        else
-                cd webrtc/trunk
-        fi
+	if [ ! -r  webrtc/trunk/webrtc/common_audio ]
+	then
+		echo downloading webrtc
+		mkdir webrtc
+		cd webrtc
+		svn co http://svn.ives.fr/svn-libs-dev/webrtc/tags/$WEBRTCTAG trunk
+		cd trunk
+	else
+		cd webrtc/trunk
+	fi
 
-        if [ ! -r out/Release/obj.target/webrtc/common_audio/libsignal_processing.a ]
-        then
-                make out/Release/obj.target/webrtc/common_audio/libsignal_processing.a
-                make out/Release/obj.target/webrtc/common_audio/libvad.a
+	if [ ! -r out/Release/obj.target/webrtc/common_audio/libsignal_processing.a ]
+	then
+		make out/Release/obj.target/webrtc/common_audio/libsignal_processing.a
+		make out/Release/obj.target/webrtc/common_audio/libvad.a
 	fi
 
 	cd $MEDIASERVERPATH
@@ -185,23 +184,23 @@ function compile_webrtc
 {
 	MEDIASERVERPATH=$PWD
 	cd $HOME
-        if [ ! -r  webrtc/trunk/webrtc/common_audio ]
-        then
-                echo downloading webrtc
-                git clone https://github.com/neutrino38/webrtc_stack.git
+	if [ ! -r  webrtc/trunk/webrtc/common_audio ]
+	then
+		echo downloading webrtc
+		git clone https://github.com/neutrino38/webrtc_stack.git
 		mv webrtc_stack webrtc
-                cd webrtc/trunk
-        else
-                cd webrtc/trunk
-        fi
+		cd webrtc/trunk
+	else
+		cd webrtc/trunk
+	fi
 
-        if [ ! -r out/Release/obj.target/webrtc/common_audio/libsignal_processing.a ]
-        then
+	if [ ! -r out/Release/obj.target/webrtc/common_audio/libsignal_processing.a ]
+	then
 		echo "Compiling VAD and signal processing from webrtc"
-                make out/Release/obj.target/webrtc/common_audio/libsignal_processing.a
+        make out/Release/obj.target/webrtc/common_audio/libsignal_processing.a
 		git reset --hard
-                make out/Release/obj.target/webrtc/common_audio/libsignal_processing.a
-                make out/Release/obj.target/webrtc/common_audio/libvad.a
+		make out/Release/obj.target/webrtc/common_audio/libsignal_processing.a
+		make out/Release/obj.target/webrtc/common_audio/libvad.a
 	fi
 
 	cd $MEDIASERVERPATH
@@ -293,7 +292,6 @@ function local_compile
 		make install
 		cd $BASESRCDIR
 	fi
-
 	
 	# compiler speex en statique
 	BASESRCDIR=$PWD
@@ -355,7 +353,6 @@ function local_compile
 		cd $BASESRCDIR
 	fi
 
-
 	if [ ! -f staticdeps/lib/libsrtp.a ]
 	then
 		echo "compilation SRTP"
@@ -390,7 +387,6 @@ function local_compile
 		make install
 		cd $BASESRCDIR
 	fi
-		
 
 	if [ ! -f staticdeps/lib/libg722_1.a ]
 	then
@@ -435,12 +431,12 @@ function local_compile
 function compile_rabbitmq
 {
 	MEDIASERVERPATH=$PWD
-        rpm -q cmake > /dev/null
-        if [ $? != 0 ]
-        then
-                echo "Installer cmake (sudo yum install cmake)"
-                exit 20
-        fi
+	rpm -q cmake > /dev/null
+	if [ $? != 0 ]
+	then
+		echo "Installer cmake (sudo yum install cmake)"
+		exit 20
+	fi
 
 	if [ ! -r staticdeps/lib/librabbitmq.a ]
 	then
@@ -531,6 +527,4 @@ case $1 in
 		echo "  rabbitmq        Compilation des libs RABBITMQ (projet moteli)"
 		echo "  upload          TODO: envoi les paquets RPM dans le repo"
   		echo "  clean			Nettoie tous les fichiers cree ce script, liens, tar.gz et rpm";;
-
 esac
-

@@ -202,7 +202,7 @@ public class Codecs {
     public static final Integer NELLY11 = 131;
     public static final Integer SPEEX16 = 117;
     public static final Integer OPUS    = 111;
-    public static final Integer TELEFONE_EVENT  = 100;
+    public static final Integer TELEFONE_EVENT = 100;
 
     public static final Integer H263_1996    = 34;
     public static final Integer H263_1998    = 103;

@@ -953,7 +953,7 @@ int RTPSession::SendPacket(RTPPacket &packet,DWORD timestamp)
 	//Init send packet
 	headers->version = RTP_VERSION;
 	
-	//if we detect a change of ssrc in packet , we change the ssrc
+	//if we detect a change of ssrc in packet, we change the ssrc
 	if (lastSendSSRC != 0 && lastSendSSRC != packet.GetSSRC())
 	{
 		Debug("Changing sending SSRC - lastRecSSRC=%x, packet ssrc=%x \n",lastSendSSRC,packet.GetSSRC());
@@ -963,42 +963,47 @@ int RTPSession::SendPacket(RTPPacket &packet,DWORD timestamp)
 	headers->ssrc = htonl(sendSSRC);
 	lastSendSSRC = packet.GetSSRC();
 	
-/* Simulate SSRC change - for test purporse only
-        if ( (sendSeq%50) == 0
-	     ||
-	     (sendSeq%50) == 1
-	     || 
-	     (sendSeq%50) == 4 ) headers->ssrc = random();
+/* 
+	//Simulate SSRC change - for test purporse only
+    if ( (sendSeq%50) == 0
+	   || (sendSeq%50) == 1
+	   || (sendSeq%50) == 4 )
+	{
+		headers->ssrc = random();
+	}
 */
-	// in case of bridging , we don't change the timestamp of the packet.
+	// in case of bridging, we don't change the timestamp of the packet.
 	if ( useOriTS && this->media != MediaFrame::Text)
 	{ 
 		sendLastTime = packet.GetTimestamp();
-		headers->ts  = htonl(packet.GetTimestamp());
 	}
 	else
 	{
 		//Calculate last timestamp
 		sendLastTime = sendTime + timestamp;
 
-		//POnemos el timestamp
-		headers->ts=htonl(sendLastTime);
 	}
-	
+	headers->ts = htonl( sendLastTime );
+
 	//Incrementamos el numero de secuencia
 	// in case of bridging , we don't change the seq num of the packet.
 	if ( useOriSeqNum && this->media != MediaFrame::Text)
 	{
 		sendSeq = packet.GetSeqNum();
-		headers->seq=htons(sendSeq);	
+		headers->seq = htons( sendSeq );
 	}
 	else
-		headers->seq=htons(sendSeq++);
-        
+	{
+		headers->seq = htons( sendSeq );
+		sendSeq++;
+	}
+
 	//Check seq wrap
-	if (sendSeq==0)
+	if( sendSeq == 0 )
+	{
 		//Inc cycles
 		sendCycles++;
+	}
 
 	//La marca de fin de frame
 	headers->m=packet.GetMark();
@@ -1088,11 +1093,12 @@ int RTPSession::SendPacket(RTPPacket &packet,DWORD timestamp)
 			//Unlock
 			rtxUse.Unlock();
 	}
+
 	//SIMULATING PACKET LOST 10%	
-	
-    	/*int ret =0;
-    	if (this->media == MediaFrame::Video  && (sendSeq%10) == 0)
-    	{
+    /*
+	int ret =0;
+    if (this->media == MediaFrame::Video  && (sendSeq%10) == 0)
+    {
 		ret =0;
 	}
 	else
@@ -1101,7 +1107,6 @@ int RTPSession::SendPacket(RTPPacket &packet,DWORD timestamp)
 		ret = sendto(simSocket,sendPacket,len,0,(sockaddr *)&sendAddr,sizeof(struct sockaddr_in));
 	}
 	*/	
-	
 	
 	//Send packet
 	int ret = sendto(simSocket,sendPacket,len,0,(sockaddr *)&sendAddr,sizeof(struct sockaddr_in));
@@ -2839,3 +2844,4 @@ bool RTPSession::GetStatistics( DWORD ssrc, MediaStatistics & stats)
 
 
 }
+

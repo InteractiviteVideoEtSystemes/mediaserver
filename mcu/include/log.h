@@ -11,11 +11,11 @@
 class Logger
 {
 public:
-        static Logger& getInstance()
-        {
-            static Logger   instance;
-            return instance;
-        }
+    static Logger& getInstance()
+    {
+        static Logger instance;
+        return instance;
+    }
 	static bool IsDebugEnabled()
 	{
 		return getInstance().debug;
@@ -38,27 +38,26 @@ public:
 protected:
 	bool debug;
 private:
-        Logger()
+    Logger()
 	{
 		debug = false;
 	}
-        // Dont forget to declare these two. You want to make sure they
-        // are unaccessable otherwise you may accidently get copies of
-        // your singelton appearing.
-        Logger(Logger const&);			// Don't Implement
-        void operator=(Logger const&);		// Don't implement
+    // Dont forget to declare these two. You want to make sure they
+    // are unaccessable otherwise you may accidently get copies of
+    // your singelton appearing.
+    Logger(Logger const&);			// Don't Implement
+    void operator=(Logger const&);		// Don't implement
 };
 
 inline const char *LogFormatDateTime(char *buffer, size_t bufSize)
 {
 	struct timeval tv;
-
 	struct tm tm;
 	char msstr[20];
+
 	gettimeofday(&tv,NULL);
 
-	long ms = tv.tv_usec/1000;
-	sprintf( msstr, "%03ld", ms );
+	sprintf( msstr, "%03ld", tv.tv_usec/1000 );
 	localtime_r(&tv.tv_sec, &tm);
 	strftime( buffer, bufSize, "%Y-%m-%dT%H:%M:%S.", &tm );
 	strcat(buffer, msstr); 
@@ -69,9 +68,9 @@ inline const char *LogFormatDateTime(char *buffer, size_t bufSize)
 inline int Log(const char *msg, ...)
 {
 	char buf[80];
-	struct timeval tv;
 	va_list ap;
-	printf("[0x%lx][%s][LOG]", (long) pthread_self(),LogFormatDateTime(buf, sizeof(buf)));
+
+	printf("[0x%lx][%s][LOG]", (long)pthread_self(), LogFormatDateTime(buf, sizeof(buf)));
 	va_start(ap, msg);
 	vprintf(msg, ap);
 	va_end(ap);
@@ -79,12 +78,13 @@ inline int Log(const char *msg, ...)
 	return 1;
 }
 
-inline int Log2(const char* prefix,const char *msg, ...)
+inline int Log2(const char* prefix, const char *msg, ...)
 {
 	struct timeval tv;
 	va_list ap;
+	
 	gettimeofday(&tv,NULL);
-	printf("[0x%lx][%.10ld.%.3ld][LOG]%s ", (long) pthread_self(),(long)tv.tv_sec,(long)tv.tv_usec/1000,prefix);
+	printf("[0x%lx][%.10ld.%.3ld][LOG]%s ", (long)pthread_self(), (long)tv.tv_sec, (long)tv.tv_usec/1000, prefix);
 	va_start(ap, msg);
 	vprintf(msg, ap);
 	va_end(ap);
@@ -94,22 +94,27 @@ inline int Log2(const char* prefix,const char *msg, ...)
 
 inline void Debug(const char *msg, ...)
 {
-    if (Logger::IsDebugEnabled())
-    {
-	va_list ap;
-	va_start(ap, msg);
-	vprintf(msg, ap);
-	va_end(ap);
-	return ;
-    }
+	if( Logger::IsDebugEnabled() )
+	{
+		struct timeval tv;
+		va_list ap;
+
+		gettimeofday( &tv, NULL );
+		printf( "[0x%lx][%.10ld.%.3ld][DBG]", (long)pthread_self(), (long)tv.tv_sec, (long)tv.tv_usec/1000 );
+		va_start( ap, msg );
+		vprintf( msg, ap );
+		va_end( ap );
+	}
+	
 }
 
 inline int Error(const char *msg, ...)
 {
 	struct timeval tv;
 	va_list ap;
+
 	gettimeofday(&tv,NULL);
-	printf("[0x%lx][%.10ld.%.3ld][ERR]", (long) pthread_self(),(long)tv.tv_sec,(long)tv.tv_usec/1000);
+	printf("[0x%lx][%.10ld.%.3ld][ERR]", (long)pthread_self(), (long)tv.tv_sec, (long)tv.tv_usec/1000);
 	va_start(ap, msg);
 	vprintf(msg, ap);
 	va_end(ap);
@@ -128,7 +133,9 @@ inline void BitDump(DWORD val,BYTE n)
 		i+= BitPrint(line2+i,(BYTE)(val>>16),8);
 		i+= BitPrint(line2+i,(BYTE)(val>>8),8);
 		i+= BitPrint(line2+i,(BYTE)(val),8);
-	} else if (n>16) {
+	}
+	else if (n>16) 
+	{
 		sprintf(line1,"0x%.2x     0x%.2x     0x%.2x     ",(BYTE)(val>>16),(BYTE)(val>>8),(BYTE)(val));
 		i+= BitPrint(line2+i,(BYTE)(val>>16),n-16);
 		i+= BitPrint(line2+i,(BYTE)(val>>8),8);

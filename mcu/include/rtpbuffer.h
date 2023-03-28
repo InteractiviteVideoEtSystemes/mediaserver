@@ -42,35 +42,51 @@ public:
 	virtual bool Add(RTPTimedPacket *rtp)
 	{
 		//Get seq num
-		DWORD seq = rtp->GetExtSeqNum();
+		DWORD extseqn = rtp->GetExtSeqNum();
 		
 		//Lock
 		pthread_mutex_lock(&mutex);
 
-		//If already past
-		if (next!=(DWORD)-1 && seq<next)
+		if( packets.size() > 0 )
 		{
-			bigJumps++;
-			//Unlock
-			//Delete pacekt
-			//Skip it and lost forever
-			if ( bigJumps > 20)
+			if( packets.rbegin()->second->GetSSRC() != rtp->GetSSRC() )
 			{
-				Log("Too many out of sequence packet. Resyncing.\n");
-				next=(DWORD)-1;
+				next = (DWORD)-1;
+			}
+		}
+
+		//If already past
+		if( next != (DWORD)-1 && extseqn < next )
+		{
+			if( ++bigJumps > 20 )
+			{
+				Log2("Too many out of sequence packet. Resyncing.\n");
+				next = (DWORD)-1;
+				bigJumps = 0;
 			}
 			else
 			{
-				//Delete pacekt
+				WORD cycl = rtp->GetSeqCycles();
+				WORD seqn = rtp->GetSeqNum();
+
+				//Unlock
+				//Delete packet
+				//Skip it and lost forever
 				pthread_mutex_unlock(&mutex);
 				delete(rtp);
-				return Error("-Out of order non recoverable packet [next:%d,seq:%d,maxWaitTime=%d,%d,%d]\n",
-						next,seq,maxWaitTime,rtp->GetSeqCycles(),rtp->GetSeqNum());
+				rtp = NULL;
+				return Error("-Out of order non recoverable packet [next:%d, seq:%d, maxWaitTime=%d,%d,%d]\n"
+					, next
+					, extseqn
+					, maxWaitTime
+					, cycl
+					, seqn
+					);
 			}
 		}
 
 		//Add event
-		packets[seq] = rtp;
+		packets[extseqn] = rtp;
 
 		//Unlock
 		pthread_mutex_unlock(&mutex);

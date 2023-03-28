@@ -1377,9 +1377,9 @@ bool RTPRedundantPacket::SetPayload(BYTE *data,DWORD size)
 
 void RTPRedundantPacket::DecodeRedundantPayload(BYTE *payload,DWORD redsize)
 {
-        if ( redsize == 0 )  return;
+    if ( redsize == 0 )  return;
 
-    	//Number of bytes to skip of text until primary data
+    //Number of bytes to skip of text until primary data
 	WORD skip = 0;
 
 	//The the payload
@@ -1396,8 +1396,8 @@ void RTPRedundantPacket::DecodeRedundantPayload(BYTE *payload,DWORD redsize)
 	{
 		//Check it
 		/*
-		    0                   1                    2                   3
-		    0 1 2 3 4 5 6 7 8 9 0 1 2 3  4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+		    0                   1                     2                   3
+		    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
 		   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 		   |F|   block PT  |  timestamp offset         |   block length    |
 		   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+

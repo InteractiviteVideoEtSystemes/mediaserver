@@ -1389,7 +1389,7 @@ void RTPRedundantPacket::DecodeRedundantPayload(BYTE *payload,DWORD redsize)
 	WORD i = 0;
 
 	//Check if it is the last
-	bool last = !(payload[i]>>7);
+	bool last = !(payload[i] >> 7);
 
 	//Read redundant headers
 	while(!last)
@@ -1423,27 +1423,27 @@ void RTPRedundantPacket::DecodeRedundantPayload(BYTE *payload,DWORD redsize)
 		BYTE type = payload[i++] & 0x7F;
 		//Get offset
 		WORD offset = payload[i++];
-		offset = offset <<6 | payload[i]>>2;
+		offset = offset << 6 | payload[i] >> 2;
 		//Get size
 		WORD size = payload[i++] & 0x03;
-		size = size <<6 | payload[i++];
+		size = size << 8 | payload[i++];
 		//Append new red header
-		headers.push_back(RedHeader(type,offset,skip,size));
+		headers.push_back(RedHeader(type, offset, skip, size));
 		//Skip the redundant payload
 		skip += size;
 		//Check if it is the last
-		last = !(payload[i]>>7);
+		last = !(payload[i] >> 7);
 	}
 	//Get primaty type
 	primaryType = payload[i] & 0x7F;
 	//Skip it
 	i++;
 	//Get redundant payload
-	redundantData = payload+i;
+	redundantData = payload + i;
 	//Get prymary payload
-	primaryData = redundantData+skip;
+	primaryData = redundantData + skip;
 	//Get size of primary payload
-	primarySize = redsize-i-skip;
+	primarySize = redsize - i - skip;
 }
 
 RTPTimedPacket* RTPRedundantPacket::CreatePrimaryPacket()

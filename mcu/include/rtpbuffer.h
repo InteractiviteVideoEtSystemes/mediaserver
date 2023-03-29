@@ -60,7 +60,7 @@ public:
 		{
 			if( ++bigJumps > 20 )
 			{
-				Log2("Too many out of sequence packet. Resyncing.\n");
+				Log("Too many out of sequence packet. Resyncing.\n");
 				next = (DWORD)-1;
 				bigJumps = 0;
 			}

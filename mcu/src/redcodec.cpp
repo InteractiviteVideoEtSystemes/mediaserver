@@ -132,6 +132,11 @@ RTPRedundantPacket * RedundentCodec::Encode(MediaFrame * frame, BYTE ptype)
     {
             //Get frame and go to next
             MediaFrame *f = *(it);
+            //Verify buffer MTU size limit
+            if (bufferLen + f->GetLength() >= MTU)
+            {
+                return NULL;
+            }
             //Copy
             memcpy(red,f->GetData(),f->GetLength());
             //Increase sizes
@@ -142,6 +147,11 @@ RTPRedundantPacket * RedundentCodec::Encode(MediaFrame * frame, BYTE ptype)
     //Check if there is frame
     if (frame)
     {
+            //Verify buffer MTU size limit
+            if (bufferLen + frame->GetLength() >= MTU)
+            {
+                return NULL;
+            }
             //Copy
             memcpy(red,frame->GetData(),frame->GetLength());
             //Serialize data
@@ -201,7 +211,7 @@ RTPRedundantPacket * RedundentCodec::Encode(MediaFrame * frame, BYTE ptype)
     }
     else
     {
-        int nbactivefr;
+        int nbactivefr = 0;
 		
         for (RedFrames::iterator it = reds.begin();it!=reds.end();++it)
         {
@@ -211,23 +221,24 @@ RTPRedundantPacket * RedundentCodec::Encode(MediaFrame * frame, BYTE ptype)
             if (f->GetLength())
             {
 				isNotNull=true;
-                if ( f->GetLength() == 3 && memcmp(f->GetData(), BOMUTF8, 3) == 0)
+                if (f->GetLength() == 3)
                 {
-
-                }
-				else
-                {
-                    nbactivefr++;
+                    if (memcmp(f->GetData(), BOMUTF8, 3) == 0)
+                    {
+                        nbactivefr++;
+                    }
                 }
             }
         }
-
         idle = (nbactivefr == 0);
     }
 	if (isNotNull)
 		return packet;
-	else
-		return NULL;
+    else
+    {
+        delete packet;
+        return NULL;
+    }
 }
 
 RTPRedundantPacket * RedundentCodec::EncodeBOM(BYTE ptype)

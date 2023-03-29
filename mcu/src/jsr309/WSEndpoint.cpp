@@ -72,10 +72,17 @@ void WSEndpoint::onMessageEnd(WebSocket *ws)
 				
 				media->SetTimestamp(getDifTime(&clock)/1000);
 				RTPRedundantPacket * packet = RedCodec->Encode(media, payloadType);
-				packet->SetSeqNum(pseudoSeqNum);
-				packet->SetSeqCycles(pseudoSeqCycle);
-				Multiplex(*packet);
-                                delete packet;
+                if (packet)
+                {
+				    packet->SetSeqNum(pseudoSeqNum);
+				    packet->SetSeqCycles(pseudoSeqCycle);
+				    Multiplex(*packet);
+                    delete packet;
+                }
+                else
+                {
+                    Error("Media RED [%u] packet encoding fail.\n", payloadType);
+                }
 			}
 			else
 			{
@@ -226,8 +233,15 @@ int WSEndpoint::SendFrame(TextFrame &frame)
 		if (useRed)
 		{
 			RTPRedundantPacket *packet = RedCodec->Encode( &bom, payloadType);
-			Multiplex(*packet);
-			delete packet;
+            if (packet)
+            {
+			    Multiplex(*packet);
+			    delete packet;
+            }
+            else
+            {
+                Error("Media RED [%u] packet encoding BOM fail.\n", payloadType);
+            }
 		}
 		else
 		{

@@ -281,7 +281,7 @@ int RTPSession::SetLocalCryptoSDES( const char *suite, const BYTE *key, const DW
     }
     else
     {
-        return Error( "Unknown cipher suite" );
+        return Error( "Unknown cipher suite\n" );
     }
 
     //Check sizes
@@ -522,7 +522,7 @@ int RTPSession::SetRemoteCryptoSDES( const char *suite, const BYTE *key, const D
     }
     else
     {
-        return Error( "Unknown cipher suite" );
+        return Error( "Unknown cipher suite\n" );
     }
 
     //Check sizes

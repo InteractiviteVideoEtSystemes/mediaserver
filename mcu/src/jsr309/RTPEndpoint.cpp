@@ -20,8 +20,8 @@ RTPEndpoint::RTPEndpoint(MediaFrame::Type type, MediaFrame::MediaRole role) : Po
 	//No time
 	prevts = 0;
 	timestamp = 0;
-        //No codec
-        codec = -1;
+    //No codec
+    codec = -1;
 	//Get freg
 	switch(type)
 	{
@@ -36,6 +36,8 @@ RTPEndpoint::RTPEndpoint(MediaFrame::Type type, MediaFrame::MediaRole role) : Po
 		case MediaFrame::Text:
 			//Set it
 			freq = 1;
+			break;
+		default:
 			break;
 	}
 }

@@ -86,8 +86,8 @@ public:
 	    RTP = 0,
 	    RTMP = 1,
 		WS = 2,
-	    TCP = 3 , // Used for MSRP, BFCP and other TCP based media
-		UDP=4
+	    TCP = 3, // Used for MSRP, BFCP and other TCP based media
+		UDP = 4
 	};
 
 	static const char * ProtocolToString(MediaProtocol prot)

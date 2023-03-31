@@ -193,7 +193,7 @@ int main(int argc,char **argv)
 		if (strcmp(argv[i],"-h")==0 || strcmp(argv[i],"--help")==0)
 		{
 			//Show usage
-			printf("Mediaserver version %s %s\r\n",MCUVERSION,MCUDATE);
+			printf("Mediaserver version %s %s\r\n", MCUVERSION, MCUDATE);
 			printf("Usage: mcu [-h] [--help] [--mcu-log logfile] [--mcu-pid pidfile] [--http-port port] [--rtmp-port port] [--min-rtp-port port] [--max-rtp-port port] [--vad-period ms]\r\n\r\n"
 				"Options:\r\n"
 				" -h,--help        Print help\r\n"
@@ -351,7 +351,7 @@ int main(int argc,char **argv)
 	WebSocketServer wsServer;
 
 	//Log version
-	Log("-MCU Version %s %s\r\n",MCUVERSION,MCUDATE);
+	Log("-MCU Version %s %s\r\n", MCUVERSION, MCUDATE);
         gserver = &server;
 
 

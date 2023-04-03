@@ -260,7 +260,7 @@ protected:
 	RTPStream* getStream(DWORD ssrc);
 
 private:
-	typedef std::map<DWORD,RTPTimedPacket*> RTPOrderedPackets;
+	typedef std::map<DWORD, RTPTimedPacket*> RTPOrderedPackets;
 	typedef std::map<DWORD, RTPStream*> Streams;
 protected:
 	RemoteRateEstimator*	remoteRateEstimator;

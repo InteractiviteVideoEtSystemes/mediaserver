@@ -326,7 +326,7 @@ int Endpoint::SetLocalSTUNCredentials( MediaFrame::Type media, const char *usern
 
     if( rtp ) return rtp->SetLocalSTUNCredentials( username, pwd );
 
-    return Error( "Unknown media [%d]\n", media );
+    return Error( "Unknown media [%s]\n", MediaFrame::TypeToString( media ) );
 }
 
 int Endpoint::SetRTPProperties( MediaFrame::Type media, const Properties &properties, MediaFrame::MediaRole role )
@@ -335,7 +335,7 @@ int Endpoint::SetRTPProperties( MediaFrame::Type media, const Properties &proper
 
     if( rtp ) return rtp->SetProperties( properties );
 
-    return Error( "Unknown media [%d]\n", media );
+    return Error( "Unknown media [%s]\n", MediaFrame::TypeToString( media ) );
 }
 
 int Endpoint::SetRTPTsTransparency( MediaFrame::Type media, bool transparency, MediaFrame::MediaRole role )
@@ -376,7 +376,7 @@ int Endpoint::onNewMediaConnection( MediaFrame::Type media, MediaFrame::MediaRol
     }
     else
     {
-        return Error( "Invalid media %d / role %d parameters\n", media, role );
+        return Error( "Invalid media %s / role %d parameters\n", MediaFrame::TypeToString( media ), role );
     }
 
     if( (*p) != NULL && (*p)->GetTransport() != MediaFrame::WS )

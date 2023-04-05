@@ -152,16 +152,16 @@ int WebSocketConnection::End()
 ************************/
 void * WebSocketConnection::run(void *par)
 {
-        Log("-WebSocket Connecttion Thread [%d,0x%x]\n",getpid(),par);
+    Log("-WebSocket Connecttion Thread [%d,0x%x]\n",getpid(),par);
 
 	//Block signals to avoid exiting on SIGUSR1
 	blocksignals();
 
-        //Obtenemos el parametro
-        WebSocketConnection *con = (WebSocketConnection *)par;
+    //Obtenemos el parametro
+    WebSocketConnection *con = (WebSocketConnection *)par;
 
-        //Ejecutamos
-        con->Run();
+    //Ejecutamos
+    con->Run();
 
 	//OK
 	return 0;
@@ -176,7 +176,7 @@ int WebSocketConnection::Run()
 	BYTE data[MTU];
 	DWORD size = MTU;
 
-	Log(">Run connection [%p]\n",this);
+	Log( ">Run WebSocket connection [%p]\n", this );
 
 	//Set values for polling
 	ufds[0].fd = socket;
@@ -273,14 +273,14 @@ int WebSocketConnection::Run()
 		if ( wsl != NULL)
 		{	
 			//Send close
-			Log("WSL: We receive a new connection , we close the old one\n");
+			Log( "WSL: We receive a new connection, we close the old one\n" );
 			wsl->onClose(this);
 		}
 		
 		//unlock now
 		pthread_mutex_unlock(&mutex);
 	}
-	Log("<Run WebSocket connection\n");
+	Log( "<Run WebSocket connection\n" );
 	
 	//If got listener
 	if (listener)

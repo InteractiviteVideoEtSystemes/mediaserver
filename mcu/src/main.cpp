@@ -164,7 +164,7 @@ int main(int argc,char **argv)
 	srand(time(NULL));
 
 	//Init open ssl lib
-        OPENSSL_init_ssl(OPENSSL_INIT_LOAD_SSL_STRINGS | OPENSSL_INIT_LOAD_CRYPTO_STRINGS, NULL);
+    OPENSSL_init_ssl(OPENSSL_INIT_LOAD_SSL_STRINGS | OPENSSL_INIT_LOAD_CRYPTO_STRINGS, NULL);
 	init_locks();
 
 	//Set default values

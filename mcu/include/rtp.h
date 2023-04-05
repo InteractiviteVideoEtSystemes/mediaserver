@@ -603,7 +603,7 @@ protected:
     }
 public:
     // Must have virtual destructor to ensure child class's destructor is called
-    virtual ~RTCPPacket() {};
+    virtual ~RTCPPacket() {}
     Type GetType() { return type; }
     virtual void Dump();
     virtual DWORD GetSize() = 0;

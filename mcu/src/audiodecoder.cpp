@@ -122,7 +122,6 @@ int AudioDecoderWorker::Decode()
 			//Creamos uno dependiendo del tipo
 			if (!(codec = AudioCodecFactory::CreateDecoder((AudioCodec::Type)packet->GetCodec())))
 				continue;
-
 		}
 
 		//Lo decodificamos
@@ -148,7 +147,6 @@ int AudioDecoderWorker::Decode()
 	if (codec!=NULL)
 		//Delete object
 		delete codec;
-
 
 	Log("<DecodeAudio\n");
 

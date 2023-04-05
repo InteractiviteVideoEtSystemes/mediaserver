@@ -46,198 +46,222 @@ MediaFrame* H264Depacketizer::AddPacket(RTPPacket *packet)
 	return AddPayload(packet->GetMediaData(),packet->GetMediaLength());
 }
 
-MediaFrame* H264Depacketizer::AddPayload(BYTE* payload, DWORD payload_len)
+MediaFrame *H264Depacketizer::AddPayload( BYTE *payload, DWORD payload_len )
 {
-	BYTE nalHeader[4];
-	BYTE nal_unit_type;
-	BYTE nal_ref_idc;
-	BYTE S, E;
-	DWORD nalu_size;
-	DWORD pos;
-	//Check lenght
-	if (!payload_len)
-		//Exit
-		return NULL;
+    BYTE nalHeader[4];
+    BYTE nal_unit_type;
+    BYTE nal_ref_idc;
+    BYTE S, E;
+    DWORD nalu_size;
+    DWORD pos;
+    //Check lenght
+    if( !payload_len )
+        //Exit
+        return NULL;
 
-	/* +---------------+
-	 * |0|1|2|3|4|5|6|7|
-	 * +-+-+-+-+-+-+-+-+
-	 * |F|NRI|  Type   |
-	 * +---------------+
-	 *
-	 * F must be 0.
-	 */
-	nal_ref_idc = (payload[0] & 0x60) >> 5;
-	nal_unit_type = payload[0] & 0x1f;
+    /* +---------------+
+     * |0|1|2|3|4|5|6|7|
+     * +-+-+-+-+-+-+-+-+
+     * |F|NRI|  Type   |
+     * +---------------+
+     *
+     * F must be 0.
+     */
+    nal_ref_idc = (payload[0] & 0x60) >> 5;
+    nal_unit_type = payload[0] & 0x1f;
 
-	//printf("[NAL:%x,type:%x]\n", payload[0], nal_unit_type);
+    //printf("[NAL:%x,type:%x]\n", payload[0], nal_unit_type);
 
-	//Check type
-	switch (nal_unit_type)
-	{
-		case 0:
-		case 30:
-		case 31:
-			/* undefined */
-			return NULL;
-		case 25:
-			/* STAP-B		Single-time aggregation packet		 5.7.1 */
-			/* 2 byte extra header for DON */
-			/** Not supported */
-			return NULL;
-		case 24:
-			/**
-			   Figure 7 presents an example of an RTP packet that contains an STAP-
-			   A.  The STAP contains two single-time aggregation units, labeled as 1
-			   and 2 in the figure.
+    //Check type
+    switch( nal_unit_type )
+    {
+        case 0:
+        case 30:
+        case 31:
+            /* undefined */
+            return NULL;
+        case 25:
+            /* STAP-B		Single-time aggregation packet		 5.7.1 */
+            /* 2 byte extra header for DON */
+            /** Not supported */
+            return NULL;
+        case 24:
+            /**
+               Figure 7 presents an example of an RTP packet that contains an STAP-
+               A.  The STAP contains two single-time aggregation units, labeled as 1
+               and 2 in the figure.
 
-			       0                   1                   2                   3
-			       0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-			      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-			      |                          RTP Header                           |
-			      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-			      |STAP-A NAL HDR |         NALU 1 Size           | NALU 1 HDR    |
-			      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-			      |                         NALU 1 Data                           |
-			      :                                                               :
-			      +               +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-			      |               | NALU 2 Size                   | NALU 2 HDR    |
-			      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-			      |                         NALU 2 Data                           |
-			      :                                                               :
-			      |                               +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-			      |                               :...OPTIONAL RTP padding        |
-			      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+                   0                   1                   2                   3
+                   0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+                  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+                  |                          RTP Header                           |
+                  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+                  |STAP-A NAL HDR |         NALU 1 Size           | NALU 1 HDR    |
+                  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+                  |                         NALU 1 Data                           |
+                  :                                                               :
+                  +               +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+                  |               | NALU 2 Size                   | NALU 2 HDR    |
+                  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+                  |                         NALU 2 Data                           |
+                  :                                                               :
+                  |                               +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+                  |                               :...OPTIONAL RTP padding        |
+                  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-			      Figure 7.  An example of an RTP packet including an STAP-A and two
-					 single-time aggregation units
-			*/
-			//Everything goes to the payload
-			frame.AddRtpPacket(0,0,payload,payload_len);
+                  Figure 7.  An example of an RTP packet including an STAP-A and two
+                     single-time aggregation units
+            */
+            //Everything goes to the payload
+            //frame.AddRtpPacket(0,0,payload,payload_len);
 
-			/* Skip STAP-A NAL HDR */
-			payload++;
-			payload_len--;
+            /* Skip STAP-A NAL HDR */
+            payload++;
+            payload_len--;
 
-			/* STAP-A Single-time aggregation packet 5.7.1 */
-			while (payload_len > 2)
-			{
-				/* Get NALU size */
-				nalu_size = (payload[0] << 8) | payload[1];
+            /* STAP-A Single-time aggregation packet 5.7.1 */
+            while( payload_len > 2 )
+            {
+                /* Get NALU size */
+                nalu_size = (payload[0] << 8) | payload[1];
 
-				/* strip NALU size */
-				payload += 2;
-				payload_len -= 2;
+                /* strip NALU size */
+                payload += 2;
+                payload_len -= 2;
 
-				//Get nal type
-				BYTE nalType = payload[0] & 0x1f;
-				//Check it
-				if (nalType==0x05)
-					//It is intra
-					frame.SetIntra(true);
+                //Get nal type
+                BYTE nalType = payload[0] & 0x1f;
+                //Check if IDR SPS or PPS
+                switch( nalType )
+                {
+                    case 0x05:
+                        //It is intra
+                        frame.SetIntra( true );
+                        break;
 
-				//Set size
-				set4(nalHeader,0,nalu_size);
-				//Append data
-				//frame.AppendMedia(sync_bytes, sizeof (sync_bytes));
-				frame.AppendMedia(nalHeader, sizeof (nalHeader));
-				
-				//Append NAL
-				frame.AppendMedia(payload,nalu_size);
-				
-				payload += nalu_size;
-				payload_len -= nalu_size;
-			}
-			break;
-		case 26:
-			/* MTAP16 Multi-time aggregation packet	5.7.2 */
-			return NULL;
-		case 27:
-			/* MTAP24 Multi-time aggregation packet	5.7.2 */
-			return NULL;
-		case 28:
-		case 29:
-			/* FU-A	Fragmentation unit	 5.8 */
-			/* FU-B	Fragmentation unit	 5.8 */
+                    default:
+                        break;
+                }
 
+                //Set size
+                set4( nalHeader, 0, nalu_size );
+                //Append header
+                frame.AppendMedia( nalHeader, sizeof( nalHeader ) );
 
-			/* +---------------+
-			 * |0|1|2|3|4|5|6|7|
-			 * +-+-+-+-+-+-+-+-+
-			 * |S|E|R| Type	   |
-			 * +---------------+
-			 *
-			 * R is reserved and always 0
-			 */
-			S = (payload[1] & 0x80) == 0x80;
-			E = (payload[1] & 0x40) == 0x40;
+                //Append NAL
+                frame.AppendMedia( payload, nalu_size );
+                //Get current position in frame
+                pos = frame.GetLength();
+                //Add RTP packet
+                frame.AddRtpPacket( pos, nalu_size, NULL, 0 );
 
-			/* strip off FU indicator and FU header bytes */
-			nalu_size = payload_len-2;
+                payload += nalu_size;
+                payload_len -= nalu_size;
+            }
+            break;
+        case 26:
+            /* MTAP16 Multi-time aggregation packet	5.7.2 */
+            return NULL;
+        case 27:
+            /* MTAP24 Multi-time aggregation packet	5.7.2 */
+            return NULL;
+        case 28:
+        case 29:
+            /* FU-A	Fragmentation unit	 5.8 */
+            /* FU-B	Fragmentation unit	 5.8 */
 
-			if (S)
-			{
-				/* NAL unit starts here */
-				BYTE nal_header;
+            /* +---------------+
+             * |0|1|2|3|4|5|6|7|
+             * +-+-+-+-+-+-+-+-+
+             * |S|E|R| Type	   |
+             * +---------------+
+             *
+             * R is reserved and always 0
+             */
+            S = (payload[1] & 0x80) == 0x80;
+            E = (payload[1] & 0x40) == 0x40;
 
-				/* reconstruct NAL header */
-				nal_header = (payload[0] & 0xe0) | (payload[1] & 0x1f);
+            /* strip off FU indicator and FU header bytes */
+            nalu_size = payload_len - 2;
 
-				//Get nal type
-				BYTE nalType = nal_header & 0x1f;
-				//Check it
-				if (nalType==0x05)
-					//It is intra
-					frame.SetIntra(true);
+            if( S )
+            {
+                /* NAL unit starts here */
+                BYTE nal_header;
 
-				//Get init of the nal
-				iniFragNALU = frame.GetLength();
-				//Set size with start code
-				set4(nalHeader,0,1);
-				//Append data
-				frame.AppendMedia(nalHeader, sizeof (nalHeader));
-				//Append NAL header
-				frame.AppendMedia(&nal_header,1);
-			}
+                /* reconstruct NAL header */
+                nal_header = (payload[0] & 0xe0) | (payload[1] & 0x1f);
 
-			//Get position
-			pos = frame.GetLength();
-			//Append data
-			frame.AppendMedia(payload+2,nalu_size);
-			//Add rtp payload
-			frame.AddRtpPacket(pos,nalu_size,payload,2);
+                //Get nal type
+                BYTE nalType = nal_header & 0x1f;
+                //Check if IDR SPS or PPS
+                switch( nalType )
+                {
+                    case 0x05:
+                        //It is intra
+                        frame.SetIntra( true );
+                        break;
 
-			if (E)
-			{
-				//Get NAL size
-				DWORD nalSize = frame.GetLength()-iniFragNALU-4;
-				//Set it
-				set4(frame.GetData(),iniFragNALU,nalSize);
-			}
-			//Done
-			break;
-		default:
-			/* 1-23	 NAL unit	Single NAL unit packet per H.264	 5.6 */
-			//Check it
-			if (nal_unit_type==0x05)
-				//It is intra
-				frame.SetIntra(true);
-			/* the entire payload is the output buffer */
-			nalu_size = payload_len;
-			//Set size
-			set4(nalHeader,0,nalu_size);
-			//Append data
-			frame.AppendMedia(nalHeader, sizeof (nalHeader));
-			//Get current position in frame
-			DWORD pos = frame.GetLength();
-			//And data
-			frame.AppendMedia(payload, nalu_size);
-			//Add RTP packet
-			frame.AddRtpPacket(pos,nalu_size,NULL,0);
-			//Done
-			break;
-	}
+                    default:
+                        break;
+                }
 
-	return &frame;
+                //Get init of the nal
+                iniFragNALU = frame.GetLength();
+                //Set size with start code
+                set4( nalHeader, 0, 1 );
+                //Append data
+                frame.AppendMedia( nalHeader, sizeof( nalHeader ) );
+                //Append NAL header
+                frame.AppendMedia( &nal_header, 1 );
+            }
+
+            //Append data
+            frame.AppendMedia( payload + 2, nalu_size );
+            //Get position
+            pos = frame.GetLength();
+            //Add rtp payload
+            frame.AddRtpPacket( pos, nalu_size, payload, 2 );
+
+            if( E )
+            {
+                //Get NAL size
+                DWORD nalSize = frame.GetLength() - iniFragNALU - 4;
+                //Set it
+                set4( frame.GetData(), iniFragNALU, nalSize );
+            }
+            //Done
+            break;
+        default:
+            /* 1-23	 NAL unit	Single NAL unit packet per H.264	 5.6 */
+            //Check if IDR SPS or PPS
+            switch( nal_unit_type )
+            {
+                case 0x05:
+                    //It is intra
+                    frame.SetIntra( true );
+                    break;
+
+                default:
+                    break;
+            }
+
+            /* the entire payload is the output buffer */
+            nalu_size = payload_len;
+            //Set size
+            set4( nalHeader, 0, nalu_size );
+            //Append header
+            frame.AppendMedia( nalHeader, sizeof( nalHeader ) );
+            //And data
+            frame.AppendMedia( payload, nalu_size );
+            //Get current position in frame
+            pos = frame.GetLength();
+            //Add RTP packet
+            frame.AddRtpPacket( pos, nalu_size, NULL, 0 );
+            //Done
+            break;
+    }
+
+    return &frame;
 }
 

@@ -316,14 +316,14 @@ int VideoDecoderJoinableWorker::Decode()
 
 void VideoDecoderJoinableWorker::onRTPPacket(RTPPacket &packet)
 {
-	//Put it on the queue
-	if (decoding)
-        {
-            if (useThread) 
-                packets.Add(packet.Clone());
-            else
-                DecodePacket(&packet);
-        }
+    //Put it on the queue
+    if( decoding )
+    {
+        if( useThread )
+            packets.Add( packet.Clone() );
+        else
+            DecodePacket( &packet );
+    }
 }
 
 void VideoDecoderJoinableWorker::onResetStream()

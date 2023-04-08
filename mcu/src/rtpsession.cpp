@@ -86,11 +86,39 @@ bool RTPSession::SetPortRange( int minPort, int maxPort )
     return true;
 }
 
+unsigned char RandomByte( unsigned int seed=0 )
+{
+    if( seed )
+    {
+        srand( seed );
+    }
+    return ((unsigned char)(int)((256.0 * (double)rand()) / ((double)RAND_MAX + 1.0)));
+}
+
+unsigned int RandomUInt32( unsigned int seed=0 )
+{
+    unsigned char byte;
+    unsigned int retval;
+
+    retval = 0;
+    byte = RandomByte( seed );
+    retval |= ((unsigned int)byte);
+    byte = RandomByte();
+    retval |= (((unsigned int)byte) << 8);
+    byte = RandomByte();
+    retval |= (((unsigned int)byte) << 16);
+    byte = RandomByte();
+    retval |= (((unsigned int)byte) << 24);
+
+    return retval;
+}
+
 /*************************
 * RTPSession
 * 	Constructro
 **************************/
-RTPSession::RTPSession( MediaFrame::Type media, Listener *listener, MediaFrame::MediaRole role ) : dtls( *this )
+RTPSession::RTPSession( MediaFrame::Type media, Listener *listener, MediaFrame::MediaRole role )
+    : dtls( *this )
 {
     //Store listener
     this->listener = listener;
@@ -104,9 +132,10 @@ RTPSession::RTPSession( MediaFrame::Type media, Listener *listener, MediaFrame::
     simPort = 0;
     simRtcpPort = 0;
     sendSeq = 0;
-    sendTime = random();
+    sendTime = RandomUInt32();
     sendLastTime = sendTime;
-    sendSSRC = random();
+    sendSSRC = RandomUInt32();
+    lastSendSSRC = 0;
     sendSR = 0;
     recSR = 0;
     sendCycles = 0;
@@ -173,8 +202,6 @@ RTPSession::RTPSession( MediaFrame::Type media, Listener *listener, MediaFrame::
     useOriTS = false;
     useExtFIR = false;
     useRtcpFIR = true;
-
-    lastSendSSRC = 0;
 }
 
 /*************************
@@ -429,7 +456,7 @@ int RTPSession::SetProperties( const Properties &properties )
 
 int RTPSession::SetLocalSTUNCredentials( const char *username, const char *pwd )
 {
-    Log( "-SetLocalSTUNCredentials [frag:%s,pwd:%s]\n", username, pwd );
+    Log( "-SetLocalSTUNCredentials [frag:%s,pwd:%s]\n", username, "****" /*pwd*/ );
     //Clean mem
     if( iceLocalUsername )
         free( iceLocalUsername );
@@ -442,10 +469,9 @@ int RTPSession::SetLocalSTUNCredentials( const char *username, const char *pwd )
     return 1;
 }
 
-
 int RTPSession::SetRemoteSTUNCredentials( const char *username, const char *pwd )
 {
-    Log( "-SetRemoteSTUNCredentials [frag:%s,pwd:%s]\n", username, pwd );
+    Log( "-SetRemoteSTUNCredentials [frag:%s,pwd:%s]\n", username, "****" /*pwd*/ );
     //Clean mem
     if( iceRemoteUsername )
         free( iceRemoteUsername );
@@ -680,18 +706,22 @@ int RTPSession::SetRemotePort( char *ip, int sendPort )
     if( recIP != INADDR_ANY && ipAddr == INADDR_ANY )
     {
         //Exit
-        Log( "-SetRemotePort NAT already bound to [%s:%d]\n", inet_ntoa( sendAddr.sin_addr ), recPort );
+        Log( "-SetRemotePort NAT already bound to [%s:%d] for media %s\n"
+            , inet_ntoa( sendAddr.sin_addr )
+            , recPort
+            , MediaFrame::TypeToString( media )
+            );
         return 1;
     }
 
     //Ok, let's et it
-    Log( "-SetRemotePort [%s:%d]\n", ip, sendPort );
+    Log( "-SetRemotePort [%s:%d] for media %s\n", ip, sendPort, MediaFrame::TypeToString( media ) );
 
     //Ip y puerto de destino
     sendAddr.sin_addr.s_addr = ipAddr;
-    sendRtcpAddr.sin_addr.s_addr = ipAddr;
     sendAddr.sin_port = htons( sendPort );
 
+    sendRtcpAddr.sin_addr.s_addr = ipAddr;
     //Check if doing rtcp muxing
     if( muxRTCP )
         //Same than rtp
@@ -876,7 +906,6 @@ int RTPSession::SendPacket( RTCPCompoundPacket &rtcp )
         //Debug
         Debug( "-Error sending rtcp packet, no remote IP yet\n" );
         //Exit
-
         return 0;
     }
     //Serialize
@@ -936,6 +965,14 @@ int RTPSession::SendPacket( RTPPacket &packet, DWORD timestamp )
     if( sendAddr.sin_addr.s_addr == INADDR_ANY )
     {
         //Do we have rec ip?
+        /*            
+        if( recIP == INADDR_ANY )
+        {
+            recIP = inet_addr( "172.21.100.19" );
+            recPort = ntohs( sendAddr.sin_port );
+        }
+        */
+
         if( recIP != INADDR_ANY )
         {
             //Do NAT
@@ -943,12 +980,15 @@ int RTPSession::SendPacket( RTPPacket &packet, DWORD timestamp )
             //Set port
             sendAddr.sin_port = htons( recPort );
             //Log
-            Log( "-RTPSession NAT: Now sending %s to [%s:%d].\n", MediaFrame::TypeToString( media ), inet_ntoa( sendAddr.sin_addr ), recPort );
+            Log( "-RTPSession NAT: now sending %s to [%s:%d].\n"
+                , MediaFrame::TypeToString( media )
+                , inet_ntoa( sendAddr.sin_addr )
+                , recPort
+                );
             //Check if using ice
         }
         else
         {
-            //Exit
             Debug( "-No remote address for [%s]\n", MediaFrame::TypeToString( media ) );
             //Exit
             return 0;
@@ -962,7 +1002,7 @@ int RTPSession::SendPacket( RTPPacket &packet, DWORD timestamp )
     }
 
     //Check if we need to send SR
-    if( isZeroTime( &lastSR ) || getDifTime( &lastSR ) > 4000000 )
+    if( isZeroTime( &lastSR ) || (getDifTime( &lastSR ) > 4000000 /*us*/) )
         //Send it
         SendSenderReport();
 
@@ -970,7 +1010,6 @@ int RTPSession::SendPacket( RTPPacket &packet, DWORD timestamp )
     rtp_hdr_t *headers = (rtp_hdr_t *)sendPacket;
 
     // if the codec of the packet we want to send is not the same than defined, we changed it
-
     if( rtpMapOut->find( sendType ) == rtpMapOut->end() || (*rtpMapOut)[sendType] != packet.GetCodec() )
     {
         this->SetSendingCodec( packet.GetCodec() );
@@ -980,10 +1019,15 @@ int RTPSession::SendPacket( RTPPacket &packet, DWORD timestamp )
     headers->version = RTP_VERSION;
 
     //if we detect a change of ssrc in packet, we change the ssrc
-    if( lastSendSSRC != 0 && lastSendSSRC != packet.GetSSRC() )
+    if( lastSendSSRC == 0 )
     {
-        Debug( "Changing sending SSRC - lastRecSSRC=%x, packet ssrc=%x \n", lastSendSSRC, packet.GetSSRC() );
-        sendSSRC = random();
+        sendSSRC = RandomUInt32( (unsigned int)time( NULL ) + (unsigned int)(uint64_t)this );
+        Debug( "Intializing sending SSRC - send=0x%X, seq=%d\n", sendSSRC, packet.GetSeqNum() );
+    } 
+    else if( lastSendSSRC != packet.GetSSRC() )
+    {
+        sendSSRC = RandomUInt32();
+        Debug( "Changing sending SSRC - last=0x%X, packet=0x%X, seq=%d\n", lastSendSSRC, packet.GetSSRC(), packet.GetSeqNum() );
     }
 
     headers->ssrc = htonl( sendSSRC );
@@ -995,7 +1039,7 @@ int RTPSession::SendPacket( RTPPacket &packet, DWORD timestamp )
        || (sendSeq%50) == 1
        || (sendSeq%50) == 4 )
     {
-        headers->ssrc = random();
+        headers->ssrc = RandomUInt32();
     }
 */
     // in case of bridging, we don't change the timestamp of the packet.
@@ -1063,7 +1107,7 @@ int RTPSession::SendPacket( RTPPacket &packet, DWORD timestamp )
 
     //Comprobamos que quepan
     if( ini + packet.GetMediaLength() > MTU )
-        return Error( "SendPacket Overflow [size:%d,max:%d]\n", ini + packet.GetMediaLength(), MTU );
+        return Error( "SendPacket Overflow [size:%d, max:%d]\n", ini + packet.GetMediaLength(), MTU );
 
     //Copiamos los datos
     memcpy( sendPacket + ini, packet.GetMediaData(), packet.GetMediaLength() );
@@ -1071,7 +1115,7 @@ int RTPSession::SendPacket( RTPPacket &packet, DWORD timestamp )
     //Set pateckt length
     int len = packet.GetMediaLength() + ini;
 
-    //Check if we ar encripted
+    //Check if we are encripted
     if( encript )
     {
         if( !sendSRTPSession )
@@ -1087,7 +1131,7 @@ int RTPSession::SendPacket( RTPPacket &packet, DWORD timestamp )
         if( err != err_status_ok )
         {
             //Nothing
-            Error( "Error protecting RTP packet for %s with recSSRC=%x  and for session=%p : [%d]\n", MediaFrame::TypeToString( media ), packet.GetSSRC(), this, err );
+            Error( "Error protecting RTP packet for %s with recSSRC=%x and for session=%p : [%d]\n", MediaFrame::TypeToString( media ), packet.GetSSRC(), this, err );
 
             return -1;
         }
@@ -1096,7 +1140,7 @@ int RTPSession::SendPacket( RTPPacket &packet, DWORD timestamp )
     //Add it rtx queue
     if( useNACK )
     {
-            //Create new pacekt
+        //Create new pacekt
         RTPTimedPacket *rtx = new RTPTimedPacket( media, sendPacket, len );
 
         rtxUse.WaitUnusedAndLock();
@@ -1112,7 +1156,7 @@ int RTPSession::SendPacket( RTPPacket &packet, DWORD timestamp )
             RTPTimedPacket *pkt = it->second;
             if( rtxs.size() > 200 )
             {
-                rtxs.erase( it++ );
+                rtxs.erase( it );
                 delete pkt;
             }
         }
@@ -1136,7 +1180,6 @@ int RTPSession::SendPacket( RTPPacket &packet, DWORD timestamp )
 
     //Send packet
     int ret = sendto( simSocket, sendPacket, len, 0, (sockaddr *)&sendAddr, sizeof( struct sockaddr_in ) );
-
     if( ret <= 0 )
     {
         Log( "Failed to send RTP packet seqnum %d, errno=%d.\n", sendSeq, errno );
@@ -1146,12 +1189,12 @@ int RTPSession::SendPacket( RTPPacket &packet, DWORD timestamp )
         //Inc stats
         numSendPackets++;
         totalSendBytes += packet.GetMediaLength();
-
     }
 
     //Exit
     return (ret > 0);
 }
+
 int RTPSession::ReadRTCP()
 {
     BYTE buffer[MTU];
@@ -1164,11 +1207,8 @@ int RTPSession::ReadRTCP()
     //Read rtcp socket
     int size = recvfrom( simRtcpSocket, buffer, MTU, MSG_DONTWAIT, (sockaddr *)&from_addr, &from_len );
 
-
     //Check if it is an STUN request
     STUNMessage *stun = STUNMessage::Parse( buffer, size );
-
-    //If it was
     if( stun )
     {
         STUNMessage::Type type = stun->GetType();
@@ -1274,7 +1314,6 @@ int RTPSession::ReadRTP()
 
     //Leemos del socket
     int size = recvfrom( simSocket, buffer, MTU, MSG_DONTWAIT, (sockaddr *)&from_addr, &from_len );
-
     if( size <= 0 )
     {
         Error( "ReadRTP on fd %d error: errno=%d.\n", simSocket, errno );
@@ -1288,8 +1327,6 @@ int RTPSession::ReadRTP()
 
     //Check if it is an STUN request
     STUNMessage *stun = STUNMessage::Parse( buffer, size );
-
-    //If it was
     if( stun )
     {
         STUNMessage::Type type = stun->GetType();
@@ -1310,7 +1347,7 @@ int RTPSession::ReadRTP()
 
             //Check if we have local passworkd
             Debug( "ICE: receiving Binding Request from %s localPwd=%s\n", inet_ntoa( from_addr.sin_addr ),
-                (iceLocalPwd != NULL) ? iceLocalPwd : "no password" );
+                (iceLocalPwd != NULL) ? "****" /*iceLocalPwd*/ : "no password" );
             if( iceRemotePwd )
             {
                 if( iceLocalPwd )
@@ -1344,9 +1381,9 @@ int RTPSession::ReadRTP()
             }
 
             //If set
-            if( stun->HasAttribute( STUNMessage::Attribute::IceControlled )
-             || stun->HasAttribute( STUNMessage::Attribute::UseCandidate )
-             || iceRemoteIP == from_addr.sin_addr.s_addr )
+            if( stun->HasAttribute( STUNMessage::Attribute::IceControlled ) || 
+                stun->HasAttribute( STUNMessage::Attribute::UseCandidate ) || 
+                iceRemoteIP == from_addr.sin_addr.s_addr )
             {
                 // We should check that username matches
                 if( iceRemoteUsername )
@@ -1357,11 +1394,16 @@ int RTPSession::ReadRTP()
                         // set recIP if not set
                         recIP = from_addr.sin_addr.s_addr;
                         recPort = ntohs( from_addr.sin_port );
+
+                        //Log
+                        Log( "-RTPSession STUN: received packet from [%s:%d] for media %s\n"
+                            , inet_ntoa( from_addr.sin_addr )
+                            , ntohs( from_addr.sin_port )
+                            , MediaFrame::TypeToString( media )
+                            );
                     }
 
-                    if( sendAddr.sin_addr.s_addr != recIP
-                        ||
-                        sendAddr.sin_port != htons( recPort ) )
+                    if( sendAddr.sin_addr.s_addr != recIP || sendAddr.sin_port != htons( recPort ) )
                     {
                         // Do symetric RTP 
                         sendAddr.sin_addr.s_addr = recIP;
@@ -1401,7 +1443,7 @@ int RTPSession::ReadRTP()
                 {
                     Debug( "ICE: sending bind request with remote user=[%s], remote password=[%s] to %s:%d.\n",
                         (iceRemoteUsername != NULL) ? iceRemoteUsername : "no user",
-                        (iceRemotePwd != NULL) ? iceRemotePwd : "no pwd",
+                        (iceRemotePwd != NULL) ? "****" /*iceRemotePwd*/ : "no pwd",
                         inet_ntoa( from_addr.sin_addr ), ntohs( from_addr.sin_port ) );
                     if( iceRemotePwd )
                     {
@@ -1477,7 +1519,11 @@ int RTPSession::ReadRTP()
     //Check if it a DTLS packet
     if( DTLSConnection::IsDTLS( buffer, size ) )
     {
-        Log( "-RTPSession DTLS: received packet from [%s:%d]\n", inet_ntoa( from_addr.sin_addr ), ntohs( from_addr.sin_port ) );
+        Log( "-RTPSession DTLS: received packet from [%s:%d] for media %s\n"
+            , inet_ntoa( from_addr.sin_addr )
+            , ntohs( from_addr.sin_port )
+            , MediaFrame::TypeToString( media )
+            );
         //Feed it
         if( !dtls.Write( buffer, size ) )
         {
@@ -1515,9 +1561,11 @@ int RTPSession::ReadRTP()
         //Get also port
         recPort = ntohs( from_addr.sin_port );
         //Log
-        Log( "-RTPSession NAT: received packet from [%s:%d] for media %s.\n",
-            inet_ntoa( from_addr.sin_addr ), ntohs( from_addr.sin_port ),
-            MediaFrame::TypeToString( media ) );
+        Log( "-RTPSession NAT: received packet from [%s:%d] for media %s\n"
+            , inet_ntoa( from_addr.sin_addr )
+            , ntohs( from_addr.sin_port )
+            , MediaFrame::TypeToString( media )
+            );
         //Check if got listener
         if( listener )
             //Request a I frame
@@ -1671,12 +1719,12 @@ int RTPSession::ReadRTP()
     {
         if( stream == NULL )
         {
-                //Send SR to old one
+            //Send SR to old one
             SendSenderReport();
             streamUse.DecUse();
             if( defaultStream == NULL && ssrc > 0 )
             {
-                Log( "-Creating default stream SSRC [new:%x] for RTPSession=%p \n", ssrc, this );
+                Log( "-Creating default stream SSRC [new:0x%X] for RTPSession=%p \n", ssrc, this );
                 SetDefaultStream( true, ssrc );
             }
             else if( listener ) //call listener
@@ -1685,7 +1733,7 @@ int RTPSession::ReadRTP()
             }
             else
             {
-                Log( "-No Listener. Adding new SSRC [new:%x]\n", ssrc );
+                Log( "-No Listener. Adding new SSRC [new:0x%X]\n", ssrc );
                 if( defaultStream == NULL )
                     SetDefaultStream( true, ssrc );
                 else
@@ -1826,7 +1874,7 @@ int RTPSession::Run()
         }
     }
 
-    Log( "<RTPSession run\n" );
+    Log( "<Run RTPSession\n" );
 }
 
 RTPPacket *RTPSession::GetPacket()
@@ -1871,6 +1919,7 @@ void RTPSession::ResetPacket( DWORD &ssrc, bool clear )
     if( s ) s->Reset( clear );
     streamUse.DecUse();
 }
+
 void RTPSession::ProcessRTCPPacket( RTCPCompoundPacket *rtcp, const char *fromAddr )
 {
     //For each packet
@@ -1931,7 +1980,6 @@ void RTPSession::ProcessRTCPPacket( RTCPCompoundPacket *rtcp, const char *fromAd
                 }
                 break;
             }
-            break;
             case RTCPPacket::SDES:
                 break;
             case RTCPPacket::Bye:
@@ -1987,10 +2035,7 @@ void RTPSession::ProcessRTCPPacket( RTCPCompoundPacket *rtcp, const char *fromAd
                             //Get field
                             RTCPRTPFeedback::TempMaxMediaStreamBitrateField *field = (RTCPRTPFeedback::TempMaxMediaStreamBitrateField *)fb->GetField( i );
                             Debug( "-TempMaxMediaStreamBitrateNotification: maxBitrate = %d, overhead=%d\n", field->GetBitrate(), field->GetOverhead() );
-
-
                         }
-
                         break;
                 }
                 break;
@@ -2071,7 +2116,7 @@ int RTPSession::SendFIR( DWORD &ssrc )
 {
     Log( "-SendFIR\n" );
 
-    //Create rtcp sender retpor
+    //Create rtcp sender report
     RTCPCompoundPacket *rtcp = CreateSenderReport();
 
     DWORD recSSRC = ssrc;
@@ -2110,7 +2155,7 @@ int RTPSession::RequestFPU()
 
 int RTPSession::RequestFPU( DWORD &ssrc )
 {
-    //Send all the packets inmediatelly to the decoderso I frame can be handled as soon as possoble
+    //Send all the packets inmediatelly to the decoder so I frame can be handled as soon as possible
     RTPStream *stream = getStream( ssrc );
     if( stream == NULL )
         stream = defaultStream;
@@ -2158,7 +2203,7 @@ void RTPSession::SetRTT( DWORD rtt )
     }
     else
     {
-     //Disable NACK
+        //Disable NACK
         isNACKEnabled = false;
         //Reduce jitter buffer as we don't use NACK
         defaultStream->SetMaxWaitTime( 60 );
@@ -2206,6 +2251,8 @@ void RTPSession::onTargetBitrateRequested( DWORD bitrate )
 
 void RTPSession::ReSendPacket( int seq )
 {
+    DWORD recCycles = 0;
+
     //Lock
     if( !useNACK )
     {
@@ -2214,7 +2261,6 @@ void RTPSession::ReSendPacket( int seq )
     }
 
     rtxUse.IncUse();
-    DWORD recCycles = 0;
     if( defaultStream != NULL )
         recCycles = defaultStream->GetRecCycles();
 
@@ -2231,13 +2277,12 @@ void RTPSession::ReSendPacket( int seq )
         DWORD size = MTU;
         BYTE data[MTU + SRTP_MAX_TRAILER_LEN];
 
-
         RTPTimedPacket *packet = it->second;
         int len = packet->GetSize();
 
         if( len > size )
         {
-                    //Error
+            //Error
             Error( "-RTPSession::ReSendPacket() | not enougth size for copying packet [len:%d]\n", len );
             return;
         }
@@ -2246,11 +2291,11 @@ void RTPSession::ReSendPacket( int seq )
         memcpy( data, packet->GetData(), packet->GetSize() );
 #if 0	
         // Does not work - recencryption fails
-                //If using abs-time
+       //If using abs-time
         if( useAbsTime )
         {
-                //Calculate absolute send time field (convert ms to 24-bit unsigned with 18 bit fractional part.
-                // Encoding: Timestamp is in seconds, 24 bit 6.18 fixed point, yielding 64s wraparound and 3.8us resolution (one increment for each 477 bytes going out on a 1Gbps interface).
+            //Calculate absolute send time field (convert ms to 24-bit unsigned with 18 bit fractional part.
+            // Encoding: Timestamp is in seconds, 24 bit 6.18 fixed point, yielding 64s wraparound and 3.8us resolution (one increment for each 477 bytes going out on a 1Gbps interface).
             DWORD abs = ((getTimeMS() << 18) / 1000) & 0x00ffffff;
             //Overwrite it
             set3( data, sizeof( rtp_hdr_t ) + sizeof( rtp_hdr_ext_t ) + 1, abs );
@@ -2259,23 +2304,24 @@ void RTPSession::ReSendPacket( int seq )
         //Check if we ar encripted
         if( encript )
         {
-                //Check  session
+            //Check  session
             if( !sendSRTPSession )
             {
-                                //Error
+                //Error
                 Error( "-RTPSession::ReSendPacket() | no sendSRTPSession\n" );
                 return;
             }
-                        //Encript
+            //Encript
             err_status_t err = srtp_protect( sendSRTPSession, data, &len );
             //Check error
             if( err != err_status_ok )
             {
-                    //Check if got listener
+                //Check if got listener
                 if( listener )
-                        //Request a I frame
+                    //Request a I frame
                     listener->onFPURequested( this );
-            //Nothing
+
+                //Nothing
                 Error( "-RTPSession::ReSendPacket() | Error protecting RTP packet [%d] sending intra instead\n", err );
                 return;
             }
@@ -2294,18 +2340,19 @@ void RTPSession::ReSendPacket( int seq )
         it = rtxs.begin();
         int first = (it == rtxs.end()) ? 0 : it->first;
 
-        Debug( "-could not resent necket packet seq %d: not in buffer anymore. first seq = %d, cout = %d, rtpsess=%p useNacl=%d\n",
+        Debug( "-could not resent nacket packet seq %d: not in buffer anymore. first seq=%d, cout=%d, rtpsess=%p useNacl=%d\n",
             ext, first, rtxs.size(), this, useNACK );
-                                //Check if got listener
-        if( listener )
-                //Request a I frame
-            listener->onFPURequested( this );
 
+        //Check if got listener
+        if( listener )
+            //Request a I frame
+            listener->onFPURequested( this );
     }
 
     //Unlock
     rtxUse.DecUse();
 }
+
 int RTPSession::SendTempMaxMediaStreamBitrateNotification( DWORD bitrate, DWORD overhead )
 {
     Log( "-SendTempMaxMediaStreamBitrateNotification [%d,%d]\n", bitrate, overhead );
@@ -2623,7 +2670,7 @@ bool RTPSession::RTPStream::Add( RTPTimedPacket *packet, DWORD size )
     //If we have a not out of order pacekt
     if( extSeq > recExtSeq )
     {
-        //Check possible lost pacekts
+        //Check possible lost packets
         if( recExtSeq && extSeq > (recExtSeq + 1) )
         {
             //Get number of lost packets
@@ -2680,7 +2727,8 @@ bool RTPSession::RTPStream::Add( RTPTimedPacket *packet, DWORD size )
                 }
                 else
                 {
-                    Error( "-Weird lost count [lost:%d,base:%d,recExtSeq:%d,recCycles:%d,extSeq:%d,seq:%d]\n", lost, base, recExtSeq, recCycles, extSeq, packet->GetSeqNum() );
+                    Error( "-Weird lost count [lost:%d,base:%d,recExtSeq:%d,recCycles:%d,extSeq:%d,seq:%d]\n"
+                        , lost, base, recExtSeq, recCycles, extSeq, packet->GetSeqNum() );
                 }
             }
         }
@@ -2754,7 +2802,6 @@ bool RTPSession::RTPStream::Add( RTPTimedPacket *packet, DWORD size )
     if( isZeroTime( &lastSR ) || getDifTime( &lastSR ) > 2000000 )
         //Send it
         s->SendSenderReport();
-
 }
 
 RTCPReport *RTPSession::RTPStream::CreateReceiverReport()

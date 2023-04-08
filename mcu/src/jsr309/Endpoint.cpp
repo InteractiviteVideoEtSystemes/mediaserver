@@ -25,8 +25,10 @@ Endpoint::Endpoint( std::wstring name, bool audioSupported, bool videoSupported,
     }
     //If audio
     if( audioSupported )
+    {
         //Create endpoint
         ports[MediaFrame::Audio] = new RTPEndpoint( MediaFrame::Audio );
+    }
     //If video
     if( videoSupported )
     {
@@ -335,7 +337,7 @@ int Endpoint::SetRTPProperties( MediaFrame::Type media, const Properties &proper
 
     if( rtp ) return rtp->SetProperties( properties );
 
-    return Error( "Unknown media [%s]\n", MediaFrame::TypeToString( media ) );
+    return Error( "Unknown media [%s] - cannot set rtp properties\n", MediaFrame::TypeToString( media ) );
 }
 
 int Endpoint::SetRTPTsTransparency( MediaFrame::Type media, bool transparency, MediaFrame::MediaRole role )
@@ -357,14 +359,13 @@ int Endpoint::SetRemoteSTUNCredentials( MediaFrame::Type media, const char *user
 
     if( rtp ) return rtp->SetRemoteSTUNCredentials( username, pwd );
 
-    return Error( "Unknown media [%s]\n", MediaFrame::TypeToString( media ) );
+    return Error( "Unknown media [%s] - cannot set stun credentials\n", MediaFrame::TypeToString( media ) );
 }
 
 int Endpoint::onNewMediaConnection( MediaFrame::Type media, MediaFrame::MediaRole role,
     MediaFrame::MediaProtocol transp, WebSocket *ws )
 {
     Port **p;
-
 
     if( role == MediaFrame::VIDEO_MAIN )
     {
@@ -389,18 +390,15 @@ int Endpoint::onNewMediaConnection( MediaFrame::Type media, MediaFrame::MediaRol
         delete (*p);
 
         (*p) = new WSEndpoint( media );
-        ws->Accept( (WSEndpoint *)*p );
-        return 1;
     }
     else
     {
-        // Previous port WAs already a using websocket
+        // Previous port was already a using websocket
         Log( "Endpoint: Accepting WebSocket connection for media %s\n",
             MediaFrame::TypeToString( media ) );
-        WSEndpoint *wsp = (WSEndpoint *)(*p);
-        ws->Accept( (WSEndpoint *)*p );
-        return 1;
     }
+    ws->Accept( (WSEndpoint *)*p );
+    return 1;
 }
 
 int Endpoint::Port::Attach( Joinable *join )
@@ -449,7 +447,7 @@ int Endpoint::Port::GetLocalMediaPort()
         }
 
         default:
-            Error( "Protocol %s not supported\n", MediaFrame::ProtocolToString( proto ) );
+            Error( "Protocol %s not supported on media port\n", MediaFrame::ProtocolToString( proto ) );
             return -1;
     }
 }
@@ -458,6 +456,14 @@ char *Endpoint::Port::GetLocalMediaHost()
 {
     switch( proto )
     {
+        /*
+        case MediaFrame::RTP:
+        {
+            RTPEndpoint *rtp = (RTPEndpoint *)(this);
+            return rtp->GetLocalHost();
+        }
+        */
+
         case MediaFrame::WS:
         {
             WSEndpoint *wsp = (WSEndpoint *)(this);
@@ -465,7 +471,7 @@ char *Endpoint::Port::GetLocalMediaHost()
         }
 
         default:
-            Error( "Protocol %s not supported\n", MediaFrame::ProtocolToString(proto) );
+            Error( "Protocol %s not supported on media host\n", MediaFrame::ProtocolToString( proto ) );
             return NULL;
     }
 }
@@ -543,6 +549,7 @@ char *Endpoint::GetMediaCandidates( MediaFrame::MediaProtocol protocol, MediaFra
     bool addrfound = false;
 
     if( gethostname( hostname, sizeof hostname ) == 0 )
+    {
         //puts(hostname);
 
         if( hostname )
@@ -571,6 +578,7 @@ char *Endpoint::GetMediaCandidates( MediaFrame::MediaProtocol protocol, MediaFra
                 }
             }
         }
+    }
 
     if( addrfound )
     {
@@ -586,7 +594,10 @@ char *Endpoint::GetMediaCandidates( MediaFrame::MediaProtocol protocol, MediaFra
 
         if( p->GetTransport() != protocol )
         {
-            Error( "Media is configured with protocol %s. Cannot get media candidate for protocol %s.\n", MediaFrame::ProtocolToString( p->GetTransport() ), MediaFrame::ProtocolToString( protocol ) );
+            Error( "Media is configured with protocol %s. Cannot get media candidate for protocol %s.\n"
+                , MediaFrame::ProtocolToString( p->GetTransport() )
+                , MediaFrame::ProtocolToString( protocol ) 
+                );
             return NULL;
         }
 
@@ -607,7 +618,7 @@ char *Endpoint::GetMediaCandidates( MediaFrame::MediaProtocol protocol, MediaFra
         {
             sprintf( url, "%s://%s", MediaFrame::ProtocolToString( protocol ), host );
         }
-        Log( "urL = %s\n", url );
+        Log( "URL = %s\n", url );
         return strdup( url );
     }
     else

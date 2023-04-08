@@ -16,8 +16,8 @@ BFCPINCLUDE     = /opt/ives/include
 FLASHSTREAMER   = no
 ADDLIBPATH      = ../staticdeps
 VADWEBRTC       = yes
-WEBRTCINCLUDE   = ${HOME}/webrtc/trunk/webrtc/
-WEBRTDIROBJ     = ${HOME}/webrtc/trunk/out/Release/obj.target/webrtc/
+WEBRTCINCLUDE   = ${HOME}/webrtc/trunk/webrtc
+WEBRTDIROBJ     = ${HOME}/webrtc/trunk/out/Release/obj.target/webrtc
 PROTOC		= ../staticdeps/bin/protoc
 DISTRO          = $(shell head -1 /etc/redhat-release | awk \
                       '{if ($$0 ~ /Fedora/) {print "fc"} else if ($$0 ~ /CentOS release 5/) {print "el5"} else if ($$0 ~ /CentOS release 6/) {print "el6"}}' )
@@ -39,8 +39,8 @@ ifeq ($(DEBUG),yes)
 	OPTS+= -g -O0
 	BFCPLIBS=/opt/ives/$(libdir)/libbfcpdbg.a 
 else
-	OPTS+= -O3
 	TAG=release
+	OPTS+= -O3
 	BFCPLIBS=/opt/ives/$(libdir)/libbfcprel.a 
 endif
 

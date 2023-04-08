@@ -189,7 +189,7 @@ int WebSocketConnection::Run()
 
 	//Set no delay option
 	int flag = 1;
-        setsockopt(socket, IPPROTO_TCP, TCP_NODELAY, &flag, sizeof(int));
+    setsockopt(socket, IPPROTO_TCP, TCP_NODELAY, &flag, sizeof(int));
 	//Catch all IO errors
 	signal(SIGIO,EmptyCatch);
 
@@ -197,11 +197,11 @@ int WebSocketConnection::Run()
 	while(running)
 	{
 		//Wait for events
-		if(poll(ufds,1,-1)<0)
+        if( poll( ufds, 1, -1 ) < 0 )
 			//Check again
 			continue;
 
-		if (ufds[0].revents & POLLOUT) 
+		if( (ufds[0].revents & POLLOUT) )
 		{
 			//Check if we have http response
 			if (response)
@@ -228,7 +228,7 @@ int WebSocketConnection::Run()
 			}
 		} 
 
-		if (ufds[0].revents & POLLIN) 
+        if( (ufds[0].revents & POLLIN) )
 		{
 			//Read data from connection
 			int len = read(socket,data,size);	
@@ -255,7 +255,7 @@ int WebSocketConnection::Run()
 			}
 		} 
 
-		if ((ufds[0].revents & POLLHUP) || (ufds[0].revents & POLLERR))
+        if( (ufds[0].revents & POLLHUP) || (ufds[0].revents & POLLERR) )
 		{
 			//Error
 			Log("Pool error event [%d]\n",ufds[0].revents);

@@ -59,7 +59,7 @@ public:
 	int SetLocalPort(int recvPort);
 	int GetLocalPort();
 	int SetRemotePort(char *ip,int sendPort);
-	int 					GetRemotePort();
+	int GetRemotePort();
 	
 	
 	RemoteRateEstimator* 	GetRemoteRateEstimator() 	{	return remoteRateEstimator; };

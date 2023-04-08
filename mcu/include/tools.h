@@ -215,7 +215,7 @@ inline void calcTimout(struct timespec *ts,DWORD timeout)
 }
 
 
-inline void EmptyCatch(int){};
+inline void EmptyCatch(int) {}
 inline BYTE  get1(const BYTE *data,BYTE i) { return data[i]; }
 inline DWORD get2(const BYTE *data,BYTE i) { return (DWORD)(data[i+1]) | ((DWORD)(data[i]))<<8; }
 inline DWORD get3(const BYTE *data,BYTE i) { return (DWORD)(data[i+2]) | ((DWORD)(data[i+1]))<<8 | ((DWORD)(data[i]))<<16; }

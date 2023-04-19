@@ -17,7 +17,8 @@ class RTPEndpoint;
 class Endpoint
 {
 public:
-	class Port : public RTPMultiplexer
+	class Port
+		: public RTPMultiplexer
 	{
 	public:
 	    virtual ~Port();
@@ -56,9 +57,8 @@ public:
 	    virtual int StopSending()
 	    {
 	        sending = false;
-		return 1;
+			return 1;
 	    }
-
 
 	protected:
 	    Joinable *joined;
@@ -78,11 +78,9 @@ public:
 			receiving = false;
 			portinited = false;
 	    }
-		
-		
 	};
 
-        typedef std::map<std::string,MediaStatistics> Statistics;
+    typedef std::map<std::string,MediaStatistics> Statistics;
 
 	Endpoint(std::wstring name,bool audioSupported,bool videoSupported,bool textSupport);
 	~Endpoint();
@@ -148,7 +146,7 @@ private:
 		{
 			return GetPort(media);
 		}
-		else if ( media == MediaFrame::Video && role != MediaFrame::VIDEO_MAIN)
+		else if ( media == MediaFrame::Video && role != MediaFrame::VIDEO_MAIN )
 		{
 			return ports2[MediaFrame::Video];
 		}
@@ -169,7 +167,7 @@ private:
 	RemoteRateEstimator estimator;
 	RemoteRateEstimator estimator2;
 	EvenSource eventSource;
-        Statistics stats;
+    Statistics stats;
 };
 
 #endif	/* ENDPOINT_H */

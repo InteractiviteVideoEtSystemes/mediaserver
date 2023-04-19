@@ -8,7 +8,7 @@
 xmlrpc_value* xmlerror (xmlrpc_env *env,const char *msg)
 {
 	//Send error
-	Error("Error processing xml cmd [\"%s\"]\n",msg);
+	Error("Processing xml cmd [\"%s\"]\n",msg);
 	//Exit
 	return xmlrpc_build_value(env,"{s:i,s:s}","returnCode",0,"errorMsg",msg);
 }

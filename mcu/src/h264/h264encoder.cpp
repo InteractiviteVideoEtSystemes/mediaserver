@@ -233,7 +233,6 @@ int H264Encoder::OpenCodec()
 	params.i_log_level          = X264_LOG_ERROR;
 #endif
 
-
 	// Set encoding context size
 	params.i_width 	= width;
 	params.i_height	= height;
@@ -262,15 +261,15 @@ int H264Encoder::OpenCodec()
 	params.rc.f_rate_tolerance  = 0.2;
 	params.rc.b_stat_write      = 0;
 	params.i_slice_max_size     = RTPPAYLOADSIZE-8;
-	params.i_threads	    = 1; //0 is auto!!
+	params.i_threads			= 1; //0 is auto!!
 	params.b_sliced_threads	    = 0;
 	params.rc.i_lookahead       = 0;
 	params.i_sync_lookahead	    = 0;
 	params.i_bframe             = 0;
-	params.b_annexb		    = 0; 
+	params.b_annexb				= 0; 
 	params.b_repeat_headers     = 1;
-	params.i_fps_num	    = fps;
-	params.i_fps_den	    = 1;
+	params.i_fps_num			= fps;
+	params.i_fps_den			= 1;
 	params.b_intra_refresh	    = (intraRefresh) ? 1 : 0;
 	params.vui.i_chroma_loc	    = 0;
 	params.i_scenecut_threshold = 0;

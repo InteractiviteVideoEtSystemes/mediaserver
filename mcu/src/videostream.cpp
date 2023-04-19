@@ -545,7 +545,7 @@ int VideoStream::SendVideo()
 		//Check picture
 		if (!pic)
 		{
-                    msleep(1000);
+            msleep(1000);
 			if ( intputErrCount++ > 10 )
 			{
 			    // If too many errors -> videoInput has been closed
@@ -566,14 +566,13 @@ int VideoStream::SendVideo()
 			//Do not send anymore
 			sendFPU = false;
 			//Do not send if just send one (100ms)
-			if (getDifTime(&lastFPU)/100>100)
+			if( getDifTime( &lastFPU ) / 1000 > 100 )
 			{
 				//Set it
 				videoEncoder->FastPictureUpdate();
 				//Update last FPU
 				getUpdDifTime(&lastFPU);
 			}
-
 		}
 
 		//Calculate target bitrate
@@ -799,7 +798,7 @@ int VideoStream::RecVideo()
 		if(lostCount>1 || waitIntra)
 		{
 			//Check if we got listener and more than two seconds have elapsed from last request
-			if (listener && getDifTime(&lastFPURequest)>10000000)
+			if( listener && getDifTime( &lastFPURequest ) > 10000000 )
 			{
 				//Debug
 				Log("-Requesting FPU lost %d ssrc= %08x\n",lostCount,recSSRC);

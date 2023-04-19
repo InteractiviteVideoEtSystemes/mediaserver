@@ -111,13 +111,11 @@ void WebSocketConnection::Stop()
 
 void WebSocketConnection::Close()
 {
-    
 	End();
 }
 
 int WebSocketConnection::End()
 {
-	
 	if (!inited)
 		//Exit
 		return 0;

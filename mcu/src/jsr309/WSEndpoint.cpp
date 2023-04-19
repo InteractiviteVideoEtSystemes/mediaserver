@@ -23,21 +23,22 @@ WSEndpoint::WSEndpoint(MediaFrame::Type type) : Port(type, MediaFrame::WS)
 			break;
 		}
 		default:
-			throw new std::logic_error("Unsupported media type\n");
-    };
+			throw new std::logic_error("Not supported media type\n" ); // , MediaFrame::TypeToString( type )
+			break;
+    }
 }
 
 void WSEndpoint::onOpen(WebSocket *ws)
 {
     if ( _ws == NULL )
     {
-	gettimeofday(&clock,NULL);
-	_ws = ws;
+		gettimeofday(&clock,NULL);
+		_ws = ws;
     }
     else
     {
     	_ws->Close();
-	_ws = ws;
+		_ws = ws;
     }
 }
 
@@ -64,9 +65,8 @@ void WSEndpoint::onMessageData(WebSocket *ws,const BYTE* data, const DWORD size)
 void WSEndpoint::onMessageEnd(WebSocket *ws)
 {
    switch( media->GetType() )
-    {
+   {
         case MediaFrame::Text:
-	    { 
 			if (useRed)
 			{
 				
@@ -96,13 +96,12 @@ void WSEndpoint::onMessageEnd(WebSocket *ws)
 			if ( pseudoSeqNum == 0xFFFF )
 				pseudoSeqCycle++;
 			pseudoSeqNum++;
-	    }
-		
-	    break;
+	
+		    break;
 	    
-	default:
-	   break;
-    }
+        default:
+            break;
+   }
 }
 
 void WSEndpoint::onRTPPacket(RTPPacket &packet)
@@ -150,7 +149,7 @@ void WSEndpoint::onRTPPacket(RTPPacket &packet)
 		else
 		{
 			Error("WSEndpoint is associated with media %s. Cannot deliver %s packet.\n",
-				   MediaFrame::TypeToString(media->GetType()), 
+			   MediaFrame::TypeToString(media->GetType()), 
 			   MediaFrame::TypeToString(packet.GetMedia()));
 		}	
     }
@@ -165,10 +164,10 @@ void WSEndpoint::onClose(WebSocket *ws)
     if ( _ws == ws )
     {
         Log("WSEndpoint: connection associated with endpoint is closing.\n");
-	_ws = 0;
+		_ws = 0;
 	
-	// Signal the interription as per
-	SendReplacementChar(false);
+		// Signal the interription as per
+		SendReplacementChar(false);
     }
 }
 
@@ -217,7 +216,7 @@ int WSEndpoint::End()
     if ( _ws != NULL )
     {
         _ws->Close();
-	_ws = NULL;
+		_ws = NULL;
     }
 	
 	RedCodec = NULL;

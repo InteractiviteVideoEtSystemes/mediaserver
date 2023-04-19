@@ -1358,7 +1358,6 @@ AudioTranscoder *MediaSession::GetAudioTranscoder( int transcoderId )
 
     //Get it
     return it->second;
-
 }
 
 

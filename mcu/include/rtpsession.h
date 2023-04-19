@@ -58,7 +58,7 @@ public:
 	void SetRemoteRateEstimator(RemoteRateEstimator* estimator);
 	int SetLocalPort(int recvPort);
 	int GetLocalPort();
-	int SetRemotePort(char *ip,int sendPort);
+	int SetRemotePort(char *ip, int sendPort);
 	int GetRemotePort();
 	
 	
@@ -85,7 +85,7 @@ public:
 	DWORD GetDefaultStream(bool receiving) { return (defaultStream != NULL) ? defaultStream->GetRecSSRC() : 0 ; }
 
 
-        bool DeleteStreams();
+    bool DeleteStreams();
 	/**
 	 * Set the stream designated by SSRC as the defaut stream, if the stream does not exist create it
 	 *
@@ -122,14 +122,13 @@ public:
 	void ResetPacket(bool clear) { if (defaultStream != NULL) defaultStream->Reset(clear) ;};
 	void ResetPacket(DWORD & ssrc, bool clear);
 	
-        /**
-         * Obtain the statistcs for a given stream or all the streams
-         * @param ssrc SSRC of the receiving stream, 0 to sum up all the streams
-         * @param stats statistic structure to populate
-         * @return  true if the stats coulf be gathered, false in case of error
-         */
-        bool GetStatistics( DWORD ssrc, MediaStatistics & stats);
-
+    /**
+        * Obtain the statistcs for a given stream or all the streams
+        * @param ssrc SSRC of the receiving stream, 0 to sum up all the streams
+        * @param stats statistic structure to populate
+        * @return  true if the stats coulf be gathered, false in case of error
+        */
+    bool GetStatistics( DWORD ssrc, MediaStatistics & stats);
 
 	DWORD 	GetSendSSRC()			const { return sendSSRC;	}
 	const RTPMap* GetRtpMapIn()			const  { return rtpMapIn;	}
@@ -178,9 +177,8 @@ private:
 
 private:
 	static  void* run(void *par);
-protected:
-	
 
+protected:
 	class RTPStream : public RTPBuffer
 	{
 	public:
@@ -218,7 +216,7 @@ protected:
 		DWORD	GetTotalRecvPacketsSinceLastSR() 	const { return totalRecvPacketsSinceLastSR;	}
 		DWORD	GetMinRecvExtSeqNumSinceLastSR() 	const { return minRecvExtSeqNumSinceLastSR;	}
 		DWORD	GetRecCycles() 						const { return recCycles;	}
-                DWORD   GetRecCodec() const { return recCodec; }
+        DWORD   GetRecCodec() const { return recCodec; }
 	
 		bool disabled;
 	private:
@@ -239,7 +237,7 @@ protected:
 		DWORD   minRecvExtSeqNumSinceLastSR;
 		DWORD	jitter;
 
-                DWORD   recCodec;
+        DWORD   recCodec;
 		
 		FECDecoder		fec;
 		
@@ -310,8 +308,8 @@ private:
 	sockaddr_in sendRtcpAddr;
 	BYTE 	sendPacket[MTU];
 	WORD    sendSeq;
-        DWORD   sendExtSeq;
-        DWORD   sendCycles;
+    DWORD   sendExtSeq;
+    DWORD   sendCycles;
 	DWORD   sendTime;
 	DWORD	sendLastTime;
 	DWORD	sendSSRC;

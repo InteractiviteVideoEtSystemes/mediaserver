@@ -227,7 +227,7 @@ int VideoEncoderMultiplexerWorker::Encode()
 	else
 	{
 		//Send at higher bitrate first frame, but skip frames after that so sending bitrate is kept
-                // DIsabled by IVES - to check later
+        //Disabled by IVES - to check later
 		videoEncoder->SetFrameRate(fps,current,intraPeriod);
 		//Iniciamos el tamama�o del encoder
  		videoEncoder->SetSize(width,height);

@@ -394,9 +394,9 @@ int Endpoint::onNewMediaConnection( MediaFrame::Type media, MediaFrame::MediaRol
     else
     {
         // Previous port was already a using websocket
-        Log( "Endpoint: Accepting WebSocket connection for media %s\n",
-            MediaFrame::TypeToString( media ) );
+        Log( "Endpoint: Accepting WebSocket connection for media %s\n", MediaFrame::TypeToString( media ) );
     }
+
     ws->Accept( (WSEndpoint *)*p );
     return 1;
 }
@@ -412,7 +412,7 @@ int Endpoint::Port::Attach( Joinable *join )
     joined = join;
      //If it is not null
     if( joined )
-    //Join to the new one
+        //Join to the new one
         joined->AddListener( (RTPEndpoint *)this );
 
     //OK
@@ -421,7 +421,7 @@ int Endpoint::Port::Attach( Joinable *join )
 
 int Endpoint::Port::Detach()
 {
-        //Detach if joined
+    //Detach if joined
     if( joined )
         //Remove ourself as listeners
         joined->RemoveListener( (RTPEndpoint *)this );
@@ -460,7 +460,8 @@ char *Endpoint::Port::GetLocalMediaHost()
         case MediaFrame::RTP:
         {
             RTPEndpoint *rtp = (RTPEndpoint *)(this);
-            return rtp->GetLocalHost();
+            //return rtp->GetLocalHost();
+            return "172.21.100.19";
         }
         */
 
@@ -501,7 +502,7 @@ int Endpoint::ConfigureMediaConnection( MediaFrame::Type media, MediaFrame::Medi
                     break;
 
                 default:
-                    return Error( "Transport not supported.\n" );
+                    return Error( "Transport %s not supported.\n", MediaFrame::ProtocolToString( proto ) );
             }
 
             if( role == MediaFrame::VIDEO_MAIN )
@@ -519,7 +520,7 @@ int Endpoint::ConfigureMediaConnection( MediaFrame::Type media, MediaFrame::Medi
             else
             {
                 delete p2;
-                return Error( "Invalid media=%d, role=%d .\n", media, role );
+                return Error( "Invalid media=%d, role=%d.\n", media, role );
             }
 
             return 1;
@@ -536,7 +537,6 @@ int Endpoint::ConfigureMediaConnection( MediaFrame::Type media, MediaFrame::Medi
         return Error( "Invalid media / role.\n" );
     }
 }
-
 
 
 char *Endpoint::GetMediaCandidates( MediaFrame::MediaProtocol protocol, MediaFrame::Type media )

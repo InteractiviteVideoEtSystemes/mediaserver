@@ -42,7 +42,7 @@ xmlrpc_value* EventQueueDelete(xmlrpc_env *env, xmlrpc_value *param_array, void 
 
 	//Delete event queue
 	if (!jsr->DeleteEventQueue(queueId))
-		return xmlerror(env,"Event queue does not exist\n");
+		return xmlerror(env,"Event queue does not exist");
 
 	//Devolvemos el resultado
 	return xmlok(env);
@@ -130,7 +130,7 @@ xmlrpc_value* PlayerCreate(xmlrpc_env *env, xmlrpc_value *param_array, void *use
 
 	//Salimos
 	if(playerId<0)
-		return xmlerror(env,"Could not set input token for media bridge\n");
+		return xmlerror(env,"Could not set input token for media bridge");
 
 	//Devolvemos el resultado
 	return xmlok(env,xmlrpc_build_value(env,"(i)",playerId));
@@ -152,7 +152,7 @@ xmlrpc_value* PlayerDelete(xmlrpc_env *env, xmlrpc_value *param_array, void *use
 
 	//Obtenemos la referencia
 	if(!jsr->GetMediaSessionRef(sessionId,&session))
-		return xmlerror(env,"Media session not found\n");
+		return xmlerror(env,"Media session not found");
 
 	//La borramos
 	bool res = session->PlayerDelete(playerId);
@@ -162,7 +162,7 @@ xmlrpc_value* PlayerDelete(xmlrpc_env *env, xmlrpc_value *param_array, void *use
 
 	//Salimos
 	if(!res)
-		return xmlerror(env,"Could not delete player\n");
+		return xmlerror(env,"Could not delete player");
 
 	//Devolvemos el resultado
 	return xmlok(env);
@@ -185,7 +185,7 @@ xmlrpc_value* PlayerOpen(xmlrpc_env *env, xmlrpc_value *param_array, void *user_
 
 	//Obtenemos la referencia
 	if(!jsr->GetMediaSessionRef(sessionId,&session))
-		return xmlerror(env,"Media session not found\n");
+		return xmlerror(env,"Media session not found");
 
 	//La borramos
 	bool res = session->PlayerOpen(playerId,filename);
@@ -195,7 +195,7 @@ xmlrpc_value* PlayerOpen(xmlrpc_env *env, xmlrpc_value *param_array, void *user_
 
 	//Salimos
 	if(!res)
-		return xmlerror(env,"Could not open player\n");
+		return xmlerror(env,"Could not open player");
 
 	//Devolvemos el resultado
 	return xmlok(env);
@@ -217,7 +217,7 @@ xmlrpc_value* PlayerPlay(xmlrpc_env *env, xmlrpc_value *param_array, void *user_
 
 	//Obtenemos la referencia
 	if(!jsr->GetMediaSessionRef(sessionId,&session))
-		return xmlerror(env,"Media session not found\n");
+		return xmlerror(env,"Media session not found");
 
 	//La borramos
 	bool res = session->PlayerPlay(playerId);
@@ -227,7 +227,7 @@ xmlrpc_value* PlayerPlay(xmlrpc_env *env, xmlrpc_value *param_array, void *user_
 
 	//Salimos
 	if(!res)
-		return xmlerror(env,"Could not play player\n");
+		return xmlerror(env,"Could not play player");
 
 	//Devolvemos el resultado
 	return xmlok(env);
@@ -250,7 +250,7 @@ xmlrpc_value* PlayerSeek(xmlrpc_env *env, xmlrpc_value *param_array, void *user_
 
 	//Obtenemos la referencia
 	if(!jsr->GetMediaSessionRef(sessionId,&session))
-		return xmlerror(env,"Media session not found\n");
+		return xmlerror(env,"Media session not found");
 
 	//La borramos
 	bool res = session->PlayerSeek(playerId,time);
@@ -260,7 +260,7 @@ xmlrpc_value* PlayerSeek(xmlrpc_env *env, xmlrpc_value *param_array, void *user_
 
 	//Salimos
 	if(!res)
-		return xmlerror(env,"Could not seek player\n");
+		return xmlerror(env,"Could not seek player");
 
 	//Devolvemos el resultado
 	return xmlok(env);
@@ -282,7 +282,7 @@ xmlrpc_value* PlayerStop(xmlrpc_env *env, xmlrpc_value *param_array, void *user_
 
 	//Obtenemos la referencia
 	if(!jsr->GetMediaSessionRef(sessionId,&session))
-		return xmlerror(env,"Media session not found\n");
+		return xmlerror(env,"Media session not found");
 
 	//La borramos
 	bool res = session->PlayerStop(playerId);
@@ -292,7 +292,7 @@ xmlrpc_value* PlayerStop(xmlrpc_env *env, xmlrpc_value *param_array, void *user_
 
 	//Salimos
 	if(!res)
-		return xmlerror(env,"Could not stop player\n");
+		return xmlerror(env,"Could not stop player");
 
 	//Devolvemos el resultado
 	return xmlok(env);
@@ -314,7 +314,7 @@ xmlrpc_value* PlayerClose(xmlrpc_env *env, xmlrpc_value *param_array, void *user
 
 	//Obtenemos la referencia
 	if(!jsr->GetMediaSessionRef(sessionId,&session))
-		return xmlerror(env,"Media session not found\n");
+		return xmlerror(env,"Media session not found");
 
 	//La borramos
 	bool res = session->PlayerClose(playerId);
@@ -324,7 +324,7 @@ xmlrpc_value* PlayerClose(xmlrpc_env *env, xmlrpc_value *param_array, void *user
 
 	//Salimos
 	if(!res)
-		return xmlerror(env,"Could not stop player\n");
+		return xmlerror(env,"Could not stop player");
 
 	//Devolvemos el resultado
 	return xmlok(env);
@@ -360,7 +360,7 @@ xmlrpc_value* RecorderCreate(xmlrpc_env *env, xmlrpc_value *param_array, void *u
 
 	//Salimos
 	if(recorderId<0)
-		return xmlerror(env,"Could not set input token for media bridge\n");
+		return xmlerror(env,"Could not set input token for media bridge");
 
 	//Devolvemos el resultado
 	return xmlok(env,xmlrpc_build_value(env,"(i)",recorderId));
@@ -382,7 +382,7 @@ xmlrpc_value* RecorderDelete(xmlrpc_env *env, xmlrpc_value *param_array, void *u
 
 	//Obtenemos la referencia
 	if(!jsr->GetMediaSessionRef(sessionId,&session))
-		return xmlerror(env,"Media session not found\n");
+		return xmlerror(env,"Media session not found");
 
 	//La borramos
 	bool res = session->RecorderDelete(recorderId);
@@ -392,7 +392,7 @@ xmlrpc_value* RecorderDelete(xmlrpc_env *env, xmlrpc_value *param_array, void *u
 
 	//Salimos
 	if(!res)
-		return xmlerror(env,"Could not delete recorder\n");
+		return xmlerror(env,"Could not delete recorder");
 
 	//Devolvemos el resultado
 	return xmlok(env);
@@ -415,7 +415,7 @@ xmlrpc_value* RecorderRecord(xmlrpc_env *env, xmlrpc_value *param_array, void *u
 
 	//Obtenemos la referencia
 	if(!jsr->GetMediaSessionRef(sessionId,&session))
-		return xmlerror(env,"Media session not found\n");
+		return xmlerror(env,"Media session not found");
 
 	//La borramos
 	bool res = session->RecorderRecord(recorderId,filename);
@@ -425,7 +425,7 @@ xmlrpc_value* RecorderRecord(xmlrpc_env *env, xmlrpc_value *param_array, void *u
 
 	//Salimos
 	if(!res)
-		return xmlerror(env,"Could not play recorder\n");
+		return xmlerror(env,"Could not play recorder");
 
 	//Devolvemos el resultado
 	return xmlok(env);
@@ -447,7 +447,7 @@ xmlrpc_value* RecorderStop(xmlrpc_env *env, xmlrpc_value *param_array, void *use
 
 	//Obtenemos la referencia
 	if(!jsr->GetMediaSessionRef(sessionId,&session))
-		return xmlerror(env,"Media session not found\n");
+		return xmlerror(env,"Media session not found");
 
 	//La borramos
 	bool res = session->RecorderStop(recorderId);
@@ -457,7 +457,7 @@ xmlrpc_value* RecorderStop(xmlrpc_env *env, xmlrpc_value *param_array, void *use
 
 	//Salimos
 	if(!res)
-		return xmlerror(env,"Could not stop recorder\n");
+		return xmlerror(env,"Could not stop recorder");
 
 	//Devolvemos el resultado
 	return xmlok(env);
@@ -491,7 +491,7 @@ xmlrpc_value* RecorderAttachToEndpoint(xmlrpc_env *env, xmlrpc_value *param_arra
 
 	//Salimos
 	if(!res)
-		return xmlerror(env,"Error\n");
+		return xmlerror(env,"Error RecorderAttachToEndpoint");
 
 	//Devolvemos el resultado
 	return xmlok(env);
@@ -525,7 +525,7 @@ xmlrpc_value* RecorderAttachToAudioMixerPort(xmlrpc_env *env, xmlrpc_value *para
 
 	//Salimos
 	if(!res)
-		return xmlerror(env,"Error\n");
+		return xmlerror(env,"Error RecorderAttachToAudioMixerPort");
 
 	//Devolvemos el resultado
 	return xmlok(env);
@@ -559,7 +559,7 @@ xmlrpc_value* RecorderAttachToVideoMixerPort(xmlrpc_env *env, xmlrpc_value *para
 
 	//Salimos
 	if(!res)
-		return xmlerror(env,"Error\n");
+		return xmlerror(env,"Error RecorderAttachToVideoMixerPort");
 
 	//Devolvemos el resultado
 	return xmlok(env);
@@ -592,7 +592,7 @@ xmlrpc_value* RecorderDettach(xmlrpc_env *env, xmlrpc_value *param_array, void *
 
 	//Salimos
 	if(!res)
-		return xmlerror(env,"Error\n");
+		return xmlerror(env,"Error RecorderDettach");
 
 	//Devolvemos el resultado
 	return xmlok(env);
@@ -649,7 +649,7 @@ xmlrpc_value* EndpointCreate(xmlrpc_env *env, xmlrpc_value *param_array, void *u
 
 	//Salimos
 	if(endpointId<0)
-		return xmlerror(env,"Could not set input token for media bridge\n");
+		return xmlerror(env,"Could not set input token for media bridge");
 
 	//Devolvemos el resultado
 	return xmlok(env,xmlrpc_build_value(env,"(i)",endpointId));
@@ -671,7 +671,7 @@ xmlrpc_value* EndpointDelete(xmlrpc_env *env, xmlrpc_value *param_array, void *u
 
 	//Obtenemos la referencia
 	if(!jsr->GetMediaSessionRef(sessionId,&session))
-		return xmlerror(env,"Media session not found\n");
+		return xmlerror(env,"Media session not found");
 
 	//La borramos
 	bool res = session->EndpointDelete(endpointId);
@@ -681,7 +681,7 @@ xmlrpc_value* EndpointDelete(xmlrpc_env *env, xmlrpc_value *param_array, void *u
 
 	//Salimos
 	if(!res)
-		return xmlerror(env,"Could not delete endpoint\n");
+		return xmlerror(env,"Could not delete endpoint");
 
 	//Devolvemos el resultado
 	return xmlok(env);
@@ -703,7 +703,7 @@ xmlrpc_value* EndpointGetStatistics(xmlrpc_env *env, xmlrpc_value *param_array, 
 
 	//Obtenemos la referencia
 	if(!jsr->GetMediaSessionRef(sessionId,&session))
-		return xmlerror(env,"Media session not found\n");
+		return xmlerror(env,"Media session not found");
 
         Endpoint * ep = session->GetEndpoint(endpointId);
 
@@ -711,7 +711,7 @@ xmlrpc_value* EndpointGetStatistics(xmlrpc_env *env, xmlrpc_value *param_array, 
         if (ep == NULL)
         {
             jsr->ReleaseMediaSessionRef(sessionId);
-            return xmlerror(env,"Endpoint not found\n");
+            return xmlerror(env,"Endpoint not found");
         }
 	//Get statistics
 	const Endpoint::Statistics * epStats = ep->GetStatistics();
@@ -776,7 +776,7 @@ xmlrpc_value* EndpointSetLocalCryptoSDES(xmlrpc_env *env, xmlrpc_value *param_ar
 
 	//Salimos
 	if(!res)
-		return xmlerror(env,"Error");
+		return xmlerror(env,"Error EndpointSetLocalCryptoSDES");
 
 	//Devolvemos el resultado
 	return xmlok(env);
@@ -811,7 +811,7 @@ xmlrpc_value* EndpointSetRemoteCryptoSDES(xmlrpc_env *env, xmlrpc_value *param_a
 	
 	//Salimos
 	if(!res)
-		return xmlerror(env,"Error");
+		return xmlerror(env,"Error EndpointSetRemoteCryptoSDES");
 
 	//Devolvemos el resultado
 	return xmlok(env);
@@ -847,7 +847,7 @@ xmlrpc_value* EndpointSetRemoteCryptoDTLS(xmlrpc_env *env, xmlrpc_value *param_a
 
 	//Salimos
 	if(!res)
-		return xmlerror(env,"Error");
+		return xmlerror(env,"Error EndpointSetRemoteCryptoDTLS");
 
 	//Devolvemos el resultado
 	return xmlok(env);
@@ -907,7 +907,7 @@ xmlrpc_value* EndpointSetLocalSTUNCredentials(xmlrpc_env *env, xmlrpc_value *par
 
 	//Salimos
 	if(!res)
-		return xmlerror(env,"Error");
+		return xmlerror(env,"Error EndpointSetLocalSTUNCredentials");
 
 	//Devolvemos el resultado
 	return xmlok(env);
@@ -943,7 +943,7 @@ xmlrpc_value* EndpointSetRemoteSTUNCredentials(xmlrpc_env *env, xmlrpc_value *pa
 
 	//Salimos
 	if(!res)
-		return xmlerror(env,"Error");
+		return xmlerror(env,"Error EndpointSetRemoteSTUNCredentials");
 
 	//Devolvemos el resultado
 	return xmlok(env);
@@ -960,6 +960,7 @@ xmlrpc_value* EndpointSetRTPProperties(xmlrpc_env *env, xmlrpc_value *param_arra
 	int endpointId;
 	int media;
 	xmlrpc_value *map;
+
 	xmlrpc_parse_value(env, param_array, "(iiiS)", &sessionId,&endpointId,&media,&map);
 
 	//Get the rtp map
@@ -991,10 +992,6 @@ xmlrpc_value* EndpointSetRTPProperties(xmlrpc_env *env, xmlrpc_value *param_arra
 	if(env->fault_occurred)
 		return 0;
 
-	//Comprobamos si ha habido error
-	if(env->fault_occurred)
-		return 0;
-
 	//Obtenemos la referencia
 	if(!jsr->GetMediaSessionRef(sessionId,&session))
 		return xmlerror(env,"The media Session does not exist");
@@ -1007,7 +1004,7 @@ xmlrpc_value* EndpointSetRTPProperties(xmlrpc_env *env, xmlrpc_value *param_arra
 
 	//Salimos
 	if(!res)
-		return xmlerror(env,"Error\n");
+		return xmlerror(env,"Error EndpointSetRTPProperties");
 
 	//Devolvemos el resultado
 	return xmlok(env);
@@ -1070,7 +1067,7 @@ xmlrpc_value* EndpointStartSending(xmlrpc_env *env, xmlrpc_value *param_array, v
 
 	//Salimos
 	if(!res)
-		return xmlerror(env,"Error\n");
+		return xmlerror(env,"Error EndpointStartSending");
 
 	//Devolvemos el resultado
 	return xmlok(env);
@@ -1164,9 +1161,9 @@ xmlrpc_value* EndpointStartReceiving(xmlrpc_env *env, xmlrpc_value *param_array,
 
 	//Salimos
 	if(!recPort)
-		return xmlerror(env,"No se ha podido terminar la sessionerencia\n");
+		return xmlerror(env,"No se ha podido terminar la sessionerencia");
 	
-	Debug("Endpoint Rec Port=%d\n",recPort);
+	Debug("Endpoint Rec Port=%d\n", recPort);
 	
 	//Devolvemos el resultado
 	return xmlok(env,xmlrpc_build_value(env,"(i)",recPort));
@@ -1200,7 +1197,7 @@ xmlrpc_value* EndpointStopReceiving(xmlrpc_env *env, xmlrpc_value *param_array, 
 
 	//Salimos
 	if(!res)
-		return xmlerror(env,"Error\n");
+		return xmlerror(env,"Error EndpointStopReceiving");
 
 	//Devolvemos el resultado
 	return xmlok(env);
@@ -1234,7 +1231,7 @@ xmlrpc_value* EndpointRequestUpdate(xmlrpc_env *env, xmlrpc_value *param_array, 
 
 	//Salimos
 	if(!res)
-		return xmlerror(env,"Error\n");
+		return xmlerror(env,"Error EndpointRequestUpdate");
 
 	//Devolvemos el resultado
 	return xmlok(env);
@@ -1268,7 +1265,7 @@ xmlrpc_value* EndpointAttachToPlayer(xmlrpc_env *env, xmlrpc_value *param_array,
 
 	//Salimos
 	if(!res)
-		return xmlerror(env,"Error\n");
+		return xmlerror(env,"Error EndpointAttachToPlayer");
 
 	//Devolvemos el resultado
 	return xmlok(env);
@@ -1302,7 +1299,7 @@ xmlrpc_value* EndpointAttachToEndpoint(xmlrpc_env *env, xmlrpc_value *param_arra
 
 	//Salimos
 	if(!res)
-		return xmlerror(env,"Error\n");
+		return xmlerror(env,"Error EndpointAttachToEndpoint");
 
 	//Devolvemos el resultado
 	return xmlok(env);
@@ -1336,7 +1333,7 @@ xmlrpc_value* EndpointAttachToAudioMixerPort(xmlrpc_env *env, xmlrpc_value *para
 
 	//Salimos
 	if(!res)
-		return xmlerror(env,"Error\n");
+		return xmlerror(env,"Error");
 
 	//Devolvemos el resultado
 	return xmlok(env);
@@ -1370,7 +1367,7 @@ xmlrpc_value* EndpointAttachToVideoMixerPort(xmlrpc_env *env, xmlrpc_value *para
 
 	//Salimos
 	if(!res)
-		return xmlerror(env,"Error\n");
+		return xmlerror(env,"Error");
 
 	//Devolvemos el resultado
 	return xmlok(env);
@@ -1420,7 +1417,7 @@ xmlrpc_value* EndpointAttachToAudioTranscoder(xmlrpc_env *env, xmlrpc_value *par
 
 	//Salimos
 	if(!res)
-		return xmlerror(env,"Error\n");
+		return xmlerror(env,"Error");
 
 	//Devolvemos el resultado
 	return xmlok(env);
@@ -1453,7 +1450,7 @@ xmlrpc_value* EndpointAttachToVideoTranscoder(xmlrpc_env *env, xmlrpc_value *par
 
 	//Salimos
 	if(!res)
-		return xmlerror(env,"Error\n");
+		return xmlerror(env,"Error");
 
 	//Devolvemos el resultado
 	return xmlok(env);
@@ -1486,7 +1483,7 @@ xmlrpc_value* EndpointDettach(xmlrpc_env *env, xmlrpc_value *param_array, void *
 
 	//Salimos
 	if(!res)
-		return xmlerror(env,"Error\n");
+		return xmlerror(env,"Error");
 
 	//Devolvemos el resultado
 	return xmlok(env);
@@ -1697,7 +1694,7 @@ xmlrpc_value* AudioMixerPortAttachToPlayer(xmlrpc_env *env, xmlrpc_value *param_
 
 	//Salimos
 	if(!res)
-		return xmlerror(env,"Error\n");
+		return xmlerror(env,"Error");
 
 	//Devolvemos el resultado
 	return xmlok(env);
@@ -1731,7 +1728,7 @@ xmlrpc_value* AudioMixerPortAttachToEndpoint(xmlrpc_env *env, xmlrpc_value *para
 
 	//Salimos
 	if(!res)
-		return xmlerror(env,"Error\n");
+		return xmlerror(env,"Error");
 
 	//Devolvemos el resultado
 	return xmlok(env);
@@ -1764,7 +1761,7 @@ xmlrpc_value* AudioMixerPortDettach(xmlrpc_env *env, xmlrpc_value *param_array, 
 
 	//Salimos
 	if(!res)
-		return xmlerror(env,"Error\n");
+		return xmlerror(env,"Error");
 
 	//Devolvemos el resultado
 	return xmlok(env);
@@ -1942,7 +1939,7 @@ xmlrpc_value* VideoMixerPortSetCodec(xmlrpc_env *env, xmlrpc_value *param_array,
 
 	//Salimos
 	if(!res)
-		return xmlerror(env,"Error\n");
+		return xmlerror(env,"Error");
 
 	//Devolvemos el resultado
 	return xmlok(env);
@@ -1977,7 +1974,7 @@ xmlrpc_value* VideoMixerPortAttachToPlayer(xmlrpc_env *env, xmlrpc_value *param_
 
 	//Salimos
 	if(!res)
-		return xmlerror(env,"Error\n");
+		return xmlerror(env,"Error");
 
 	//Devolvemos el resultado
 	return xmlok(env);
@@ -2011,7 +2008,7 @@ xmlrpc_value* VideoMixerPortAttachToEndpoint(xmlrpc_env *env, xmlrpc_value *para
 
 	//Salimos
 	if(!res)
-		return xmlerror(env,"Error\n");
+		return xmlerror(env,"Error");
 
 	//Devolvemos el resultado
 	return xmlok(env);
@@ -2044,7 +2041,7 @@ xmlrpc_value* VideoMixerPortDettach(xmlrpc_env *env, xmlrpc_value *param_array, 
 
 	//Salimos
 	if(!res)
-		return xmlerror(env,"Error\n");
+		return xmlerror(env,"Error");
 
 	//Devolvemos el resultado
 	return xmlok(env);
@@ -2147,7 +2144,7 @@ xmlrpc_value* VideoMixerMosaicSetSlot(xmlrpc_env *env, xmlrpc_value *param_array
 
 	//Salimos
 	if(!res)
-		return xmlerror(env,"Error\n");
+		return xmlerror(env,"Error");
 
 	//Devolvemos el resultado
 	return xmlok(env);
@@ -2182,7 +2179,7 @@ xmlrpc_value* VideoMixerMosaicSetCompositionType(xmlrpc_env *env, xmlrpc_value *
 
 	//Salimos
 	if(!res)
-		return xmlerror(env,"Error\n");
+		return xmlerror(env,"Error");
 
 	//Devolvemos el resultado
 	return xmlok(env);
@@ -2216,7 +2213,7 @@ xmlrpc_value* VideoMixerMosaicSetOverlayPNG(xmlrpc_env *env, xmlrpc_value *param
 
 	//Salimos
 	if(!res)
-		return xmlerror(env,"Error\n");
+		return xmlerror(env,"Error");
 
 	//Devolvemos el resultado
 	return xmlok(env);
@@ -2249,7 +2246,7 @@ xmlrpc_value* VideoMixerMosaicResetOverlay(xmlrpc_env *env, xmlrpc_value *param_
 
 	//Salimos
 	if(!res)
-		return xmlerror(env,"Error\n");
+		return xmlerror(env,"Error");
 
 	//Devolvemos el resultado
 	return xmlok(env);
@@ -2283,7 +2280,7 @@ xmlrpc_value* VideoMixerMosaicAddPort(xmlrpc_env *env, xmlrpc_value *param_array
 
 	//Salimos
 	if(!res)
-		return xmlerror(env,"Error\n");
+		return xmlerror(env,"Error");
 
 	//Devolvemos el resultado
 	return xmlok(env);
@@ -2317,7 +2314,7 @@ xmlrpc_value* VideoMixerMosaicRemovePort(xmlrpc_env *env, xmlrpc_value *param_ar
 
 	//Salimos
 	if(!res)
-		return xmlerror(env,"Error\n");
+		return xmlerror(env,"Error");
 
 	//Devolvemos el resultado
 	return xmlok(env);
@@ -2430,7 +2427,7 @@ xmlrpc_value* AudioTranscoderSetCodec(xmlrpc_env *env, xmlrpc_value *param_array
 
 	//Salimos
 	if(!res)
-		return xmlerror(env,"Error\n");
+		return xmlerror(env,"Error");
 
 	//Devolvemos el resultado
 	return xmlok(env);
@@ -2470,7 +2467,7 @@ xmlrpc_value* AudioTranscoderAttachToEndpoint(xmlrpc_env *env, xmlrpc_value *par
         }
             
 	//La borramos
-       Log("-[audio transcoder:%ls] ==> [endpoint:%ls]\n",
+    Log("-[audio transcoder:%ls] ==> [endpoint:%ls]\n",
             tr->GetName().c_str(), ep->GetName().c_str());
 
 	int res = tr->Attach(ep->GetJoinable(MediaFrame::Audio));
@@ -2480,7 +2477,7 @@ xmlrpc_value* AudioTranscoderAttachToEndpoint(xmlrpc_env *env, xmlrpc_value *par
 
 	//Salimos
 	if(!res)
-		return xmlerror(env,"Error: failed to attach Audio Transcoder to Endpoint\n");
+		return xmlerror(env, "Failed to attach Audio Transcoder to Endpoint");
 
 	//Devolvemos el resultado
 	return xmlok(env);
@@ -2519,7 +2516,7 @@ xmlrpc_value* AudioTranscoderDettach(xmlrpc_env *env, xmlrpc_value *param_array,
 
 	//Salimos
 	if(!res)
-		return xmlerror(env,"Error\n");
+		return xmlerror(env,"Error");
 
 	//Devolvemos el resultado
 	return xmlok(env);
@@ -2621,7 +2618,7 @@ xmlrpc_value* VideoTranscoderFPU(xmlrpc_env *env, xmlrpc_value *param_array, voi
 
 	//Salimos
 	if(!res)
-		return xmlerror(env,"Error\n");
+		return xmlerror(env,"Error");
 
 	//Devolvemos el resultado
 	return xmlok(env);
@@ -2645,8 +2642,6 @@ xmlrpc_value* VideoTranscoderSetCodec(xmlrpc_env *env, xmlrpc_value *param_array
 	xmlrpc_value *map;
 
 	xmlrpc_parse_value(env, param_array, "(iiiiiiiS)", &sessionId, &videoTranscoderId, &codec, &size, &fps, &bitrate, &intraPeriod, &map);
-
-
 	
 	//Comprobamos si ha habido error
 	if(env->fault_occurred)
@@ -2665,7 +2660,7 @@ xmlrpc_value* VideoTranscoderSetCodec(xmlrpc_env *env, xmlrpc_value *param_array
 
 	//Salimos
 	if(!res)
-		return xmlerror(env,"Error\n");
+		return xmlerror(env,"Error VideoTranscoderSetCodec");
 
 	//Devolvemos el resultado
 	return xmlok(env);
@@ -2698,7 +2693,7 @@ xmlrpc_value* VideoTranscoderAttachToEndpoint(xmlrpc_env *env, xmlrpc_value *par
 
 	//Salimos
 	if(!res)
-		return xmlerror(env,"Error\n");
+		return xmlerror( env, "Failed to attach Video Transcoder to Endpoint" );
 
 	//Devolvemos el resultado
 	return xmlok(env);
@@ -2730,7 +2725,7 @@ xmlrpc_value* VideoTranscoderDettach(xmlrpc_env *env, xmlrpc_value *param_array,
 
 	//Salimos
 	if(!res)
-		return xmlerror(env,"Error\n");
+		return xmlerror(env,"Error VideoTranscoderDettach" );
 
 	//Devolvemos el resultado
 	return xmlok(env);
@@ -2822,7 +2817,7 @@ xmlrpc_value* ConfigureMediaConnection(xmlrpc_env *env, xmlrpc_value *param_arra
 	
 	//Salimos
 	if(!res)
-		return xmlerror(env,"Error\n");
+		return xmlerror(env,"Error ConfigureMediaConnection");
 
 	//Devolvemos el resultado
 	return xmlok(env);

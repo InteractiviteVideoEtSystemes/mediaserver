@@ -1346,7 +1346,8 @@ int RTPSession::ReadRTP()
             BYTE *aux = (BYTE *)malloc( size );
 
             //Check if we have local passworkd
-            Debug( "ICE: receiving Binding Request from %s localPwd=%s\n", inet_ntoa( from_addr.sin_addr ),
+            Debug( "ICE: receiving Binding Request from %s localPwd=%s\n",
+                inet_ntoa( from_addr.sin_addr ),
                 (iceLocalPwd != NULL) ? "****" /*iceLocalPwd*/ : "no password" );
             if( iceRemotePwd )
             {
@@ -1407,7 +1408,7 @@ int RTPSession::ReadRTP()
                     {
                         // Do symetric RTP 
                         sendAddr.sin_addr.s_addr = recIP;
-                        sendAddr.sin_port = ntohs( recPort );
+                        sendAddr.sin_port = htons( recPort );
                     }
                 }
 
@@ -1479,7 +1480,12 @@ int RTPSession::ReadRTP()
                     Debug( "DTLS: packet empty no need to send it\n" );
                     return 0;
                 }
+
                 sendto( simSocket, buffer, len, 0, (sockaddr *)&from_addr, sizeof( struct sockaddr_in ) );
+            }
+            else
+            {
+
             }
         }
 

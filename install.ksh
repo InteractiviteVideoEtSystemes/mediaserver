@@ -197,7 +197,7 @@ function compile_webrtc
 	if [ ! -r out/Release/obj.target/webrtc/common_audio/libsignal_processing.a ]
 	then
 		echo "Compiling VAD and signal processing from webrtc"
-        make out/Release/obj.target/webrtc/common_audio/libsignal_processing.a
+	        make out/Release/obj.target/webrtc/common_audio/libsignal_processing.a
 		git reset --hard
 		make out/Release/obj.target/webrtc/common_audio/libsignal_processing.a
 		make out/Release/obj.target/webrtc/common_audio/libvad.a
@@ -405,9 +405,9 @@ function local_compile
 		cd $BASESRCDIR
 	fi
 	
-	if [ ! -r staticdeps/lib/libvpx.a ]
+	if [ ! -f staticdeps/lib/libvpx.a ]
 	then
-    		echo "Compiling VP8 codec"
+		echo "Compiling VP8 codec"
 		#cd $HOME/webrtc/trunk/third_party/libvpx/source/libvpx
 		cd $HOME
 		rm -rf libvpx
@@ -415,7 +415,7 @@ function local_compile
 		cd libvpx
 		git checkout v1.7.0
 		chmod 750 configure
-		./configure --disable-shared --enable-static --prefix=$BASESRCDIR/staticdeps  --enable-vp8 --enable-error-concealment  --disable-multithread 
+		./configure --disable-shared --enable-static --prefix=$BASESRCDIR/staticdeps --enable-vp8 --enable-error-concealment --disable-multithread 
 		make
 		make install
 		cd $BASESRCDIR
@@ -424,6 +424,7 @@ function local_compile
 	cd $BASESRCDIR
 	
 	mkdir -p bin/debug
+	mkdir -p bin/release
 	cd mcu
 	make -f Makefile.rpm mcu
 }

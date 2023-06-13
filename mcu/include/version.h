@@ -9,7 +9,7 @@
 #define	VERSION_H
 
 #define MCUVERSION	"1.8.7"
-#define MCUDATE		"Date: 2023-03-29 10:01:01"
+#define MCUDATE		"Date: 2023-06-13 10:01:01"
 
 #endif	/* VERSION_H */
 

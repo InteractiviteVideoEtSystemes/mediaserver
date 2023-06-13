@@ -59,7 +59,7 @@ void WSEndpoint::onMessageStart(WebSocket *ws, WebSocket::MessageType type, cons
 
 void WSEndpoint::onMessageData(WebSocket *ws,const BYTE* data, const DWORD size)
 {
-    media->AppendMedia( (BYTE*) data, size);
+    media->AppendMedia( (BYTE*)data, size );
 }
 
 void WSEndpoint::onMessageEnd(WebSocket *ws)
@@ -69,7 +69,6 @@ void WSEndpoint::onMessageEnd(WebSocket *ws)
         case MediaFrame::Text:
 			if (useRed)
 			{
-				
 				media->SetTimestamp(getDifTime(&clock)/1000);
 				RTPRedundantPacket * packet = RedCodec->Encode(media, payloadType);
                 if (packet)
@@ -93,10 +92,12 @@ void WSEndpoint::onMessageEnd(WebSocket *ws)
 				packet.SetSeqCycles(pseudoSeqCycle);
 				Multiplex(packet);				
 			}	
-			if ( pseudoSeqNum == 0xFFFF )
-				pseudoSeqCycle++;
+            if( pseudoSeqNum == 0xFFFF )
+            {
+                pseudoSeqCycle++;
+            }
+
 			pseudoSeqNum++;
-	
 		    break;
 	    
         default:
@@ -104,58 +105,53 @@ void WSEndpoint::onMessageEnd(WebSocket *ws)
    }
 }
 
-void WSEndpoint::onRTPPacket(RTPPacket &packet)
+void WSEndpoint::onRTPPacket( RTPPacket &packet )
 {
-    if (_ws != NULL)
+    if( _ws != NULL )
     {
-        if ( packet.GetMedia() == media->GetType() )
-		{
-			switch ( packet.GetMedia() )
-			{
-			case MediaFrame::Text:
-			{	
-								
-				//Check the type of data
-				if (packet.GetCodec() == TextCodec::T140RED)
-				{
-				
-					//Get redundant packet
-					RTPRedundantPacket* red = (RTPRedundantPacket*) &packet;
-					
-					RedCodec->Decode(red, this);
-							
-				} 
-				else if (packet.GetCodec() == TextCodec::T140)
-				{
-					
-					//Create frame
-					TextFrame frame ( packet.GetTimestamp(),packet.GetMediaData(),packet.GetMediaLength() );
-					//Send it
-					SendFrame(frame);
-				}
-				else
-				{
-					Error("Text codec %d: not supported.\n", packet.GetCodec() );
-				}
-				break;
-			}
-			
-			default:
-				Error("WSEndpoint does not support media %s.\n",
-					MediaFrame::TypeToString( packet.GetMedia() ) );
-				break;
-			}
-		}
-		else
-		{
-			Error("WSEndpoint is associated with media %s. Cannot deliver %s packet.\n",
-			   MediaFrame::TypeToString(media->GetType()), 
-			   MediaFrame::TypeToString(packet.GetMedia()));
-		}	
+        if( packet.GetMedia() == media->GetType() )
+        {
+            switch( packet.GetMedia() )
+            {
+                case MediaFrame::Text:
+                {
+                    //Check the type of data
+                    if( packet.GetCodec() == TextCodec::T140RED )
+                    {
+                        //Get redundant packet
+                        RTPRedundantPacket *red = (RTPRedundantPacket *)&packet;
+
+                        RedCodec->Decode( red, this );
+                    }
+                    else if( packet.GetCodec() == TextCodec::T140 )
+                    {
+                        //Create frame
+                        TextFrame frame( packet.GetTimestamp(), packet.GetMediaData(), packet.GetMediaLength() );
+                        //Send it
+                        SendFrame( frame );
+                    }
+                    else
+                    {
+                        Error( "Text codec %d: not supported.\n", packet.GetCodec() );
+                    }
+                    break;
+                }
+
+                default:
+                    Error( "WSEndpoint does not support media %s.\n", MediaFrame::TypeToString( packet.GetMedia() ) );
+                    break;
+            }
+        }
+        else
+        {
+            Error( "WSEndpoint is associated with media %s. Cannot deliver %s packet.\n",
+                MediaFrame::TypeToString( media->GetType() ),
+                MediaFrame::TypeToString( packet.GetMedia() ) );
+        }
     }
     else
     {
-		Debug("WSEndpoint: no Websocket is associated yet.\n");
+        Debug( "WSEndpoint: no Websocket is associated yet.\n" );
     }
 }
 

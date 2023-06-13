@@ -152,7 +152,7 @@ xmlrpc_value* PlayerDelete(xmlrpc_env *env, xmlrpc_value *param_array, void *use
 
 	//Obtenemos la referencia
 	if(!jsr->GetMediaSessionRef(sessionId,&session))
-		return xmlerror( env, "Media session not found\n" );
+		return xmlerror( env, "Media session not found" );
 
 	//La borramos
 	bool res = session->PlayerDelete(playerId);
@@ -185,7 +185,7 @@ xmlrpc_value* PlayerOpen(xmlrpc_env *env, xmlrpc_value *param_array, void *user_
 
 	//Obtenemos la referencia
 	if(!jsr->GetMediaSessionRef(sessionId,&session))
-		return xmlerror( env, "Media session not found\n" );
+		return xmlerror( env, "Media session not found" );
 
 	//La borramos
 	bool res = session->PlayerOpen(playerId,filename);
@@ -217,7 +217,7 @@ xmlrpc_value* PlayerPlay(xmlrpc_env *env, xmlrpc_value *param_array, void *user_
 
 	//Obtenemos la referencia
 	if(!jsr->GetMediaSessionRef(sessionId,&session))
-		return xmlerror( env, "Media session not found\n" );
+		return xmlerror( env, "Media session not found" );
 
 	//La borramos
 	bool res = session->PlayerPlay(playerId);
@@ -250,7 +250,7 @@ xmlrpc_value* PlayerSeek(xmlrpc_env *env, xmlrpc_value *param_array, void *user_
 
 	//Obtenemos la referencia
 	if(!jsr->GetMediaSessionRef(sessionId,&session))
-		return xmlerror( env, "Media session not found\n" );
+		return xmlerror( env, "Media session not found" );
 	
 	//La borramos
 	bool res = session->PlayerSeek(playerId,time);
@@ -282,7 +282,7 @@ xmlrpc_value* PlayerStop(xmlrpc_env *env, xmlrpc_value *param_array, void *user_
 
 	//Obtenemos la referencia
 	if(!jsr->GetMediaSessionRef(sessionId,&session))
-		return xmlerror( env, "Media session not found\n" );
+		return xmlerror( env, "Media session not found" );
 	
 	//La borramos
 	bool res = session->PlayerStop(playerId);
@@ -314,7 +314,7 @@ xmlrpc_value* PlayerClose(xmlrpc_env *env, xmlrpc_value *param_array, void *user
 
 	//Obtenemos la referencia
 	if(!jsr->GetMediaSessionRef(sessionId,&session))
-		return xmlerror( env, "Media session not found\n" );
+		return xmlerror( env, "Media session not found" );
 	
 	//La borramos
 	bool res = session->PlayerClose(playerId);
@@ -382,7 +382,7 @@ xmlrpc_value* RecorderDelete(xmlrpc_env *env, xmlrpc_value *param_array, void *u
 
 	//Obtenemos la referencia
 	if(!jsr->GetMediaSessionRef(sessionId,&session))
-		return xmlerror( env, "Media session not found\n" );
+		return xmlerror( env, "Media session not found" );
 	
 	//La borramos
 	bool res = session->RecorderDelete(recorderId);
@@ -415,7 +415,7 @@ xmlrpc_value* RecorderRecord(xmlrpc_env *env, xmlrpc_value *param_array, void *u
 
 	//Obtenemos la referencia
 	if(!jsr->GetMediaSessionRef(sessionId,&session))
-		return xmlerror( env, "Media session not found\n" );
+		return xmlerror( env, "Media session not found" );
 
 	//La borramos
 	bool res = session->RecorderRecord(recorderId,filename);
@@ -447,7 +447,7 @@ xmlrpc_value* RecorderStop(xmlrpc_env *env, xmlrpc_value *param_array, void *use
 
 	//Obtenemos la referencia
 	if(!jsr->GetMediaSessionRef(sessionId,&session))
-		return xmlerror( env, "Media session not found\n" );
+		return xmlerror( env, "Media session not found" );
 
 	//La borramos
 	bool res = session->RecorderStop(recorderId);
@@ -671,7 +671,7 @@ xmlrpc_value* EndpointDelete(xmlrpc_env *env, xmlrpc_value *param_array, void *u
 
 	//Obtenemos la referencia
 	if(!jsr->GetMediaSessionRef(sessionId,&session))
-		return xmlerror( env, "Media session not found\n" );
+		return xmlerror( env, "Media session not found" );
 
 	//La borramos
 	bool res = session->EndpointDelete(endpointId);
@@ -703,7 +703,7 @@ xmlrpc_value* EndpointGetStatistics(xmlrpc_env *env, xmlrpc_value *param_array, 
 
 	//Obtenemos la referencia
 	if(!jsr->GetMediaSessionRef(sessionId,&session))
-		return xmlerror( env, "Media session not found\n" );
+		return xmlerror( env, "Media session not found" );
 
     Endpoint * ep = session->GetEndpoint(endpointId);
     if (ep == NULL)
@@ -1539,7 +1539,7 @@ xmlrpc_value* AudioMixerDelete(xmlrpc_env *env, xmlrpc_value *param_array, void 
 
 	//Obtenemos la referencia
 	if(!jsr->GetMediaSessionRef(sessionId,&session))
-		return xmlerror( env, "Media session not found\n" );
+		return xmlerror( env, "Media session not found" );
 
 	//La borramos
 	bool res = session->AudioMixerDelete(mixerId);
@@ -1613,7 +1613,7 @@ xmlrpc_value* AudioMixerPortSetCodec(xmlrpc_env *env, xmlrpc_value *param_array,
 
 	//Obtenemos la referencia
 	if(!jsr->GetMediaSessionRef(sessionId,&session))
-		return xmlerror( env, "Media session not found\n" );
+		return xmlerror( env, "Media session not found" );
 
 	//La borramos
 	bool res = session->AudioMixerPortSetCodec(mixerId,portId,(AudioCodec::Type)codec);
@@ -1647,7 +1647,7 @@ xmlrpc_value* AudioMixerPortDelete(xmlrpc_env *env, xmlrpc_value *param_array, v
 
 	//Obtenemos la referencia
 	if(!jsr->GetMediaSessionRef(sessionId,&session))
-		return xmlerror( env, "Media session not found\n" );
+		return xmlerror( env, "Media session not found" );
 
 	//La borramos
 	bool res = session->AudioMixerPortDelete(mixerId,portId);
@@ -1817,7 +1817,7 @@ xmlrpc_value* VideoMixerDelete(xmlrpc_env *env, xmlrpc_value *param_array, void 
 
 	//Obtenemos la referencia
 	if(!jsr->GetMediaSessionRef(sessionId,&session))
-		return xmlerror( env, "Media session not found\n" );
+		return xmlerror( env, "Media session not found" );
 
 	//La borramos
 	bool res = session->VideoMixerDelete(mixerId);
@@ -1888,7 +1888,7 @@ xmlrpc_value* VideoMixerPortDelete(xmlrpc_env *env, xmlrpc_value *param_array, v
 
 	//Obtenemos la referencia
 	if(!jsr->GetMediaSessionRef(sessionId,&session))
-		return xmlerror( env, "Media session not found\n" );
+		return xmlerror( env, "Media session not found" );
 
 	//La borramos
 	bool res = session->VideoMixerPortDelete(mixerId,portId);
@@ -2096,7 +2096,7 @@ xmlrpc_value* VideoMixerMosaicDelete(xmlrpc_env *env, xmlrpc_value *param_array,
 
 	//Obtenemos la referencia
 	if(!jsr->GetMediaSessionRef(sessionId,&session))
-		return xmlerror( env, "Media session not found\n" );
+		return xmlerror( env, "Media session not found" );
 
 	//La borramos
 	bool res = session->VideoMixerMosaicDelete(mixerId,mosaicId);
@@ -2370,7 +2370,7 @@ xmlrpc_value* AudioTranscoderDelete(xmlrpc_env *env, xmlrpc_value *param_array, 
 
 	//Obtenemos la referencia
 	if(!jsr->GetMediaSessionRef(sessionId,&session))
-		return xmlerror( env, "Media session not found\n" );
+		return xmlerror( env, "Media session not found" );
 
 	//La borramos
 	bool res = session->AudioTranscoderDelete(trId);
@@ -2573,7 +2573,7 @@ xmlrpc_value* VideoTranscoderDelete(xmlrpc_env *env, xmlrpc_value *param_array, 
 
 	//Obtenemos la referencia
 	if(!jsr->GetMediaSessionRef(sessionId,&session))
-        return xmlerror( env, "Media session not found\n" );
+        return xmlerror( env, "Media session not found" );
 
 	//La borramos
 	bool res = session->VideoTranscoderDelete(videoTranscoderId);

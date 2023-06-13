@@ -121,10 +121,10 @@ RTPSession::RTPSession( MediaFrame::Type media, Listener *listener, MediaFrame::
     : dtls( *this )
 {
     //Store listener
-    this->listener = listener;
+    listener = listener;
     //And media
-    this->media = media;
-    this->role = role;
+    media = media;
+    role = role;
     //Init values
     sendType = -1;
     simSocket = FD_INVALID;
@@ -132,10 +132,10 @@ RTPSession::RTPSession( MediaFrame::Type media, Listener *listener, MediaFrame::
     simPort = 0;
     simRtcpPort = 0;
     sendSeq = 0;
-    sendTime = RandomUInt32();
+    sendTime = 0; // RandomUInt32();
     sendLastTime = sendTime;
-    sendSSRC = RandomUInt32();
-    lastSendSSRC = 0;
+    sendSSRC = 0; // RandomUInt32();
+    lastSendSSRC = sendSSRC;
     sendSR = 0;
     recSR = 0;
     sendCycles = 0;
@@ -265,8 +265,11 @@ void RTPSession::SetSendingRTPMap( RTPMap &map )
 {
     //If we already have one
     if( rtpMapOut )
+    {
         //Delete it
         delete(rtpMapOut);
+    }
+
     //Clone it
     rtpMapOut = new RTPMap( map );
 }
@@ -386,6 +389,7 @@ int RTPSession::SetProperties( const Properties &properties )
         {
             //Set ssrc for sending
             sendSSRC = atoi( it->second.c_str() );
+            Debug( "Initializing sending SSRC - send=0x%X from SDP\n", sendSSRC );
         }
         else if( it->first.compare( "cname" ) == 0 )
         {
@@ -462,6 +466,7 @@ int RTPSession::SetLocalSTUNCredentials( const char *username, const char *pwd )
         free( iceLocalUsername );
     if( iceLocalPwd )
         free( iceLocalPwd );
+
     //Store values
     iceLocalUsername = strdup( username );
     iceLocalPwd = strdup( pwd );
@@ -1003,8 +1008,10 @@ int RTPSession::SendPacket( RTPPacket &packet, DWORD timestamp )
 
     //Check if we need to send SR
     if( isZeroTime( &lastSR ) || (getDifTime( &lastSR ) > 4000000 /*us*/) )
+    {
         //Send it
         SendSenderReport();
+    }
 
     //Modificamos las cabeceras del packete
     rtp_hdr_t *headers = (rtp_hdr_t *)sendPacket;
@@ -1019,13 +1026,9 @@ int RTPSession::SendPacket( RTPPacket &packet, DWORD timestamp )
     headers->version = RTP_VERSION;
 
     //if we detect a change of ssrc in packet, we change the ssrc
-    if( lastSendSSRC == 0 )
+    if( lastSendSSRC != 0 && lastSendSSRC != packet.GetSSRC() )
     {
-        sendSSRC = RandomUInt32( (unsigned int)time( NULL ) + (unsigned int)(uint64_t)this );
-        Debug( "Intializing sending SSRC - send=0x%X, seq=%d\n", sendSSRC, packet.GetSeqNum() );
-    } 
-    else if( lastSendSSRC != packet.GetSSRC() )
-    {
+        // Attention du coté WebRTC, il faudrait une re-negociation!
         sendSSRC = RandomUInt32();
         Debug( "Changing sending SSRC - last=0x%X, packet=0x%X, seq=%d\n", lastSendSSRC, packet.GetSSRC(), packet.GetSeqNum() );
     }
@@ -1051,8 +1054,8 @@ int RTPSession::SendPacket( RTPPacket &packet, DWORD timestamp )
     {
         //Calculate last timestamp
         sendLastTime = sendTime + timestamp;
-
     }
+
     headers->ts = htonl( sendLastTime );
 
     //Incrementamos el numero de secuencia
@@ -1781,7 +1784,7 @@ void RTPSession::Start()
     running = true;
 
     //Create thread
-    createPriorityThread( &thread, run, this, 0 );
+    pthread_create( &thread, NULL, run, this );
 }
 
 void RTPSession::Stop()
@@ -1837,6 +1840,13 @@ void *RTPSession::run( void *par )
 int RTPSession::Run()
 {
     Log( ">Run RTPSession [%p]\n", this );
+
+    sendTime = RandomUInt32( (unsigned int)time( NULL ) + (unsigned int)(uint64_t)this );
+    if( sendSSRC == 0 )
+    {
+        sendSSRC = RandomUInt32();
+        Debug( "Initializing sending SSRC - send=0x%X from random\n", sendSSRC );
+    }
 
     //Set values for polling
     ufds[0].fd = simSocket;
@@ -2433,8 +2443,10 @@ bool RTPSession::DeleteStreams()
     for( Streams::iterator it = streams.begin(); it != streams.end(); it++ )
     {
         if( remoteRateEstimator )
+        {
             //Add stream
             remoteRateEstimator->RemoveStream( it->first );
+        }
         delete it->second;
     }
 
@@ -2470,8 +2482,10 @@ RTPSession::RTPStream *RTPSession::getStream( DWORD ssrc )
 
     //If not found
     if( it == streams.end() )
+    {
         //Error
         return NULL;
+    }
 
     //Get the stream
     return it->second;
@@ -2513,7 +2527,6 @@ RTCPCompoundPacket *RTPSession::CreateSenderReport()
     //Update time of latest sr
     DWORD sinceLastSR = getUpdDifTime( &lastSR );
 
-
     for( Streams::iterator it = streams.begin(); it != streams.end(); it++ )
     {
         RTCPReport *report = NULL;
@@ -2529,9 +2542,7 @@ RTCPCompoundPacket *RTPSession::CreateSenderReport()
             //Append it
             sr->AddReport( report );
         }
-
     }
-
 
     //Append SR to rtcp
     rtcp->AddRTCPacket( sr );
@@ -2620,7 +2631,6 @@ void RTPSession::Listener::onNewStream( RTPSession *session, DWORD newSsrc, bool
 {
     if( !receiving ) return;
 
-
     DWORD oldssrc = session->GetDefaultStream( true );
 
     if( oldssrc )
@@ -2686,8 +2696,10 @@ bool RTPSession::RTPStream::Add( RTPTimedPacket *packet, DWORD size )
 
             //If remote estimator
             if( s->GetRemoteRateEstimator() )
+            {
                 //Update estimator
                 s->GetRemoteRateEstimator()->UpdateLost( recSSRC, lost, size );
+            }
 
             //If nack is enable t waiting for a PLI/FIR response (to not oeverflow)
             if( s->IsNACKEnabled() && !s->IsRequestFPU() )
@@ -2806,8 +2818,10 @@ bool RTPSession::RTPStream::Add( RTPTimedPacket *packet, DWORD size )
 
     //Check if we need to send SR
     if( isZeroTime( &lastSR ) || getDifTime( &lastSR ) > 2000000 )
+    {
         //Send it
         s->SendSenderReport();
+    }
 }
 
 RTCPReport *RTPSession::RTPStream::CreateReceiverReport()
@@ -2878,6 +2892,8 @@ void RTPSession::onDTLSSetup( DTLSConnection::Suite suite, BYTE *localMasterKey,
             SetLocalCryptoSDES( "NULL_CIPHER_HMAC_SHA1_80", localMasterKey, localMasterKeySize );
             SetRemoteCryptoSDES( "NULL_CIPHER_HMAC_SHA1_80", remoteMasterKey, remoteMasterKeySize, 0 );
             break;
+        default:
+            break;
     }
 }
 
@@ -2894,9 +2910,13 @@ bool RTPSession::GetStatistics( DWORD ssrc, MediaStatistics &stats )
     stats.totalSendBytes = totalSendBytes;
 
     if( rtpMapOut->find( sendType ) != rtpMapOut->end() )
+    {
         stats.sendingCodec = (*rtpMapOut)[sendType];
+    }
     else
+    {
         stats.sendingCodec = -1;
+    }
 
     RTPStream *s = (ssrc > 0) ? getStream( ssrc ) : NULL;
     if( s != NULL )
@@ -2920,10 +2940,12 @@ bool RTPSession::GetStatistics( DWORD ssrc, MediaStatistics &stats )
                 stats.lostRecvPackets += s->GetLostRecvPackets();
             }
         }
+
         if( defaultStream != NULL )
+        {
             stats.receivingCodec = defaultStream->GetRecCodec();
+        }
     }
 
     return true;
 }
-

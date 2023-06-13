@@ -5,28 +5,28 @@
 #include "xmlhandler.h"
 #include "tools.h"
 
-xmlrpc_value* xmlerror (xmlrpc_env *env,const char *msg)
+xmlrpc_value *xmlerror( xmlrpc_env *env, const char *msg )
 {
-	//Send error
-	Error("Processing xml cmd [\"%s\"]\n",msg);
-	//Exit
-	return xmlrpc_build_value(env,"{s:i,s:s}","returnCode",0,"errorMsg",msg);
+    //Send error
+    Error( "Processing xml cmd [\"%s\"]\n", msg );
+    //Exit
+    return xmlrpc_build_value( env, "{s:i,s:s}", "returnCode", 0, "errorMsg", msg );
 }
 
-xmlrpc_value* xmlok (xmlrpc_env *env,xmlrpc_value *array)
+xmlrpc_value *xmlok( xmlrpc_env *env, xmlrpc_value *array )
 {
-	//Si es null ponemos uno vacio
-	if (array==NULL)
-		array = xmlrpc_build_value(env,"()");
+    //Si es null ponemos uno vacio
+    if( array == NULL )
+        array = xmlrpc_build_value( env, "()" );
 
-	//Creamos el valor de retorno
-	xmlrpc_value *ret = xmlrpc_build_value(env,"{s:i,s:A}","returnCode",1,"returnVal",array);
+    //Creamos el valor de retorno
+    xmlrpc_value *ret = xmlrpc_build_value( env, "{s:i,s:A}", "returnCode", 1, "returnVal", array );
 
-	//Decrementamos el contador
-	xmlrpc_DECREF(array);
+    //Decrementamos el contador
+    xmlrpc_DECREF( array );
 
-	//Y salimos
-	return ret;
+    //Y salimos
+    return ret;
 }
 
 int xmlparsemap(xmlrpc_env *env, xmlrpc_value *map, Properties & props)

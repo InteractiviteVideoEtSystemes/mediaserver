@@ -313,6 +313,7 @@ private:
 	DWORD   sendTime;
 	DWORD	sendLastTime;
 	DWORD	sendSSRC;
+	DWORD	lastSendSSRC;
 	DWORD	sendSR;
 	DWORD	recSR;
 	//Recepcion
@@ -352,9 +353,6 @@ private:
 	Use				rtxUse;
 	Use				streamUse;
     bool        	resetRequested;
-	
-	DWORD			lastSendSSRC;
-
 };
 
 #endif

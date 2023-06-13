@@ -16,16 +16,16 @@
 * AudioStream
 *	Constructor
 ***********************************/
-AudioStream::AudioStream(Listener* listener) : rtp(MediaFrame::Audio,listener)
+AudioStream::AudioStream( Listener *l ) : rtp( MediaFrame::Audio, l )
 {
-	sendingAudio=TaskIdle;
-	receivingAudio=TaskIdle;
-	audioCodec=AudioCodec::PCMU;
-	this->listener = listener;
-	muted = 0;
-	
-	//Create objects
-	pthread_mutex_init(&mutex,NULL);
+    sendingAudio = TaskIdle;
+    receivingAudio = TaskIdle;
+    audioCodec = AudioCodec::PCMU;
+    listener = l;
+    muted = 0;
+
+    //Create objects
+    pthread_mutex_init( &mutex, NULL );
 }
 
 /*******************************

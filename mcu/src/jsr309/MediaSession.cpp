@@ -1,7 +1,7 @@
 #include "log.h"
 #include "MediaSession.h"
 
-MediaSession::MediaSession( std::wstring tag )
+MediaSession::MediaSession( std::wstring t )
 {
     //Init
     maxEndpointId = 1;
@@ -12,7 +12,7 @@ MediaSession::MediaSession( std::wstring tag )
     maxVideoTranscoderId = 1;
     maxEventContextId = 1;
     //Store it
-    this->tag = tag;
+    tag = t;
 }
 
 MediaSession::~MediaSession()
@@ -20,11 +20,11 @@ MediaSession::~MediaSession()
     End();
 }
 
-void MediaSession::SetListener( MediaSession::Listener *listener, void *param )
+void MediaSession::SetListener( MediaSession::Listener *l, void *p )
 {
     //Store values
-    this->listener = listener;
-    this->param = param;
+    listener = l;
+    param = p;
 }
 
 int MediaSession::Init()

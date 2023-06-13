@@ -330,7 +330,7 @@ int RTPEndpoint::Attach(Joinable *join)
 
 int RTPEndpoint::Detach()
 {
-        //Detach if joined
+    //Detach if joined
 	if (joined)
 		//Remove ourself as listeners
 		joined->RemoveListener(this);
@@ -350,9 +350,9 @@ void RTPEndpoint::onFPURequested(RTPSession *session)
 void RTPEndpoint::onReceiverEstimatedMaxBitrate(RTPSession *session,DWORD estimation)
 {
 	//Check if joined
-       if (joined)
-               //Request update
-               joined->SetREMB(estimation);
+    if (joined)
+        //Request update
+        joined->SetREMB(estimation);
 }
 
 void RTPEndpoint::onTempMaxMediaStreamBitrateRequest(RTPSession *session,DWORD estimation,DWORD overhead)
@@ -383,7 +383,6 @@ void RTPEndpoint::SetREMB(DWORD estimation)
 	if (remoteRateEstimator)
 		//Update temporal limit
 		remoteRateEstimator->SetTemporalMaxLimit(estimation);
-
 }
 
 int RTPEndpoint::RequestUpdate()
@@ -394,10 +393,9 @@ int RTPEndpoint::RequestUpdate()
 
  xmlrpc_value* ExternalFIRRequestedEvent::GetXmlValue(xmlrpc_env *env)
 {
-	 BYTE sessTag[1024];
+	BYTE sessTag[1024];
 	UTF8Parser sessTagParser(sessionTag);
 	DWORD sessLen = sessTagParser.Serialize(sessTag,1024);
 	sessTag[sessLen] = 0;
     return xmlrpc_build_value(env,"(isiii)",(int)JSR309Event::ExternalFIRRequestedEvent,sessTag,this->joinableId,(int)this->media,(int)this->role);
-
 }

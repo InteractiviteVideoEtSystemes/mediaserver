@@ -17,18 +17,19 @@ public:
 	class RtpPacketization
 	{
 	public:
-		RtpPacketization(DWORD pos,DWORD size,BYTE* prefix,DWORD prefixLen)
-		{
-			//Store values
-			this->pos = pos;
-			this->size = size;
-			this->prefixLen = prefixLen;
-			//Check size
-			if (prefixLen)
+        RtpPacketization( DWORD pos, DWORD size, BYTE *prefix, DWORD prefixLen )
+        {
+            //Store values
+            this->pos = pos;
+            this->size = size;
+            this->prefixLen = prefixLen;
+            //Check size
+			if( prefixLen )
+			{
 				//Copy
-				memcpy(this->prefix,prefix,prefixLen);
-
-		}
+				memcpy( this->prefix, prefix, prefixLen );
+			}
+        }
 
 		DWORD GetPos()		{ return pos;	}
 		DWORD GetSize()		{ return size;	}
@@ -109,10 +110,10 @@ public:
 		}
 	}
 	
-	MediaFrame(Type type,DWORD size)
+	MediaFrame(Type t,DWORD size)
 	{
 		//Set media type
-		this->type = type;
+		type = t;
 		//Set no timestamp
 		ts = (DWORD)-1;
 		//No duration

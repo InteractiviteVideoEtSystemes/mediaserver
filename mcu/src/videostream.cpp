@@ -22,36 +22,36 @@
 * VideoStream
 *	Constructor
 ***********************************/
-VideoStream::VideoStream(Listener* listener, Logo & muteLogo, MediaFrame::MediaRole role) : 
-	rtp(MediaFrame::Video,listener,role), logo(muteLogo)
+VideoStream::VideoStream( Listener *l, Logo &muteLogo, MediaFrame::MediaRole role ) :
+    rtp( MediaFrame::Video, l, role ), logo( muteLogo )
 {
-	//Inicializamos a cero todo
-	sendingVideo = TaskIdle;
-	receivingVideo = TaskIdle;
-	videoInput	= NULL;
-	videoOutput	= NULL;
-	rtpSession	= NULL;
-	
-	videoCodec=VideoCodec::H263_1996;
-	videoCaptureMode=0;
-	videoGrabWidth=0;
-	videoGrabHeight=0;
-	videoFPS=0;
-	videoBitrate=0;
-	videoIntraPeriod=0;
-	videoBitrateLimit=0;
-	videoBitrateLimitCount=0;
-	sendFPU = false;
-	this->listener = listener;
-	mediaListener = NULL;
-	muted = false;
-	mediaRole = role;
-	
-	recSSRC = 0;
-	
-	//Create objects
-	pthread_mutex_init(&mutex,NULL);
-	pthread_cond_init(&cond,NULL);
+    //Inicializamos a cero todo
+    sendingVideo = TaskIdle;
+    receivingVideo = TaskIdle;
+    videoInput = NULL;
+    videoOutput = NULL;
+    rtpSession = NULL;
+
+    videoCodec = VideoCodec::H263_1996;
+    videoCaptureMode = 0;
+    videoGrabWidth = 0;
+    videoGrabHeight = 0;
+    videoFPS = 0;
+    videoBitrate = 0;
+    videoIntraPeriod = 0;
+    videoBitrateLimit = 0;
+    videoBitrateLimitCount = 0;
+    sendFPU = false;
+    listener = l;
+    mediaListener = NULL;
+    muted = false;
+    mediaRole = role;
+
+    recSSRC = 0;
+
+    //Create objects
+    pthread_mutex_init( &mutex, NULL );
+    pthread_cond_init( &cond, NULL );
 }
 
 /*******************************
@@ -979,10 +979,10 @@ int VideoStream::RecVideo()
 	pthread_exit(0);
 }
 
-int VideoStream::SetMediaListener(MediaFrame::Listener *listener)
+int VideoStream::SetMediaListener( MediaFrame::Listener *l )
 {
 	//Set it
-	this->mediaListener = listener;
+	mediaListener = l;
 }
 
 int VideoStream::SendFPU()

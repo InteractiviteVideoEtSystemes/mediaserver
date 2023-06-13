@@ -14,10 +14,10 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 
-Endpoint::Endpoint( std::wstring name, bool audioSupported, bool videoSupported, bool textSupported ) : eventSource( name )
+Endpoint::Endpoint( std::wstring n, bool audioSupported, bool videoSupported, bool textSupported ) : eventSource( n )
 {
     //Store name
-    this->name = name;
+    name = n;
     //Nullify
     for( int i = 0; i < 3; i++ )
     {

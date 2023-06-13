@@ -117,14 +117,15 @@ unsigned int RandomUInt32( unsigned int seed=0 )
 * RTPSession
 * 	Constructro
 **************************/
-RTPSession::RTPSession( MediaFrame::Type media, Listener *listener, MediaFrame::MediaRole role )
+RTPSession::RTPSession( MediaFrame::Type m, Listener *l, MediaFrame::MediaRole r )
     : dtls( *this )
 {
     //Store listener
-    listener = listener;
+    listener = l;
     //And media
-    media = media;
-    role = role;
+    media = m;
+    role = r;
+
     //Init values
     sendType = -1;
     simSocket = FD_INVALID;
@@ -389,7 +390,7 @@ int RTPSession::SetProperties( const Properties &properties )
         {
             //Set ssrc for sending
             sendSSRC = atoi( it->second.c_str() );
-            Debug( "Initializing sending SSRC - send=0x%X from SDP\n", sendSSRC );
+            Debug( "Initializing sending SSRC - send=0x%X from SDP for %s\n", sendSSRC, MediaFrame::TypeToString( media ) );
         }
         else if( it->first.compare( "cname" ) == 0 )
         {
@@ -411,7 +412,6 @@ int RTPSession::SetProperties( const Properties &properties )
             useNACK = atoi( it->second.c_str() );
             //Enable NACK until first RTT
             isNACKEnabled = useNACK;
-
         }
         else if( it->first.compare( "useOriSeqNum" ) == 0 )
         {
@@ -423,13 +423,11 @@ int RTPSession::SetProperties( const Properties &properties )
         {
             //Set use of SIP INFO FIR
             useExtFIR = atoi( it->second.c_str() );
-
         }
         else if( it->first.compare( "useRtcpFIR" ) == 0 )
         {
             //Set use of RTCP FIR
             useRtcpFIR = atoi( it->second.c_str() );
-
         }
         else if( it->first.compare( 0, 5, "codec" ) == 0 )
         {
@@ -1019,7 +1017,7 @@ int RTPSession::SendPacket( RTPPacket &packet, DWORD timestamp )
     // if the codec of the packet we want to send is not the same than defined, we changed it
     if( rtpMapOut->find( sendType ) == rtpMapOut->end() || (*rtpMapOut)[sendType] != packet.GetCodec() )
     {
-        this->SetSendingCodec( packet.GetCodec() );
+        SetSendingCodec( packet.GetCodec() );
     }
 
     //Init send packet
@@ -1028,9 +1026,9 @@ int RTPSession::SendPacket( RTPPacket &packet, DWORD timestamp )
     //if we detect a change of ssrc in packet, we change the ssrc
     if( lastSendSSRC != 0 && lastSendSSRC != packet.GetSSRC() )
     {
-        // Attention du coté WebRTC, il faudrait une re-negociation!
+        // Attention du coté WebRTC, il faudrait une re-negociation si on change le SSRC!
         sendSSRC = RandomUInt32();
-        Debug( "Changing sending SSRC - last=0x%X, packet=0x%X, seq=%d\n", lastSendSSRC, packet.GetSSRC(), packet.GetSeqNum() );
+        Debug( "Changing sending SSRC - last=0x%X, packet=0x%X, seq=%d for %s\n", lastSendSSRC, packet.GetSSRC(), packet.GetSeqNum(), MediaFrame::TypeToString( media ) );
     }
 
     headers->ssrc = htonl( sendSSRC );
@@ -1046,7 +1044,7 @@ int RTPSession::SendPacket( RTPPacket &packet, DWORD timestamp )
     }
 */
     // in case of bridging, we don't change the timestamp of the packet.
-    if( useOriTS && this->media != MediaFrame::Text )
+    if( useOriTS && media != MediaFrame::Text )
     {
         sendLastTime = packet.GetTimestamp();
     }
@@ -1060,7 +1058,7 @@ int RTPSession::SendPacket( RTPPacket &packet, DWORD timestamp )
 
     //Incrementamos el numero de secuencia
     // in case of bridging , we don't change the seq num of the packet.
-    if( useOriSeqNum && this->media != MediaFrame::Text )
+    if( useOriSeqNum && media != MediaFrame::Text )
     {
         sendSeq = packet.GetSeqNum();
         headers->seq = htons( sendSeq );
@@ -1134,7 +1132,7 @@ int RTPSession::SendPacket( RTPPacket &packet, DWORD timestamp )
         if( err != err_status_ok )
         {
             //Nothing
-            Error( "Error protecting RTP packet for %s with recSSRC=%x and for session=%p : [%d]\n", MediaFrame::TypeToString( media ), packet.GetSSRC(), this, err );
+            Error( "Error protecting RTP packet for %s with recSSRC=0x%X and for session=%p : [%d]\n", MediaFrame::TypeToString( media ), packet.GetSSRC(), this, err );
 
             return -1;
         }
@@ -1170,7 +1168,7 @@ int RTPSession::SendPacket( RTPPacket &packet, DWORD timestamp )
     //SIMULATING PACKET LOST 10%	
     /*
     int ret =0;
-    if (this->media == MediaFrame::Video  && (sendSeq%10) == 0)
+    if (media == MediaFrame::Video  && (sendSeq%10) == 0)
     {
         ret =0;
     }
@@ -1845,7 +1843,7 @@ int RTPSession::Run()
     if( sendSSRC == 0 )
     {
         sendSSRC = RandomUInt32();
-        Debug( "Initializing sending SSRC - send=0x%X from random\n", sendSSRC );
+        Debug( "Initializing sending SSRC - send=0x%X from random for %s\n", sendSSRC, MediaFrame::TypeToString( media ) );
     }
 
     //Set values for polling
@@ -2192,10 +2190,10 @@ int RTPSession::RequestFPU( DWORD &ssrc )
     }*/
 }
 
-void RTPSession::SetRTT( DWORD rtt )
+void RTPSession::SetRTT( DWORD r )
 {
     //Set it
-    this->rtt = rtt;
+    rtt = r;
     DWORD recSSRC = 0;
     if( defaultStream != NULL )
         recSSRC = defaultStream->GetRecSSRC();

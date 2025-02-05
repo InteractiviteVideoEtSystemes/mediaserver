@@ -541,17 +541,13 @@ int Endpoint::ConfigureMediaConnection( MediaFrame::Type media, MediaFrame::Medi
 
 char *Endpoint::GetMediaCandidates( MediaFrame::MediaProtocol protocol, MediaFrame::Type media )
 {
-
     char hostname[HOST_NAME_MAX];
-    //char host[80];
     char *host;
-    char url[50];
+    char urls[28*10];
     bool addrfound = false;
 
-    if( gethostname( hostname, sizeof hostname ) == 0 )
+    if( gethostname( hostname, sizeof(hostname) ) == 0 )
     {
-        //puts(hostname);
-
         if( hostname )
         {
             struct hostent *remoteHost = gethostbyname( hostname );
@@ -566,7 +562,6 @@ char *Endpoint::GetMediaCandidates( MediaFrame::MediaProtocol protocol, MediaFra
                     while( remoteHost->h_addr_list[i] != 0 )
                     {
                         addr.s_addr = *(u_long *)remoteHost->h_addr_list[i++];
-                        //inet_ntoa_r( addr, host, sizeof(host) );
                         host = inet_ntoa( addr );
                         if( strcmp( host, "127.0.0.1" ) != 0 )
                         {
@@ -602,28 +597,29 @@ char *Endpoint::GetMediaCandidates( MediaFrame::MediaProtocol protocol, MediaFra
         }
 
         port = p->GetLocalMediaPort();
-        wshost = p->GetLocalMediaHost();
-
-        if( port == -1 )
+        if (port == -1) {
             return NULL;
+        }
 
-        if( wshost )
+        wshost = p->GetLocalMediaHost();
+        if (wshost) {
             host = wshost;
+        }
 
         if( port > 0 )
         {
-            sprintf( url, "%s://%s:%d", MediaFrame::ProtocolToString( protocol ), host, port );
+            sprintf( urls, "%s://%s:%d#%s://%s:%d", MediaFrame::ProtocolToString( protocol ), host, port, , MediaFrame::ProtocolToString(protocol), "192.168.0.4", port );
         }
         else
         {
-            sprintf( url, "%s://%s", MediaFrame::ProtocolToString( protocol ), host );
+            sprintf( urls, "%s://%s#%s://%s", MediaFrame::ProtocolToString( protocol ), host, MediaFrame::ProtocolToString(protocol), "192.168.0.4" );
         }
-        Log( "URL = %s\n", url );
-        return strdup( url );
+        Log( "URL = %s\n", urls );
+        return strdup( urls );
     }
     else
     {
-        Error( "No address found. \n" );
+        Error( "No address found.\n" );
         return NULL;
     }
 }

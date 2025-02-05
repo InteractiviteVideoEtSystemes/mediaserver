@@ -2729,6 +2729,36 @@ xmlrpc_value* VideoTranscoderDettach(xmlrpc_env *env, xmlrpc_value *param_array,
 	return xmlok(env);
 }
 
+std::vector<std::string> split_urls(const std::string &input, char delimiter)
+{
+	std::vector<std::string> result;
+	size_t start = 0, end;
+
+	while ((end = input.find(delimiter, start)) != std::string::npos) {
+		result.push_back(input.substr(start, end - start));
+		start = end + 1;
+	}
+
+	result.push_back(input.substr(start)); // Dernière URL
+	return result;
+}
+
+#include <vector>
+
+std::vector<std::string> split_urls(const std::string &input, char delimiter)
+{
+	std::vector<std::string> result;
+	size_t start = 0, end;
+
+	while ((end = input.find(delimiter, start)) != std::string::npos) {
+		result.push_back(input.substr(start, end - start));
+		start = end + 1;
+	}
+
+	result.push_back(input.substr(start));
+	return result;
+}
+
 xmlrpc_value* GetMediaCandidates(xmlrpc_env *env, xmlrpc_value *param_array, void *user_data)
 {
 	JSR309Manager *jsr = (JSR309Manager*)user_data;
@@ -2739,7 +2769,6 @@ xmlrpc_value* GetMediaCandidates(xmlrpc_env *env, xmlrpc_value *param_array, voi
 	int media;
 	int sessionId;
 	int endPointId;
-	char* url =  NULL ;
 	
 	xmlrpc_parse_value(env, param_array, "(iiii)", &sessionId,&endPointId,&protocol,&media);
 
@@ -2758,14 +2787,51 @@ xmlrpc_value* GetMediaCandidates(xmlrpc_env *env, xmlrpc_value *param_array, voi
 	
 	if (endpoint != NULL)
 	{
-		url = endpoint->GetMediaCandidates((MediaFrame::MediaProtocol ) protocol,( MediaFrame::Type ) media);
-		
-		if (url != NULL)
+		char *urls = endpoint->GetMediaCandidates((MediaFrame::MediaProtocol) protocol, (MediaFrame::Type) media);
+		if (urls != NULL)
 		{
-			xmlrpc_value* arr = xmlrpc_build_value(env,"(s)",url);
-			free(url);
-			//Devolvemos el resultado
-			return xmlok(env,arr);
+			xmlrpc_value *arr;
+			std::vector<std::string> url_list = split_urls(urls, '#');
+
+			switch (url_list.size()) {
+				case 1:
+					arr = xmlrpc_build_value(env, "(s)", url_list[0]);
+					break;
+				case 2:
+					arr = xmlrpc_build_value(env, "(ss)", url_list[0], url_list[1]);
+					break;
+				case 3:
+					arr = xmlrpc_build_value(env, "(sss)", url_list[0], url_list[1], url_list[2]);
+					break;
+				case 4:
+					arr = xmlrpc_build_value(env, "(ssss)", url_list[0], url_list[1], url_list[2], url_list[3]);
+					break;
+				case 5:
+					arr = xmlrpc_build_value(env, "(sssss)", url_list[0], url_list[1], url_list[2], url_list[3], url_list[4]);
+					break;
+				case 6:
+					arr = xmlrpc_build_value(env, "(ssssss)", url_list[0], url_list[1], url_list[2], url_list[3], url_list[4], url_list[5]);
+					break;
+				case 7:
+					arr = xmlrpc_build_value(env, "(sssssss)", url_list[0], url_list[1], url_list[2], url_list[3], url_list[4], url_list[5], url_list[6]);
+					break;
+				case 8:
+					arr = xmlrpc_build_value(env, "(ssssssss)", url_list[0], url_list[1], url_list[2], url_list[3], url_list[4], url_list[5], url_list[6], url_list[7]);
+					break;
+				case 9:
+					arr = xmlrpc_build_value(env, "(sssssssss)", url_list[0], url_list[1], url_list[2], url_list[3], url_list[4], url_list[5], url_list[6], url_list[7], url_list[8]);
+					break;
+				case 10:
+					arr = xmlrpc_build_value(env, "(ssssssssss)", url_list[0], url_list[1], url_list[2], url_list[3], url_list[4], url_list[5], url_list[6], url_list[7], url_list[8], url_list[9]);
+					break;
+				case 0:
+				default:
+					arr = xmlrpc_build_value(env, "(s)", urls);
+					break;
+			}
+
+			free(urls);
+			return xmlok(env, arr);
 		}
 		else
 		{
@@ -2891,8 +2957,8 @@ XmlHandlerCmd jsr309CmdList[] =
 	{"VideoMixerMosaicRemovePort",		VideoMixerMosaicRemovePort},
 	{"AudioTranscoderCreate",		AudioTranscoderCreate},
 	{"AudioTranscoderDelete",		AudioTranscoderDelete},
-        {"AudioTranscoderSetCodec",             AudioTranscoderSetCodec},
-        {"AudioTranscoderAttachToEndpoint",     AudioTranscoderAttachToEndpoint},
+    {"AudioTranscoderSetCodec",             AudioTranscoderSetCodec},
+    {"AudioTranscoderAttachToEndpoint",     AudioTranscoderAttachToEndpoint},
 	{"AudioTranscoderDettach",		AudioTranscoderDettach},
 	{"VideoTranscoderCreate",		VideoTranscoderCreate},
 	{"VideoTranscoderDelete",		VideoTranscoderDelete},

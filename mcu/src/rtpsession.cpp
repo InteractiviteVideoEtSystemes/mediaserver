@@ -390,7 +390,7 @@ int RTPSession::SetProperties( const Properties &properties )
         {
             //Set ssrc for sending
             sendSSRC = atoi( it->second.c_str() );
-            Debug( "Initializing sending SSRC - send=0x%X from SDP for %s\n", sendSSRC, MediaFrame::TypeToString( media ) );
+            Debug( "Initializing sending SSRC - send=0x%X from SDP for %s for RTPSession=%p\n", sendSSRC, MediaFrame::TypeToString( media ), this );
         }
         else if( it->first.compare( "cname" ) == 0 )
         {
@@ -1005,7 +1005,7 @@ int RTPSession::SendPacket( RTPPacket &packet, DWORD timestamp )
     }
 
     //Check if we need to send SR
-    if( isZeroTime( &lastSR ) || (getDifTime( &lastSR ) > 4000000 /*us*/) )
+    if( isZeroTime( &lastSR ) || getDifTime( &lastSR ) > 4000000 /*us*/ )
     {
         //Send it
         SendSenderReport();
@@ -1028,7 +1028,7 @@ int RTPSession::SendPacket( RTPPacket &packet, DWORD timestamp )
     {
         // Attention du coté WebRTC, il faudrait une re-negociation si on change le SSRC!
         sendSSRC = RandomUInt32();
-        Debug( "Changing sending SSRC - last=0x%X, packet=0x%X, seq=%d for %s\n", lastSendSSRC, packet.GetSSRC(), packet.GetSeqNum(), MediaFrame::TypeToString( media ) );
+        Debug( "Changing sending SSRC - send=0x%X, packet last=0x%X != cur=0x%X, seq=%d for %s for RTPSession=%p\n", sendSSRC, lastSendSSRC, packet.GetSSRC(), packet.GetSeqNum(), MediaFrame::TypeToString( media ), this );
     }
 
     headers->ssrc = htonl( sendSSRC );
@@ -1127,13 +1127,13 @@ int RTPSession::SendPacket( RTPPacket &packet, DWORD timestamp )
         err_status_t err;
 
         //Encript
+
         err = srtp_protect( sendSRTPSession, sendPacket, &len );
         //Check error
         if( err != err_status_ok )
         {
             //Nothing
-            Error( "Error protecting RTP packet for %s with recSSRC=0x%X and for session=%p : [%d]\n", MediaFrame::TypeToString( media ), packet.GetSSRC(), this, err );
-
+            Error( "Error protecting SRTP packet for %s with recSSRC=0x%X and for session=%p : [%d]\n", MediaFrame::TypeToString( media ), packet.GetSSRC(), this, err );
             return -1;
         }
     }
@@ -1731,7 +1731,7 @@ int RTPSession::ReadRTP()
             streamUse.DecUse();
             if( defaultStream == NULL && ssrc > 0 )
             {
-                Log( "-Creating default stream SSRC [new:0x%X] for RTPSession=%p \n", ssrc, this );
+                Log( "-Creating default stream SSRC [new:0x%X] for RTPSession=%p\n", ssrc, this );
                 SetDefaultStream( true, ssrc );
             }
             else if( listener ) //call listener
@@ -1740,7 +1740,7 @@ int RTPSession::ReadRTP()
             }
             else
             {
-                Log( "-No Listener. Adding new SSRC [new:0x%X]\n", ssrc );
+                Log( "-No Listener. Adding new SSRC [new:0x%X] for RTPSession=%p\n", ssrc, this );
                 if( defaultStream == NULL )
                     SetDefaultStream( true, ssrc );
                 else
@@ -1843,7 +1843,7 @@ int RTPSession::Run()
     if( sendSSRC == 0 )
     {
         sendSSRC = RandomUInt32();
-        Debug( "Initializing sending SSRC - send=0x%X from random for %s\n", sendSSRC, MediaFrame::TypeToString( media ) );
+        Debug( "Initializing sending SSRC - send=0x%X from random for %s for RTPSession=%p\n", sendSSRC, MediaFrame::TypeToString( media ), this );
     }
 
     //Set values for polling
@@ -2573,6 +2573,7 @@ int RTPSession::SendSenderReport()
     //Create rtcp sender retpor
     RTCPCompoundPacket *rtcp = CreateSenderReport();
     DWORD recSSRC = 0;
+
     if( defaultStream != NULL )
         recSSRC = defaultStream->GetRecSSRC();
 
@@ -2594,21 +2595,26 @@ int RTPSession::SendSenderReport()
         if( estimation )
         {
             //Resend TMMBR
-            RTCPRTPFeedback *rfb = RTCPRTPFeedback::Create( RTCPRTPFeedback::TempMaxMediaStreamBitrateRequest, sendSSRC, recSSRC );
+            RTCPRTPFeedback *rfb = RTCPRTPFeedback::Create(RTCPRTPFeedback::TempMaxMediaStreamBitrateRequest, sendSSRC, recSSRC);
             //Limit incoming bitrate
-            rfb->AddField( new RTCPRTPFeedback::TempMaxMediaStreamBitrateField( recSSRC, estimation, 0 ) );
+            rfb->AddField(new RTCPRTPFeedback::TempMaxMediaStreamBitrateField(recSSRC, estimation, 0));
             //Add to packet
-            rtcp->AddRTCPacket( rfb );
-            std::list<DWORD> ssrcs;
-            //Get ssrcs
-            remoteRateEstimator->GetSSRCs( ssrcs );
-            //Create feedback
-            // SSRC of media source (32 bits):  Always 0; this is the same convention as in [RFC5104] section 4.2.2.2 (TMMBN).
-            RTCPPayloadFeedback *remb = RTCPPayloadFeedback::Create( RTCPPayloadFeedback::ApplicationLayerFeeedbackMessage, sendSSRC, 0 );
-            //Send estimation
-            remb->AddField( RTCPPayloadFeedback::ApplicationLayerFeeedbackField::CreateReceiverEstimatedMaxBitrate( ssrcs, estimation ) );
-            //Add to packet
-            rtcp->AddRTCPacket( remb );
+            rtcp->AddRTCPacket(rfb);
+
+            {
+                std::list<DWORD> ssrcs;
+
+                //Get ssrcs
+                remoteRateEstimator->GetSSRCs(ssrcs);
+                //Create feedback
+                // SSRC of media source (32 bits):  Always 0; this is the same convention as in [RFC5104] section 4.2.2.2 (TMMBN).
+                RTCPPayloadFeedback *remb = RTCPPayloadFeedback::Create(RTCPPayloadFeedback::ApplicationLayerFeeedbackMessage, sendSSRC, 0);
+                //Send estimation
+                remb->AddField(RTCPPayloadFeedback::ApplicationLayerFeeedbackField::CreateReceiverEstimatedMaxBitrate(ssrcs, estimation));
+                //Add to packet
+                rtcp->AddRTCPacket(remb);
+            }
+            
             Debug( "SR: reporting estimated bandwidth of %d to %s\n", estimation, inet_ntoa( sendRtcpAddr.sin_addr ) );
         }
     }

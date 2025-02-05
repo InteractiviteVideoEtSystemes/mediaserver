@@ -443,7 +443,7 @@ int main(int argc,char **argv)
 	wsServer.AddHandler("/jsr309", &jsr309Manager );
 	//Add the html status handler
 	server.AddHandler("/status/general",&status);
-        server.AddHandler("/status/mcu",&mcustatus);
+    server.AddHandler("/status/mcu",&mcustatus);
 	//Init the rtmp server
 	if (! rtmpServer.Init(rtmpPort)) goto server_init_failed;
 

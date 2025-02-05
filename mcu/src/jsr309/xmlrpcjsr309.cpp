@@ -2795,34 +2795,40 @@ xmlrpc_value* GetMediaCandidates(xmlrpc_env *env, xmlrpc_value *param_array, voi
 
 			switch (url_list.size()) {
 				case 1:
-					arr = xmlrpc_build_value(env, "(s)", url_list[0]);
+					arr = xmlrpc_build_value(env, "(s)", url_list[0].c_str());
 					break;
 				case 2:
-					arr = xmlrpc_build_value(env, "(ss)", url_list[0], url_list[1]);
+					arr = xmlrpc_build_value(env, "(ss)", url_list[0].c_str(), url_list[1].c_str());
 					break;
 				case 3:
-					arr = xmlrpc_build_value(env, "(sss)", url_list[0], url_list[1], url_list[2]);
+					arr = xmlrpc_build_value(env, "(sss)", url_list[0].c_str(), url_list[1].c_str(), url_list[2].c_str());
 					break;
 				case 4:
-					arr = xmlrpc_build_value(env, "(ssss)", url_list[0], url_list[1], url_list[2], url_list[3]);
+					arr = xmlrpc_build_value(env, "(ssss)", url_list[0].c_str(), url_list[1].c_str(), url_list[2].c_str(), url_list[3].c_str());
 					break;
 				case 5:
-					arr = xmlrpc_build_value(env, "(sssss)", url_list[0], url_list[1], url_list[2], url_list[3], url_list[4]);
+					arr = xmlrpc_build_value(env, "(sssss)", url_list[0].c_str(), url_list[1].c_str(), url_list[2].c_str(), url_list[3].c_str()
+						, url_list[4].c_str());
 					break;
 				case 6:
-					arr = xmlrpc_build_value(env, "(ssssss)", url_list[0], url_list[1], url_list[2], url_list[3], url_list[4], url_list[5]);
+					arr = xmlrpc_build_value(env, "(ssssss)", url_list[0].c_str(), url_list[1].c_str(), url_list[2].c_str(), url_list[3].c_str()
+						, url_list[4].c_str(), url_list[5].c_str());
 					break;
 				case 7:
-					arr = xmlrpc_build_value(env, "(sssssss)", url_list[0], url_list[1], url_list[2], url_list[3], url_list[4], url_list[5], url_list[6]);
+					arr = xmlrpc_build_value(env, "(sssssss)", url_list[0].c_str(), url_list[1].c_str(), url_list[2].c_str(), url_list[3].c_str()
+						, url_list[4].c_str(), url_list[5].c_str(), url_list[6].c_str());
 					break;
 				case 8:
-					arr = xmlrpc_build_value(env, "(ssssssss)", url_list[0], url_list[1], url_list[2], url_list[3], url_list[4], url_list[5], url_list[6], url_list[7]);
+					arr = xmlrpc_build_value(env, "(ssssssss)", url_list[0].c_str(), url_list[1].c_str(), url_list[2].c_str(), url_list[3].c_str()
+						, url_list[4].c_str(), url_list[5].c_str(), url_list[6].c_str(), url_list[7].c_str());
 					break;
 				case 9:
-					arr = xmlrpc_build_value(env, "(sssssssss)", url_list[0], url_list[1], url_list[2], url_list[3], url_list[4], url_list[5], url_list[6], url_list[7], url_list[8]);
+					arr = xmlrpc_build_value(env, "(sssssssss)", url_list[0].c_str(), url_list[1].c_str(), url_list[2].c_str(), url_list[3].c_str()
+						, url_list[4].c_str(), url_list[5].c_str(), url_list[6].c_str(), url_list[7].c_str(), url_list[8].c_str());
 					break;
 				case 10:
-					arr = xmlrpc_build_value(env, "(ssssssssss)", url_list[0], url_list[1], url_list[2], url_list[3], url_list[4], url_list[5], url_list[6], url_list[7], url_list[8], url_list[9]);
+					arr = xmlrpc_build_value(env, "(ssssssssss)", url_list[0].c_str(), url_list[1].c_str(), url_list[2].c_str(), url_list[3].c_str()
+						, url_list[4].c_str(), url_list[5].c_str(), url_list[6].c_str(), url_list[7].c_str(), url_list[8].c_str(), url_list[9].c_str());
 					break;
 				case 0:
 				default:

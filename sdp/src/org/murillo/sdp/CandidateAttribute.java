@@ -12,9 +12,7 @@ import java.util.ArrayList;
  * @author Sergio
  */
 public class CandidateAttribute implements Attribute {
-
-
-
+    
     public static class Extension {
         public String name;
         public String value;

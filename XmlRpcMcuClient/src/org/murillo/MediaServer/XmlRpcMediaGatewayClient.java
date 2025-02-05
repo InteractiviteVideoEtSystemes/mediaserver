@@ -17,8 +17,6 @@ import java.util.Map;
  * @author Sergio Garcia Murillo
  */
 public class XmlRpcMediaGatewayClient {
-
-    
     
     public static final Integer QCIF = 0;
     public static final Integer CIF  = 1;
@@ -27,9 +25,6 @@ public class XmlRpcMediaGatewayClient {
     public static final Integer HVGA = 4;
     public static final Integer QVGA = 5;
     public static final Integer HD720P = 6;
-
-
-
 
     private XmlRpcTimedClient client;
     private XmlRpcClientConfigImpl config;

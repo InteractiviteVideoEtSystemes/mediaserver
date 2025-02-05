@@ -7,7 +7,6 @@ package org.murillo.MediaServer;
 
 //import java.net.MalformedURLException;
 //import java.net.URL;
-import java.math.BigInteger;
 import java.net.*;
 
 //import java.util.HashMap;
@@ -120,10 +119,8 @@ public class XmlRPCJSR309Client {
     public MediaCandidate[] GetMediaCandidates(int sessId,Integer EndpointId,Codecs.MediaProtocol protocol, Codecs.MediaType media)
         throws XmlRpcException
     {
-        //MediaCandidate c1 = null;
-        //MediaCandidate c2 = null;
         List<MediaCandidate> mediaCandidates = new ArrayList<MediaCandidate>();
-/**/
+        
          //Create request
         Object[] request = new Object[]{sessId, EndpointId, protocol.valueOf(), media.valueOf()};
         //Execute
@@ -131,69 +128,18 @@ public class XmlRPCJSR309Client {
         //Get result
         Object[] returnVal = (Object[])response.get("returnVal");
 
-        Logger.getLogger(XmlRPCJSR309Client.class.getName()).log(Level.INFO,
-                "Recuperation du nombre des interfaces reseau : {0}", (returnVal != null ? returnVal.length : 0));
-/**/        
-/**/
-
         try {
             if (returnVal != null)
             {
                 for (int i = 0; i < returnVal.length; i++)
                 {
-                    Logger.getLogger(XmlRPCJSR309Client.class.getName()).log(Level.INFO,
-                        "Recuperation interface reseau {0}: {1}", new Object[] {i+1, (String)returnVal[i]});
-                    //c1 = new MediaCandidate((String)returnVal[i], 1, "0.0.0.0");
-                    //mediaCandidates.add(new MediaCandidate((String)returnVal[i], i+1, "0.0.0.0"));
-                    //mediaCandidates.add(new MediaCandidate((String)returnVal[i], returnVal.length-i, "0.0.0.0"));
+                    mediaCandidates.add(new MediaCandidate((String)returnVal[i], i+1, "0.0.0.0"));
                 }
             }
-            
-            //c2 = new MediaCandidate("rtp://192.168.0.4", 2, "0.0.0.0");
-            mediaCandidates.add(new MediaCandidate("rtp://192.168.0.4", mediaCandidates.size() + 1, "0.0.0.0"));
-            //mediaCandidates.add(new MediaCandidate("rtp://172.21.100.61", mediaCandidates.size() + 1, "0.0.0.0"));
-            mediaCandidates.add(new MediaCandidate("rtp://174.21.100.61", mediaCandidates.size() + 1, "0.0.0.0"));
         } catch (MalformedURLException ex) {
             return null;
         }
-/**/        
-/*
-        try {
-            Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
-            int id = 1; // Identifiant unique pour chaque candidat
-            
-            while (interfaces.hasMoreElements()) {
-                NetworkInterface networkInterface = interfaces.nextElement();
-
-                // Filtrer les interfaces inactives, loopback et virtuelles
-                if (networkInterface.isLoopback() || !networkInterface.isUp()) {
-                    continue;
-                }
-
-                Enumeration<InetAddress> addresses = networkInterface.getInetAddresses();
-                while (addresses.hasMoreElements()) {
-                    InetAddress addr = addresses.nextElement();
-                    if (addr instanceof Inet4Address) {
-                        try {
-                            mediaCandidates.add(new MediaCandidate("rtp://" + addr.getHostAddress(), id++, "0.0.0.0"));
-                        } catch (MalformedURLException ex) {
-                        }
-                    }
-                }
-            } 
-        } catch (SocketException e) {
-            //return null;
-            Logger.getLogger(XmlRPCJSR309Client.class.getName()).log(Level.INFO,
-                "Erreur lors de la recuperation des interfaces reseau : {0}", e.getMessage());
-            
-            try {
-                mediaCandidates.add(new MediaCandidate("rtp://192.168.0.4", mediaCandidates.size() + 1, "0.0.0.0"));
-            } catch (MalformedURLException ex) {
-                return null;
-            }
-        }            
-*/            
-        //return new MediaCandidate[] { c1, c2 };
+        
         return mediaCandidates.toArray(new MediaCandidate[0]);
     }
 

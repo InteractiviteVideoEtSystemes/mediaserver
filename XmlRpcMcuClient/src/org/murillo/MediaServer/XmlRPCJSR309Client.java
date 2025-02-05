@@ -5,13 +5,23 @@
 
 package org.murillo.MediaServer;
 
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.HashMap;
-//import java.util.logging.Level;
-//import java.util.logging.Logger;
+//import java.net.MalformedURLException;
+//import java.net.URL;
+import java.math.BigInteger;
+import java.net.*;
+
+//import java.util.HashMap;
+//import java.util.ArrayList;
+//import java.util.List;
+import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.security.SecureRandom;
+import javax.xml.bind.DatatypeConverter;
+
 import org.apache.xmlrpc.XmlRpcException;
 import org.apache.xmlrpc.client.XmlRpcClientConfigImpl;
+
 import org.murillo.MediaServer.Codecs.MediaType;
 
 /**
@@ -63,37 +73,43 @@ public class XmlRPCJSR309Client {
         public String protocol;
         public Integer priority;
         public String netmask;
+        public String foundation;
 
-        MediaCandidate( String url, Integer p, String netmaks) throws MalformedURLException
+        MediaCandidate( String url, Integer priority, String netmaks) throws MalformedURLException
         {
+            SecureRandom random = new SecureRandom();
+            Integer id = random.nextInt(10000);
+            
             String[] proto = url.split("://");
             this.protocol = proto[0];
             String[] address = proto[1].split(":");
             this.addr = address[0];
-            if (address.length>1)
+            if (address.length > 1) {
                 this.port = Integer.valueOf(address[1]);
-            else
-                this.port=0;
-            this.priority = p;
+            } else {
+                this.port = 0;
+            }
+            this.priority = priority;
             this.netmask = netmaks;
+            this.foundation = DatatypeConverter.printInt(id);
         }
 
         @Override
-        public MediaCandidate clone() throws CloneNotSupportedException
+        public MediaCandidate clone()
+            throws CloneNotSupportedException
         {
             try {
                 MediaCandidate c = new MediaCandidate(addr.toString(), priority, netmask);
                 return c;
-            }
-            catch (MalformedURLException ex)
-            {
+            } catch (MalformedURLException ex) {
                 throw new java.lang.CloneNotSupportedException();
             }
         }
 
     }
     /** Creates a new instance of XmlRpcMcuClient */
-    public XmlRPCJSR309Client(String  url) throws MalformedURLException
+    public XmlRPCJSR309Client(String  url)
+        throws MalformedURLException
     {
         config = new XmlRpcClientConfigImpl();
         config.setServerURL(new URL(url));
@@ -101,75 +117,130 @@ public class XmlRPCJSR309Client {
         client.setConfig(config);
     }
 
-    public MediaCandidate[] GetMediaCandidates(int sessId,Integer EndpointId,Codecs.MediaProtocol protocol, Codecs.MediaType media) throws XmlRpcException
+    public MediaCandidate[] GetMediaCandidates(int sessId,Integer EndpointId,Codecs.MediaProtocol protocol, Codecs.MediaType media)
+        throws XmlRpcException
     {
-        MediaCandidate c = null;
-
+        //MediaCandidate c1 = null;
+        //MediaCandidate c2 = null;
+        List<MediaCandidate> mediaCandidates = new ArrayList<MediaCandidate>();
+/**/
          //Create request
-        Object[] request = new Object[]{sessId,EndpointId,protocol.valueOf(),media.valueOf()};
+        Object[] request = new Object[]{sessId, EndpointId, protocol.valueOf(), media.valueOf()};
         //Execute
-        HashMap response = (HashMap) client.execute("GetMediaCandidates", request);
+        HashMap response = (HashMap)client.execute("GetMediaCandidates", request);
         //Get result
-        Object[] returnVal = (Object[]) response.get("returnVal");
+        Object[] returnVal = (Object[])response.get("returnVal");
+
+        Logger.getLogger(XmlRPCJSR309Client.class.getName()).log(Level.INFO,
+                "Recuperation du nombre des interfaces reseau : {0}", (returnVal != null ? returnVal.length : 0));
+/**/        
+/**/
 
         try {
             if (returnVal != null)
             {
-                for (int i=0; i< returnVal.length;i++)
+                for (int i = 0; i < returnVal.length; i++)
                 {
-                    c = new MediaCandidate((String) returnVal[i], 1, "0.0.0.0");
+                    Logger.getLogger(XmlRPCJSR309Client.class.getName()).log(Level.INFO,
+                        "Recuperation interface reseau {0}: {1}", new Object[] {i+1, (String)returnVal[i]});
+                    //c1 = new MediaCandidate((String)returnVal[i], 1, "0.0.0.0");
+                    //mediaCandidates.add(new MediaCandidate((String)returnVal[i], i+1, "0.0.0.0"));
+                    //mediaCandidates.add(new MediaCandidate((String)returnVal[i], returnVal.length-i, "0.0.0.0"));
                 }
             }
-          //  c = new MediaCandidate("rtp://172.21.100.14", 1, "0.0.0.0");
-        }
-        catch (MalformedURLException ex)
-        {
+            
+            //c2 = new MediaCandidate("rtp://192.168.0.4", 2, "0.0.0.0");
+            mediaCandidates.add(new MediaCandidate("rtp://192.168.0.4", mediaCandidates.size() + 1, "0.0.0.0"));
+            //mediaCandidates.add(new MediaCandidate("rtp://172.21.100.61", mediaCandidates.size() + 1, "0.0.0.0"));
+            mediaCandidates.add(new MediaCandidate("rtp://174.21.100.61", mediaCandidates.size() + 1, "0.0.0.0"));
+        } catch (MalformedURLException ex) {
             return null;
         }
+/**/        
+/*
+        try {
+            Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
+            int id = 1; // Identifiant unique pour chaque candidat
+            
+            while (interfaces.hasMoreElements()) {
+                NetworkInterface networkInterface = interfaces.nextElement();
 
-        return new MediaCandidate[] { c };
+                // Filtrer les interfaces inactives, loopback et virtuelles
+                if (networkInterface.isLoopback() || !networkInterface.isUp()) {
+                    continue;
+                }
+
+                Enumeration<InetAddress> addresses = networkInterface.getInetAddresses();
+                while (addresses.hasMoreElements()) {
+                    InetAddress addr = addresses.nextElement();
+                    if (addr instanceof Inet4Address) {
+                        try {
+                            mediaCandidates.add(new MediaCandidate("rtp://" + addr.getHostAddress(), id++, "0.0.0.0"));
+                        } catch (MalformedURLException ex) {
+                        }
+                    }
+                }
+            } 
+        } catch (SocketException e) {
+            //return null;
+            Logger.getLogger(XmlRPCJSR309Client.class.getName()).log(Level.INFO,
+                "Erreur lors de la recuperation des interfaces reseau : {0}", e.getMessage());
+            
+            try {
+                mediaCandidates.add(new MediaCandidate("rtp://192.168.0.4", mediaCandidates.size() + 1, "0.0.0.0"));
+            } catch (MalformedURLException ex) {
+                return null;
+            }
+        }            
+*/            
+        //return new MediaCandidate[] { c1, c2 };
+        return mediaCandidates.toArray(new MediaCandidate[0]);
     }
 
-    public int EventQueueCreate() throws XmlRpcException
+    public int EventQueueCreate()
+        throws XmlRpcException
     {
         //Create request
         Object[] request = new Object[]{};
         //Execute
-        HashMap response = (HashMap) client.execute("EventQueueCreate", request);
+        HashMap response = (HashMap)client.execute("EventQueueCreate", request);
         //Get result
-        Object[] returnVal = (Object[]) response.get("returnVal");
+        Object[] returnVal = (Object[])response.get("returnVal");
         //Return part id
         return (Integer)returnVal[0];
     }
 
-    public boolean EventQueueDelete(int queueId) throws XmlRpcException
+    public boolean EventQueueDelete(int queueId)
+        throws XmlRpcException
     {
         //Create request
         Object[] request = new Object[]{queueId};
         //Execute
-        HashMap response = (HashMap) client.execute("EventQueueDelete", request);
+        HashMap response = (HashMap)client.execute("EventQueueDelete", request);
         //Return
-        return (((Integer)response.get("returnCode"))==1);
+        return (((Integer)response.get("returnCode")) == 1);
     }
 
-    public int MediaSessionCreate(String name,Integer queueId) throws XmlRpcException
+    public int MediaSessionCreate(String name,Integer queueId)
+        throws XmlRpcException
     {
         //Create request
         Object[] request = new Object[]{name,queueId};
         //Execute
-        HashMap response = (HashMap) client.execute("MediaSessionCreate", request);
+        HashMap response = (HashMap)client.execute("MediaSessionCreate", request);
         //Get result
-        Object[] returnVal = (Object[]) response.get("returnVal");
+        Object[] returnVal = (Object[])response.get("returnVal");
         //Return part id
         return (Integer)returnVal[0];
     }
 
-    public boolean MediaSessionDelete(int sessId) throws XmlRpcException
+    public boolean MediaSessionDelete(int sessId)
+        throws XmlRpcException
     {
         //Create request
         Object[] request = new Object[]{sessId};
         //Execute
-        HashMap response = (HashMap) client.execute("MediaSessionDelete", request);
+        HashMap response = (HashMap)client.execute("MediaSessionDelete", request);
         //Return
         return (((Integer)response.get("returnCode"))==1);
     }
@@ -180,9 +251,9 @@ public class XmlRPCJSR309Client {
         //Create request
         Object[] request = new Object[]{sessId,name};
         //Execute
-        HashMap response = (HashMap) client.execute("PlayerCreate", request);
+        HashMap response = (HashMap)client.execute("PlayerCreate", request);
         //Get result
-        Object[] returnVal = (Object[]) response.get("returnVal");
+        Object[] returnVal = (Object[])response.get("returnVal");
         //Return part id
         return (Integer)returnVal[0];
     }
@@ -192,7 +263,7 @@ public class XmlRPCJSR309Client {
         //Create request
         Object[] request = new Object[]{sessId,playerId};
         //Execute
-        HashMap response = (HashMap) client.execute("PlayerDelete", request);
+        HashMap response = (HashMap)client.execute("PlayerDelete", request);
         //Return
         return (((Integer)response.get("returnCode"))==1);
     }
@@ -203,7 +274,7 @@ public class XmlRPCJSR309Client {
         //Create request
         Object[] request = new Object[]{sessId,playerId,filename};
         //Execute
-        HashMap response = (HashMap) client.execute("PlayerOpen", request);
+        HashMap response = (HashMap)client.execute("PlayerOpen", request);
         //Return
         return (((Integer)response.get("returnCode"))==1);
     }
@@ -213,7 +284,7 @@ public class XmlRPCJSR309Client {
         //Create request
         Object[] request = new Object[]{sessId,playerId};
         //Execute
-        HashMap response = (HashMap) client.execute("PlayerPlay", request);
+        HashMap response = (HashMap)client.execute("PlayerPlay", request);
         //Return
         return (((Integer)response.get("returnCode"))==1);
     }
@@ -223,7 +294,7 @@ public class XmlRPCJSR309Client {
         //Create request
         Object[] request = new Object[]{sessId,playerId,time};
         //Execute
-        HashMap response = (HashMap) client.execute("PlayerSeek", request);
+        HashMap response = (HashMap)client.execute("PlayerSeek", request);
         //Return
         return (((Integer)response.get("returnCode"))==1);
     }
@@ -233,7 +304,7 @@ public class XmlRPCJSR309Client {
         //Create request
         Object[] request = new Object[]{sessId,playerId};
         //Execute
-        HashMap response = (HashMap) client.execute("PlayerStop", request);
+        HashMap response = (HashMap)client.execute("PlayerStop", request);
         //Return
         return (((Integer)response.get("returnCode"))==1);
     }
@@ -243,7 +314,7 @@ public class XmlRPCJSR309Client {
         //Create request
         Object[] request = new Object[]{sessId,playerId};
         //Execute
-        HashMap response = (HashMap) client.execute("PlayerClose", request);
+        HashMap response = (HashMap)client.execute("PlayerClose", request);
         //Return
         return (((Integer)response.get("returnCode"))==1);
     }
@@ -254,9 +325,9 @@ public class XmlRPCJSR309Client {
         //Create request
         Object[] request = new Object[]{sessId,name};
         //Execute
-        HashMap response = (HashMap) client.execute("RecorderCreate", request);
+        HashMap response = (HashMap)client.execute("RecorderCreate", request);
         //Get result
-        Object[] returnVal = (Object[]) response.get("returnVal");
+        Object[] returnVal = (Object[])response.get("returnVal");
         //Return part id
         return (Integer)returnVal[0];
     }
@@ -266,7 +337,7 @@ public class XmlRPCJSR309Client {
         //Create request
         Object[] request = new Object[]{sessId,recorderId};
         //Execute
-        HashMap response = (HashMap) client.execute("RecorderDelete", request);
+        HashMap response = (HashMap)client.execute("RecorderDelete", request);
         //Return
         return (((Integer)response.get("returnCode"))==1);
     }
@@ -277,7 +348,7 @@ public class XmlRPCJSR309Client {
         //Create request
         Object[] request = new Object[]{sessId,recorderId,filename};
         //Execute
-        HashMap response = (HashMap) client.execute("RecorderRecord", request);
+        HashMap response = (HashMap)client.execute("RecorderRecord", request);
         //Return
         return (((Integer)response.get("returnCode"))==1);
     }
@@ -287,7 +358,7 @@ public class XmlRPCJSR309Client {
         //Create request
         Object[] request = new Object[]{sessId,recorderId};
         //Execute
-        HashMap response = (HashMap) client.execute("RecorderStop", request);
+        HashMap response = (HashMap)client.execute("RecorderStop", request);
         //Return
         return (((Integer)response.get("returnCode"))==1);
     }
@@ -297,7 +368,7 @@ public class XmlRPCJSR309Client {
         //Create request
         Object[] request = new Object[]{sessId,recorderId,endpointId,media.valueOf()};
         //Execute
-        HashMap response = (HashMap) client.execute("RecorderAttachToEndpoint", request);
+        HashMap response = (HashMap)client.execute("RecorderAttachToEndpoint", request);
         //Return
         return (((Integer)response.get("returnCode"))==1);
     }
@@ -307,7 +378,7 @@ public class XmlRPCJSR309Client {
         //Create request
         Object[] request = new Object[]{sessId,recorderId,mixerId,portId};
         //Execute
-        HashMap response = (HashMap) client.execute("RecorderAttachToAudioMixerPort", request);
+        HashMap response = (HashMap)client.execute("RecorderAttachToAudioMixerPort", request);
         //Return
         return (((Integer)response.get("returnCode"))==1);
     }
@@ -317,7 +388,7 @@ public class XmlRPCJSR309Client {
         //Create request
         Object[] request = new Object[]{sessId,recorderId,mixerId,portId};
         //Execute
-        HashMap response = (HashMap) client.execute("RecorderAttachToVideoMixerPort", request);
+        HashMap response = (HashMap)client.execute("RecorderAttachToVideoMixerPort", request);
         //Return
         return (((Integer)response.get("returnCode"))==1);
     }
@@ -327,7 +398,7 @@ public class XmlRPCJSR309Client {
         //Create request
         Object[] request = new Object[]{sessId,recorderId,media.valueOf()};
         //Execute
-        HashMap response = (HashMap) client.execute("RecorderDettach", request);
+        HashMap response = (HashMap)client.execute("RecorderDettach", request);
         //Return
         return (((Integer)response.get("returnCode"))==1);
     }
@@ -338,7 +409,7 @@ public class XmlRPCJSR309Client {
         //Create request
         Object[] request = new Object[]{sessId,name,audioSupported,videoSupported,textSupported};
         //Execute
-        HashMap response = (HashMap) client.execute("EndpointCreate", request);
+        HashMap response = (HashMap)client.execute("EndpointCreate", request);
         //Get result
         Object[] returnVal = (Object[]) response.get("returnVal");
         //Return part id
@@ -350,7 +421,7 @@ public class XmlRPCJSR309Client {
         //Create request
         Object[] request = new Object[]{sessId,endpointId};
         //Execute
-        HashMap response = (HashMap) client.execute("EndpointDelete", request);
+        HashMap response = (HashMap)client.execute("EndpointDelete", request);
         //Return
         return (((Integer)response.get("returnCode"))==1);
     }
@@ -358,9 +429,9 @@ public class XmlRPCJSR309Client {
     public HashMap<String,MediaStatistics> EndpointGetStatistics(Integer sessId, Integer endpointId) throws XmlRpcException
     {
         Object[] request = new Object[]{sessId,endpointId};
-        HashMap response = (HashMap) client.execute("EndpointGetStatistics", request);
-        Object[] returnVal = (Object[]) response.get("returnVal");
-        if ( returnVal != null && returnVal.length > 0)
+        HashMap response = (HashMap)client.execute("EndpointGetStatistics", request);
+        Object[] returnVal = (Object[])response.get("returnVal");
+        if (returnVal != null && returnVal.length > 0)
         {
             //Create map
             HashMap<String,MediaStatistics> s = MediaStatistics.parseResult(returnVal);
@@ -374,7 +445,7 @@ public class XmlRPCJSR309Client {
         //Create request
         Object[] request = new Object[]{sessId,endpointId,media.valueOf(),username,pwd};
         //Execute
-        HashMap response = (HashMap) client.execute("EndpointSetLocalSTUNCredentials", request);
+        HashMap response = (HashMap)client.execute("EndpointSetLocalSTUNCredentials", request);
         //Return
         return (((Integer)response.get("returnCode"))==1);
     }
@@ -384,7 +455,7 @@ public class XmlRPCJSR309Client {
         //Create request
         Object[] request = new Object[]{sessId,endpointId,media.valueOf(),username,pwd};
         //Execute
-        HashMap response = (HashMap) client.execute("EndpointSetRemoteSTUNCredentials", request);
+        HashMap response = (HashMap)client.execute("EndpointSetRemoteSTUNCredentials", request);
         //Return
         return (((Integer)response.get("returnCode"))==1);
     }
@@ -394,7 +465,7 @@ public class XmlRPCJSR309Client {
         //Create request
         Object[] request = new Object[]{sessId,endpointId,media.valueOf(),suite,key};
         //Execute
-        HashMap response = (HashMap) client.execute("EndpointSetLocalCryptoSDES", request);
+        HashMap response = (HashMap)client.execute("EndpointSetLocalCryptoSDES", request);
         //Return
         return (((Integer)response.get("returnCode"))==1);
     }
@@ -404,7 +475,7 @@ public class XmlRPCJSR309Client {
         //Create request
         Object[] request = new Object[]{sessId,endpointId,media.valueOf(),suite,key};
         //Execute
-        HashMap response = (HashMap) client.execute("EndpointSetRemoteCryptoSDES", request);
+        HashMap response = (HashMap)client.execute("EndpointSetRemoteCryptoSDES", request);
         //Return
         return (((Integer)response.get("returnCode"))==1);
     }
@@ -414,11 +485,11 @@ public class XmlRPCJSR309Client {
         //Create request
         Object[] request = new Object[]{hash};
         //Execute
-        HashMap response = (HashMap) client.execute("EndpointGetLocalCryptoDTLSFingerprint", request);
+        HashMap response = (HashMap)client.execute("EndpointGetLocalCryptoDTLSFingerprint", request);
 	//Get result
-        Object[] returnVal = (Object[]) response.get("returnVal");
+        Object[] returnVal = (Object[])response.get("returnVal");
 	//Get result
-        return (String) returnVal[0];
+        return (String)returnVal[0];
     }
 
     public boolean EndpointSetRemoteCryptoDTLS(Integer sessId,Integer endpointId,MediaType media,String setup,String hash,String fingerprint) throws XmlRpcException
@@ -426,7 +497,7 @@ public class XmlRPCJSR309Client {
         //Create request
         Object[] request = new Object[]{sessId,endpointId,media.valueOf(),setup,hash,fingerprint};
         //Execute
-        HashMap response = (HashMap) client.execute("EndpointSetRemoteCryptoDTLS", request);
+        HashMap response = (HashMap)client.execute("EndpointSetRemoteCryptoDTLS", request);
         //Return
         return (((Integer)response.get("returnCode"))==1);
     }
@@ -436,7 +507,7 @@ public class XmlRPCJSR309Client {
         //Create request
         Object[] request = new Object[]{sessId,endpointId,media.valueOf(),properties};
         //Execute
-        HashMap response = (HashMap) client.execute("EndpointSetRTPProperties", request);
+        HashMap response = (HashMap)client.execute("EndpointSetRTPProperties", request);
         //Return
         return (((Integer)response.get("returnCode"))==1);
     }
@@ -446,7 +517,7 @@ public class XmlRPCJSR309Client {
         //Create request
         Object[] request = new Object[]{sessId,endpointId,media.valueOf(),sendIp,sendPort,rtpMap};
         //Execute
-        HashMap response = (HashMap) client.execute("EndpointStartSending", request);
+        HashMap response = (HashMap)client.execute("EndpointStartSending", request);
         //Return
         return (((Integer)response.get("returnCode"))==1);
     }
@@ -456,7 +527,7 @@ public class XmlRPCJSR309Client {
        //Create request
         Object[] request = new Object[]{sessId,endpointId,media.valueOf()};
         //Execute
-        HashMap response = (HashMap) client.execute("EndpointStopSending", request);
+        HashMap response = (HashMap)client.execute("EndpointStopSending", request);
         //Return
         return (((Integer)response.get("returnCode"))==1);
     }
@@ -466,9 +537,9 @@ public class XmlRPCJSR309Client {
         //Create request
         Object[] request = new Object[]{sessId,endpointId,media.valueOf(),rtpMap};
         //Execute
-        HashMap response = (HashMap) client.execute("EndpointStartReceiving", request);
+        HashMap response = (HashMap)client.execute("EndpointStartReceiving", request);
         //Get result
-        Object[] returnVal = (Object[]) response.get("returnVal");
+        Object[] returnVal = (Object[])response.get("returnVal");
         //Return port
         return (Integer)returnVal[0];
     }
@@ -478,7 +549,7 @@ public class XmlRPCJSR309Client {
         //Create request
         Object[] request = new Object[]{sessId,endpointId,media.valueOf()};
         //Execute
-        HashMap response = (HashMap) client.execute("EndpointStopReceiving", request);
+        HashMap response = (HashMap)client.execute("EndpointStopReceiving", request);
         //Return
         return (((Integer)response.get("returnCode"))==1);
     }
@@ -488,7 +559,7 @@ public class XmlRPCJSR309Client {
         //Create request
         Object[] request = new Object[]{sessId,endpointId,media.valueOf()};
         //Execute
-        HashMap response = (HashMap) client.execute("EndpointRequestUpdate", request);
+        HashMap response = (HashMap)client.execute("EndpointRequestUpdate", request);
         //Return
         return (((Integer)response.get("returnCode"))==1);
     }
@@ -499,7 +570,7 @@ public class XmlRPCJSR309Client {
         //Create request
         Object[] request = new Object[]{sessId,endpointId,playerId,media.valueOf()};
         //Execute
-        HashMap response = (HashMap) client.execute("EndpointAttachToPlayer", request);
+        HashMap response = (HashMap)client.execute("EndpointAttachToPlayer", request);
         //Return
         return (((Integer)response.get("returnCode"))==1);
     }
@@ -508,7 +579,7 @@ public class XmlRPCJSR309Client {
         //Create request
         Object[] request = new Object[]{sessId,endpointId,sourceId,media.valueOf()};
         //Execute
-        HashMap response = (HashMap) client.execute("EndpointAttachToEndpoint", request);
+        HashMap response = (HashMap)client.execute("EndpointAttachToEndpoint", request);
         //Return
         return (((Integer)response.get("returnCode"))==1);
     }
@@ -518,7 +589,7 @@ public class XmlRPCJSR309Client {
         //Create request
         Object[] request = new Object[]{sessId,endpointId,mixerId,portId};
         //Execute
-        HashMap response = (HashMap) client.execute("EndpointAttachToAudioMixerPort", request);
+        HashMap response = (HashMap)client.execute("EndpointAttachToAudioMixerPort", request);
         //Return
         return (((Integer)response.get("returnCode"))==1);
     }
@@ -528,7 +599,7 @@ public class XmlRPCJSR309Client {
         //Create request
         Object[] request = new Object[]{sessId,endpointId,mixerId,portId};
         //Execute
-        HashMap response = (HashMap) client.execute("EndpointAttachToVideoMixerPort", request);
+        HashMap response = (HashMap)client.execute("EndpointAttachToVideoMixerPort", request);
         //Return
         return (((Integer)response.get("returnCode"))==1);
     }
@@ -538,7 +609,7 @@ public class XmlRPCJSR309Client {
         //Create request
         Object[] request = new Object[]{sessId,endpointId,videoTranscodeId};
         //Execute
-        HashMap response = (HashMap) client.execute("EndpointAttachToVideoTranscoder", request);
+        HashMap response = (HashMap)client.execute("EndpointAttachToVideoTranscoder", request);
         //Return
         return (((Integer)response.get("returnCode"))==1);
     }
@@ -548,7 +619,7 @@ public class XmlRPCJSR309Client {
         //Create request
         Object[] request = new Object[]{sessId,endpointId,transcodeId};
         //Execute
-        HashMap response = (HashMap) client.execute("EndpointAttachToAudioTranscoder", request);
+        HashMap response = (HashMap)client.execute("EndpointAttachToAudioTranscoder", request);
         //Return
         return (((Integer)response.get("returnCode"))==1);
     }
@@ -559,7 +630,7 @@ public class XmlRPCJSR309Client {
         //Create request
         Object[] request = new Object[]{sessId,endpointId,media.valueOf()};
         //Execute
-        HashMap response = (HashMap) client.execute("EndpointDettach", request);
+        HashMap response = (HashMap)client.execute("EndpointDettach", request);
         //Return
         return (((Integer)response.get("returnCode"))==1);
     }
@@ -569,9 +640,9 @@ public class XmlRPCJSR309Client {
         //Create request
         Object[] request = new Object[]{sessId,name,};
         //Execute
-        HashMap response = (HashMap) client.execute("AudioMixerCreate", request);
+        HashMap response = (HashMap)client.execute("AudioMixerCreate", request);
         //Get result
-        Object[] returnVal = (Object[]) response.get("returnVal");
+        Object[] returnVal = (Object[])response.get("returnVal");
         //Return part id
         return (Integer)returnVal[0];
     }
@@ -581,7 +652,7 @@ public class XmlRPCJSR309Client {
         //Create request
         Object[] request = new Object[]{sessId,mixerId};
         //Execute
-        HashMap response = (HashMap) client.execute("AudioMixerDelete", request);
+        HashMap response = (HashMap)client.execute("AudioMixerDelete", request);
         //Return
         return (((Integer)response.get("returnCode"))==1);
     }
@@ -592,9 +663,9 @@ public class XmlRPCJSR309Client {
         //Create request
         Object[] request = new Object[]{sessId,mixerId,name};
         //Execute
-        HashMap response = (HashMap) client.execute("AudioMixerPortCreate", request);
+        HashMap response = (HashMap)client.execute("AudioMixerPortCreate", request);
         //Get result
-        Object[] returnVal = (Object[]) response.get("returnVal");
+        Object[] returnVal = (Object[])response.get("returnVal");
         //Return part id
         return (Integer)returnVal[0];
     }
@@ -604,7 +675,7 @@ public class XmlRPCJSR309Client {
         //Create request
         Object[] request = new Object[]{sessId,mixerId,portId,codec};
         //Execute
-        HashMap response = (HashMap) client.execute("AudioMixerPortSetCodec", request);
+        HashMap response = (HashMap)client.execute("AudioMixerPortSetCodec", request);
         //Return
         return (((Integer)response.get("returnCode"))==1);
     }
@@ -614,7 +685,7 @@ public class XmlRPCJSR309Client {
         //Create request
         Object[] request = new Object[]{sessId,mixerId,portId};
         //Execute
-        HashMap response = (HashMap) client.execute("AudioMixerPortDelete", request);
+        HashMap response = (HashMap)client.execute("AudioMixerPortDelete", request);
         //Return
         return (((Integer)response.get("returnCode"))==1);
     }
@@ -624,7 +695,7 @@ public class XmlRPCJSR309Client {
         //Create request
         Object[] request = new Object[]{sessId,mixerId,portId,endpointId};
         //Execute
-        HashMap response = (HashMap) client.execute("AudioMixerPortAttachToEndpoint", request);
+        HashMap response = (HashMap)client.execute("AudioMixerPortAttachToEndpoint", request);
         //Return
         return (((Integer)response.get("returnCode"))==1);
     }
@@ -634,7 +705,7 @@ public class XmlRPCJSR309Client {
         //Create request
         Object[] request = new Object[]{sessId,mixerId,portId,playerId};
         //Execute
-        HashMap response = (HashMap) client.execute("AudioMixerPortAttachToPlayer", request);
+        HashMap response = (HashMap)client.execute("AudioMixerPortAttachToPlayer", request);
         //Return
         return (((Integer)response.get("returnCode"))==1);
     }
@@ -644,7 +715,7 @@ public class XmlRPCJSR309Client {
         //Create request
         Object[] request = new Object[]{sessId,mixerId,portId};
         //Execute
-        HashMap response = (HashMap) client.execute("AudioMixerPortDettach", request);
+        HashMap response = (HashMap)client.execute("AudioMixerPortDettach", request);
         //Return
         return (((Integer)response.get("returnCode"))==1);
     }
@@ -654,9 +725,9 @@ public class XmlRPCJSR309Client {
         //Create request
         Object[] request = new Object[]{sessId,tag};
         //Execute
-        HashMap response = (HashMap) client.execute("VideoMixerCreate", request);
+        HashMap response = (HashMap)client.execute("VideoMixerCreate", request);
         //Get result
-        Object[] returnVal = (Object[]) response.get("returnVal");
+        Object[] returnVal = (Object[])response.get("returnVal");
         //Return part id
         return (Integer)returnVal[0];
     }
@@ -666,7 +737,7 @@ public class XmlRPCJSR309Client {
         //Create request
         Object[] request = new Object[]{mixerId};
         //Execute
-        HashMap response = (HashMap) client.execute("VideoMixerDelete", request);
+        HashMap response = (HashMap)client.execute("VideoMixerDelete", request);
         //Return
         return (((Integer)response.get("returnCode"))==1);
     }
@@ -676,9 +747,9 @@ public class XmlRPCJSR309Client {
         //Create request
         Object[] request = new Object[]{sessId,mixerId,tag,mosiacId};
         //Execute
-        HashMap response = (HashMap) client.execute("VideoMixerPortCreate", request);
+        HashMap response = (HashMap)client.execute("VideoMixerPortCreate", request);
         //Get result
-        Object[] returnVal = (Object[]) response.get("returnVal");
+        Object[] returnVal = (Object[])response.get("returnVal");
         //Return part id
         return (Integer)returnVal[0];
     }
@@ -688,7 +759,7 @@ public class XmlRPCJSR309Client {
         //Create request
         Object[] request = new Object[]{sessId,mixerId,portId,codec,size,fps,bitrate,intraPeriod};
         //Execute
-        HashMap response = (HashMap) client.execute("VideoMixerPortSetCodec", request);
+        HashMap response = (HashMap)client.execute("VideoMixerPortSetCodec", request);
         //Return
         return (((Integer)response.get("returnCode"))==1);
     }
@@ -698,7 +769,7 @@ public class XmlRPCJSR309Client {
         //Create request
         Object[] request = new Object[]{sessId,mixerId,portId};
         //Execute
-        HashMap response = (HashMap) client.execute("VideoMixerPortDelete", request);
+        HashMap response = (HashMap)client.execute("VideoMixerPortDelete", request);
         //Return
         return (((Integer)response.get("returnCode"))==1);
     }
@@ -708,7 +779,7 @@ public class XmlRPCJSR309Client {
         //Create request
         Object[] request = new Object[]{sessId,mixerId,portId,endpointId};
         //Execute
-        HashMap response = (HashMap) client.execute("VideoMixerPortAttachToEndpoint", request);
+        HashMap response = (HashMap)client.execute("VideoMixerPortAttachToEndpoint", request);
         //Return
         return (((Integer)response.get("returnCode"))==1);
     }
@@ -717,7 +788,7 @@ public class XmlRPCJSR309Client {
         //Create request
         Object[] request = new Object[]{sessId,mixerId,portId,playerId};
         //Execute
-        HashMap response = (HashMap) client.execute("VideoMixerPortAttachToPlayer", request);
+        HashMap response = (HashMap)client.execute("VideoMixerPortAttachToPlayer", request);
         //Return
         return (((Integer)response.get("returnCode"))==1);
     }
@@ -727,7 +798,7 @@ public class XmlRPCJSR309Client {
         //Create request
         Object[] request = new Object[]{sessId,mixerId,portId};
         //Execute
-        HashMap response = (HashMap) client.execute("VideoMixerPortDettach", request);
+        HashMap response = (HashMap)client.execute("VideoMixerPortDettach", request);
         //Return
         return (((Integer)response.get("returnCode"))==1);
     }
@@ -737,9 +808,9 @@ public class XmlRPCJSR309Client {
         //Create request
         Object[] request = new Object[]{sessId,mixerId,comp,size};
         //Execute
-        HashMap response = (HashMap) client.execute("VideoMixerMosaicCreate", request);
+        HashMap response = (HashMap)client.execute("VideoMixerMosaicCreate", request);
          //Get result
-        Object[] returnVal = (Object[]) response.get("returnVal");
+        Object[] returnVal = (Object[])response.get("returnVal");
         //Return part id
         return (Integer)returnVal[0];
     }
@@ -749,7 +820,7 @@ public class XmlRPCJSR309Client {
         //Create request
         Object[] request = new Object[]{sessId,mixerId,portId};
         //Execute
-        HashMap response = (HashMap) client.execute("VideoMixerMosaicDelete", request);
+        HashMap response = (HashMap)client.execute("VideoMixerMosaicDelete", request);
         //Return
         return (((Integer)response.get("returnCode"))==1);
     }
@@ -759,7 +830,7 @@ public class XmlRPCJSR309Client {
         //Create request
         Object[] request = new Object[]{sessId,mixerId,mosaicId,num,portId};
         //Execute
-        HashMap response = (HashMap) client.execute("VideoMixerMosaicSetSlot", request);
+        HashMap response = (HashMap)client.execute("VideoMixerMosaicSetSlot", request);
         //Return
         return (((Integer)response.get("returnCode"))==1);
     }
@@ -769,7 +840,7 @@ public class XmlRPCJSR309Client {
         //Create request
         Object[] request = new Object[]{sessId,mixerId,mosaicId,comp,size};
         //Execute
-        HashMap response = (HashMap) client.execute("VideoMixerMosaicSetCompositionType", request);
+        HashMap response = (HashMap)client.execute("VideoMixerMosaicSetCompositionType", request);
         //Return
         return (((Integer)response.get("returnCode"))==1);
     }
@@ -779,7 +850,7 @@ public class XmlRPCJSR309Client {
         //Create request
         Object[] request = new Object[]{sessId,mixerId,mosaicId,overlay};
         //Execute
-        HashMap response = (HashMap) client.execute("VideoMixerMosaicSetOverlayPNG", request);
+        HashMap response = (HashMap)client.execute("VideoMixerMosaicSetOverlayPNG", request);
         //Return
         return (((Integer)response.get("returnCode"))==1);
     }
@@ -789,7 +860,7 @@ public class XmlRPCJSR309Client {
         //Create request
         Object[] request = new Object[]{sessId,mixerId,mosaicId};
         //Execute
-        HashMap response = (HashMap) client.execute("VideoMixerMosaicResetOverlay", request);
+        HashMap response = (HashMap)client.execute("VideoMixerMosaicResetOverlay", request);
         //Return
         return (((Integer)response.get("returnCode"))==1);
     }
@@ -799,7 +870,7 @@ public class XmlRPCJSR309Client {
         //Create request
         Object[] request = new Object[]{sessId,mixerId,mosaicId,portId};
         //Execute
-        HashMap response = (HashMap) client.execute("VideoMixerMosaicAddPort", request);
+        HashMap response = (HashMap)client.execute("VideoMixerMosaicAddPort", request);
         //Return
         return (((Integer)response.get("returnCode"))==1);
     }
@@ -809,7 +880,7 @@ public class XmlRPCJSR309Client {
         //Create request
         Object[] request = new Object[]{sessId,mixerId,mosaicId,portId};
         //Execute
-        HashMap response = (HashMap) client.execute("VideoMixerMosaicRemovePort", request);
+        HashMap response = (HashMap)client.execute("VideoMixerMosaicRemovePort", request);
         //Return
         return (((Integer)response.get("returnCode"))==1);
     }
@@ -819,9 +890,9 @@ public class XmlRPCJSR309Client {
         //Create request
         Object[] request = new Object[]{sessId,tag};
         //Execute
-        HashMap response = (HashMap) client.execute("AudioTranscoderCreate", request);
+        HashMap response = (HashMap)client.execute("AudioTranscoderCreate", request);
         //Get result
-        Object[] returnVal = (Object[]) response.get("returnVal");
+        Object[] returnVal = (Object[])response.get("returnVal");
         //Return part id
         return (Integer)returnVal[0];
     }
@@ -831,7 +902,7 @@ public class XmlRPCJSR309Client {
         //Create request
         Object[] request = new Object[]{sessId,transcoderId};
         //Execute
-        HashMap response = (HashMap) client.execute("AudioTranscoderDelete", request);
+        HashMap response = (HashMap)client.execute("AudioTranscoderDelete", request);
         //Return
         return (((Integer)response.get("returnCode"))==1);
     }
@@ -841,7 +912,7 @@ public class XmlRPCJSR309Client {
         //Create request
         Object[] request = new Object[]{sessId,transcoderId,codec,params};
         //Execute
-        HashMap response = (HashMap) client.execute("AudioTranscoderSetCodec", request);
+        HashMap response = (HashMap)client.execute("AudioTranscoderSetCodec", request);
         //Return
         return (((Integer)response.get("returnCode"))==1);
     }
@@ -851,7 +922,7 @@ public class XmlRPCJSR309Client {
         //Create request
         Object[] request = new Object[]{sessId,transcoderId,endpointId};
         //Execute
-        HashMap response = (HashMap) client.execute("AudioTranscoderAttachToEndpoint", request);
+        HashMap response = (HashMap)client.execute("AudioTranscoderAttachToEndpoint", request);
         //Return
         return (((Integer)response.get("returnCode"))==1);
     }
@@ -861,7 +932,7 @@ public class XmlRPCJSR309Client {
         //Create request
         Object[] request = new Object[]{sessId,transcoderId};
         //Execute
-        HashMap response = (HashMap) client.execute("AudioTranscoderDettach", request);
+        HashMap response = (HashMap)client.execute("AudioTranscoderDettach", request);
         //Return
         return (((Integer)response.get("returnCode"))==1);
     }
@@ -871,9 +942,9 @@ public class XmlRPCJSR309Client {
         //Create request
         Object[] request = new Object[]{sessId,tag};
         //Execute
-        HashMap response = (HashMap) client.execute("VideoTranscoderCreate", request);
+        HashMap response = (HashMap)client.execute("VideoTranscoderCreate", request);
         //Get result
-        Object[] returnVal = (Object[]) response.get("returnVal");
+        Object[] returnVal = (Object[])response.get("returnVal");
         //Return part id
         return (Integer)returnVal[0];
     }
@@ -883,7 +954,7 @@ public class XmlRPCJSR309Client {
         //Create request
         Object[] request = new Object[]{sessId,videoTranscoderId};
         //Execute
-        HashMap response = (HashMap) client.execute("VideoTranscoderDelete", request);
+        HashMap response = (HashMap)client.execute("VideoTranscoderDelete", request);
         //Return
         return (((Integer)response.get("returnCode"))==1);
     }
@@ -893,7 +964,7 @@ public class XmlRPCJSR309Client {
         //Create request
         Object[] request = new Object[]{sessId,videoTranscoderId,codec,size,fps,bitrate,intraPeriod,params};
         //Execute
-        HashMap response = (HashMap) client.execute("VideoTranscoderSetCodec", request);
+        HashMap response = (HashMap)client.execute("VideoTranscoderSetCodec", request);
         //Return
         return (((Integer)response.get("returnCode"))==1);
     }
@@ -902,7 +973,7 @@ public class XmlRPCJSR309Client {
         //Create request
         Object[] request = new Object[]{sessId,videoTranscoderId};
         //Execute
-        HashMap response = (HashMap) client.execute("VideoTranscoderFPU", request);
+        HashMap response = (HashMap)client.execute("VideoTranscoderFPU", request);
         //Return
         return (((Integer)response.get("returnCode"))==1);
     }
@@ -912,7 +983,7 @@ public class XmlRPCJSR309Client {
         //Create request
         Object[] request = new Object[]{sessId,videoTranscoderId,endpointId};
         //Execute
-        HashMap response = (HashMap) client.execute("VideoTranscoderAttachToEndpoint", request);
+        HashMap response = (HashMap)client.execute("VideoTranscoderAttachToEndpoint", request);
         //Return
         return (((Integer)response.get("returnCode"))==1);
     }
@@ -922,7 +993,7 @@ public class XmlRPCJSR309Client {
         //Create request
         Object[] request = new Object[]{sessId,videoTranscoderId};
         //Execute
-        HashMap response = (HashMap) client.execute("VideoTranscoderDettach", request);
+        HashMap response = (HashMap)client.execute("VideoTranscoderDettach", request);
         //Return
         return (((Integer)response.get("returnCode"))==1);
     }
@@ -932,7 +1003,7 @@ public class XmlRPCJSR309Client {
         //Create request
         Object[] request = new Object[]{sessId,EndpointId,media.valueOf(),role.valueOf(),protocol.valueOf(),token, expectedPayload};
         //Execute
-        HashMap response = (HashMap) client.execute("ConfigureMediaConnection", request);
+        HashMap response = (HashMap)client.execute("ConfigureMediaConnection", request);
         //Return
         return (((Integer)response.get("returnCode"))==1);
     }

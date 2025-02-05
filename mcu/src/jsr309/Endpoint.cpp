@@ -542,88 +542,69 @@ int Endpoint::ConfigureMediaConnection( MediaFrame::Type media, MediaFrame::Medi
 char *Endpoint::GetMediaCandidates( MediaFrame::MediaProtocol protocol, MediaFrame::Type media )
 {
     char hostname[HOST_NAME_MAX];
-    char *host;
-    char urls[28*10];
-    bool addrfound = false;
+    char urls[28 * 10] = {0};
 
-    if( gethostname( hostname, sizeof(hostname) ) == 0 )
-    {
-        if( hostname )
-        {
-            struct hostent *remoteHost = gethostbyname( hostname );
+    if( gethostname( hostname, sizeof(hostname) ) == 0 && hostname ) {
+        struct hostent *remoteHost = gethostbyname( hostname );
 
-            if( remoteHost )
+        if( remoteHost && remoteHost->h_addrtype == AF_INET ) { // IPv4
+            int i = 0;
+            while( remoteHost->h_addr_list[i] != 0 )
             {
+                char *host;
+                char url[28] = {0};
                 struct in_addr addr;
-                int i = 0;
 
-                if( remoteHost->h_addrtype == AF_INET )
-                {
-                    while( remoteHost->h_addr_list[i] != 0 )
-                    {
-                        addr.s_addr = *(u_long *)remoteHost->h_addr_list[i++];
-                        host = inet_ntoa( addr );
-                        if( strcmp( host, "127.0.0.1" ) != 0 )
-                        {
-                            Log( "\tIPv4 Address #%d: %s\n", i, inet_ntoa( addr ) );
-                            addrfound = true;
-                            break;
+                addr.s_addr = *(u_long *)remoteHost->h_addr_list[i++];
+                host = inet_ntoa( addr );
+                if (strcmp(host, "127.0.0.1") != 0) {
+                    Log("\tIPv4 Address #%d: %s\n", i, host);
+
+                    int port = 0;
+                    char *wshost = NULL;
+                    Port *p = GetPort(media);
+
+                    if (p == NULL) {
+                        Error("No such media %s\n", MediaFrame::TypeToString(media));
+                    } else if (p->GetTransport() != protocol) {
+                        Error("Media is configured with protocol %s. Cannot get media candidate for protocol %s.\n"
+                            , MediaFrame::ProtocolToString(p->GetTransport())
+                            , MediaFrame::ProtocolToString(protocol)
+                            );
+                    } else {
+                        port = p->GetLocalMediaPort();
+                        if (port != -1) {
+                            wshost = p->GetLocalMediaHost();
+                            if (wshost) {
+                                host = wshost;
+                            }
+
+                            if (port > 0) {
+                                sprintf(url, "%s://%s:%d", MediaFrame::ProtocolToString(protocol), host, port);
+                            } else {
+                                sprintf(url, "%s://%s", MediaFrame::ProtocolToString(protocol), host);
+                            }
                         }
                     }
+                }
+
+                if (*url != 0) {
+                    if (*urls != 0) {
+                        strcat(urls, "#");
+                    }
+                    strcat(urls, url);
                 }
             }
         }
     }
 
-    if( addrfound )
-    {
-        int port = 0;
-        char *wshost = NULL;
-        Port *p = GetPort( media );
-
-        if( p == NULL )
-        {
-            Error( "No such media %s\n", MediaFrame::TypeToString( media ) );
-            return NULL;
-        }
-
-        if( p->GetTransport() != protocol )
-        {
-            Error( "Media is configured with protocol %s. Cannot get media candidate for protocol %s.\n"
-                , MediaFrame::ProtocolToString( p->GetTransport() )
-                , MediaFrame::ProtocolToString( protocol ) 
-                );
-            return NULL;
-        }
-
-        port = p->GetLocalMediaPort();
-        if (port == -1) {
-            return NULL;
-        }
-
-        wshost = p->GetLocalMediaHost();
-        if (wshost) {
-            host = wshost;
-        }
-
-        if( port > 0 )
-        {
-            sprintf( urls, "%s://%s:%d#%s://%s:%d", MediaFrame::ProtocolToString( protocol ), host, port, , MediaFrame::ProtocolToString(protocol), "192.168.0.4", port );
-        }
-        else
-        {
-            sprintf( urls, "%s://%s#%s://%s", MediaFrame::ProtocolToString( protocol ), host, MediaFrame::ProtocolToString(protocol), "192.168.0.4" );
-        }
-        Log( "URL = %s\n", urls );
-        return strdup( urls );
-    }
-    else
-    {
-        Error( "No address found.\n" );
+    if( *urls != 0 ) {
+        return strdup(urls);
+    } else {
+        Error("No address found.\n");
         return NULL;
     }
 }
-
 
 int Endpoint::Port::SwitchJoin( Port *oldPort )
 {

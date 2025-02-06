@@ -538,52 +538,58 @@ int Endpoint::ConfigureMediaConnection( MediaFrame::Type media, MediaFrame::Medi
     }
 }
 
-
-char *Endpoint::GetMediaCandidates( MediaFrame::MediaProtocol protocol, MediaFrame::Type media )
+char *Endpoint::GetMediaCandidates(MediaFrame::MediaProtocol protocol, MediaFrame::Type media)
 {
     char hostname[HOST_NAME_MAX];
-    char urls[28 * 10] = {0};
+    char urls[INET6_ADDRSTRLEN * 10] = {0};
 
-    if( gethostname( hostname, sizeof(hostname) ) == 0 && hostname ) {
-        struct hostent *remoteHost = gethostbyname( hostname );
+    if (gethostname(hostname, sizeof(hostname)) == 0 && hostname) {
+        struct addrinfo hints, *res, *p;
 
-        if( remoteHost && remoteHost->h_addrtype == AF_INET ) { // IPv4
-            int i = 0;
-            while( remoteHost->h_addr_list[i] != 0 )
-            {
-                char *host;
+        // Configuration des critères pour getaddrinfo
+        memset(&hints, 0, sizeof hints);
+        hints.ai_family = AF_INET; // IPv4 et pas IPv6
+        hints.ai_socktype = SOCK_STREAM; // Pas nécessaire, mais bonne pratique
+
+        // Récupérer les adresses IP associées au nom d'hôte
+        if (getaddrinfo(hostname, NULL, &hints, &res) == 0) {
+            for (p = res; p != NULL; p = p->ai_next) {
+                char ipstr[INET6_ADDRSTRLEN] = {0};
                 char url[28] = {0};
-                struct in_addr addr;
 
-                addr.s_addr = *(u_long *)remoteHost->h_addr_list[i++];
-                host = inet_ntoa( addr );
-                if (strcmp(host, "127.0.0.1") != 0) {
-                    Log("\tIPv4 Address #%d: %s\n", i, host);
+                if (p->ai_family == AF_INET) { // IPv4
+                    struct sockaddr_in *ipv4 = (struct sockaddr_in *)p->ai_addr;
+                    inet_ntop(AF_INET, &(ipv4->sin_addr), ipstr, sizeof ipstr);
+                    Log("\tIPv4 Address: %s\n", ipstr);
+                } else { // IPv6
+                    struct sockaddr_in6 *ipv6 = (struct sockaddr_in6 *)p->ai_addr;
+                    inet_ntop(AF_INET6, &(ipv6->sin6_addr), ipstr, sizeof ipstr);
+                    Log("\tIPv6 Address: %s\n", ipstr);
+                }
 
-                    int port = 0;
-                    char *wshost = NULL;
-                    Port *p = GetPort(media);
+                int port = 0;
+                char *wshost = NULL;
+                Port *p = GetPort(media);
 
-                    if (p == NULL) {
-                        Error("No such media %s\n", MediaFrame::TypeToString(media));
-                    } else if (p->GetTransport() != protocol) {
-                        Error("Media is configured with protocol %s. Cannot get media candidate for protocol %s.\n"
-                            , MediaFrame::ProtocolToString(p->GetTransport())
-                            , MediaFrame::ProtocolToString(protocol)
-                            );
-                    } else {
-                        port = p->GetLocalMediaPort();
-                        if (port != -1) {
-                            wshost = p->GetLocalMediaHost();
-                            if (wshost) {
-                                host = wshost;
-                            }
+                if (p == NULL) {
+                    Error("No such media %s\n", MediaFrame::TypeToString(media));
+                } else if (p->GetTransport() != protocol) {
+                    Error("Media is configured with protocol %s. Cannot get media candidate for protocol %s.\n"
+                        , MediaFrame::ProtocolToString(p->GetTransport())
+                        , MediaFrame::ProtocolToString(protocol)
+                        );
+                } else {
+                    port = p->GetLocalMediaPort();
+                    if (port != -1) {
+                        wshost = p->GetLocalMediaHost();
+                        if (wshost) {
+                            strcpy(ipstr, wshost);
+                        }
 
-                            if (port > 0) {
-                                sprintf(url, "%s://%s:%d", MediaFrame::ProtocolToString(protocol), host, port);
-                            } else {
-                                sprintf(url, "%s://%s", MediaFrame::ProtocolToString(protocol), host);
-                            }
+                        if (port > 0) {
+                            sprintf(url, "%s://%s:%d", MediaFrame::ProtocolToString(protocol), ipstr, port);
+                        } else {
+                            sprintf(url, "%s://%s", MediaFrame::ProtocolToString(protocol), ipstr);
                         }
                     }
                 }
@@ -595,10 +601,12 @@ char *Endpoint::GetMediaCandidates( MediaFrame::MediaProtocol protocol, MediaFra
                     strcat(urls, url);
                 }
             }
+
+            freeaddrinfo(res);
         }
     }
 
-    if( *urls != 0 ) {
+    if (*urls != 0) {
         return strdup(urls);
     } else {
         Error("No address found.\n");

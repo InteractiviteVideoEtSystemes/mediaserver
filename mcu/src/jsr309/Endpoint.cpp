@@ -21,6 +21,14 @@
 #include "RTPEndpoint.h"
 #include "WSEndpoint.h"
 
+#ifndef NI_MAXHOST
+#define NI_MAXHOST      INET_ADDRSTRLEN
+#endif
+#ifndef NI_NUMERICHOST
+#define NI_NUMERICHOST  1
+#endif
+
+
 Endpoint::Endpoint( std::wstring n, bool audioSupported, bool videoSupported, bool textSupported ) : eventSource( n )
 {
     //Store name
@@ -544,9 +552,6 @@ int Endpoint::ConfigureMediaConnection( MediaFrame::Type media, MediaFrame::Medi
         return Error( "Invalid media / role.\n" );
     }
 }
-
-#define NI_MAXHOST      INET_ADDRSTRLEN
-#define NI_NUMERICHOST  1
 
 char *Endpoint::GetMediaCandidates(MediaFrame::MediaProtocol protocol, MediaFrame::Type media)
 {

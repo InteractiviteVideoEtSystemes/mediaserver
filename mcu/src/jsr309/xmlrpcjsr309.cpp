@@ -1,6 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include <vector>
+
 #include "xmlhandler.h"
 #include "JSR309Manager.h"
 #include "MediaSession.h"
@@ -10,6 +13,20 @@
 #include "AudioTranscoder.h"
 #include "rtpsession.h"
 
+
+std::vector<std::string> split_urls(const std::string &input, char delimiter)
+{
+	std::vector<std::string> result;
+	size_t start = 0, end;
+
+	while ((end = input.find(delimiter, start)) != std::string::npos) {
+		result.push_back(input.substr(start, end - start));
+		start = end + 1;
+	}
+
+	result.push_back(input.substr(start));
+	return result;
+}
 
 xmlrpc_value* EventQueueCreate(xmlrpc_env *env, xmlrpc_value *param_array, void *user_data)
 {
@@ -2727,36 +2744,6 @@ xmlrpc_value* VideoTranscoderDettach(xmlrpc_env *env, xmlrpc_value *param_array,
 
 	//Devolvemos el resultado
 	return xmlok(env);
-}
-
-std::vector<std::string> split_urls(const std::string &input, char delimiter)
-{
-	std::vector<std::string> result;
-	size_t start = 0, end;
-
-	while ((end = input.find(delimiter, start)) != std::string::npos) {
-		result.push_back(input.substr(start, end - start));
-		start = end + 1;
-	}
-
-	result.push_back(input.substr(start)); // Dernière URL
-	return result;
-}
-
-#include <vector>
-
-std::vector<std::string> split_urls(const std::string &input, char delimiter)
-{
-	std::vector<std::string> result;
-	size_t start = 0, end;
-
-	while ((end = input.find(delimiter, start)) != std::string::npos) {
-		result.push_back(input.substr(start, end - start));
-		start = end + 1;
-	}
-
-	result.push_back(input.substr(start));
-	return result;
 }
 
 xmlrpc_value* GetMediaCandidates(xmlrpc_env *env, xmlrpc_value *param_array, void *user_data)

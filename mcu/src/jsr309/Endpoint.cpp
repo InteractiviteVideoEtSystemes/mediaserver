@@ -4,15 +4,22 @@
  *
  * Created on 7 de septiembre de 2011, 0:59
  */
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <netdb.h>
+#include <ifaddrs.h>
+
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+
 #include "log.h"
 #include "Endpoint.h"
 #include "RTPEndpoint.h"
 #include "WSEndpoint.h"
-
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <netdb.h>
 
 Endpoint::Endpoint( std::wstring n, bool audioSupported, bool videoSupported, bool textSupported ) : eventSource( n )
 {
@@ -538,72 +545,64 @@ int Endpoint::ConfigureMediaConnection( MediaFrame::Type media, MediaFrame::Medi
     }
 }
 
+#define NI_MAXHOST      INET_ADDRSTRLEN
+#define NI_NUMERICHOST  1
+
 char *Endpoint::GetMediaCandidates(MediaFrame::MediaProtocol protocol, MediaFrame::Type media)
 {
-    char hostname[HOST_NAME_MAX];
-    char urls[INET6_ADDRSTRLEN * 10] = {0};
+    struct ifaddrs *ifaddr, *ifa;
+    char host[NI_MAXHOST];
+    char urls[NI_MAXHOST * 10] = {0};
 
-    if (gethostname(hostname, sizeof(hostname)) == 0 && hostname) {
-        struct addrinfo hints, *res, *p;
+    if (getifaddrs(&ifaddr) != -1) {
+        for (ifa = ifaddr; ifa != NULL; ifa = ifa->ifa_next) {
+            char url[NI_MAXHOST] = {0};
 
-        // Configuration des critères pour getaddrinfo
-        memset(&hints, 0, sizeof hints);
-        hints.ai_family = AF_INET; // IPv4 et pas IPv6
-        hints.ai_socktype = SOCK_STREAM; // Pas nécessaire, mais bonne pratique
+            if (ifa->ifa_addr != NULL && ifa->ifa_addr->sa_family == AF_INET) {  // IPv4
+                int res = getnameinfo(ifa->ifa_addr, sizeof(struct sockaddr_in),
+                    host, NI_MAXHOST,
+                    NULL, 0,
+                    NI_NUMERICHOST);
+                if (res == 0 && strcmp(host, "127.0.0.1") != 0) {
+                    int port = 0;
+                    char *wshost = NULL;
+                    Port *p = GetPort(media);
 
-        // Récupérer les adresses IP associées au nom d'hôte
-        if (getaddrinfo(hostname, NULL, &hints, &res) == 0) {
-            for (p = res; p != NULL; p = p->ai_next) {
-                char ipstr[INET6_ADDRSTRLEN] = {0};
-                char url[28] = {0};
-
-                if (p->ai_family == AF_INET) { // IPv4
-                    struct sockaddr_in *ipv4 = (struct sockaddr_in *)p->ai_addr;
-                    inet_ntop(AF_INET, &(ipv4->sin_addr), ipstr, sizeof ipstr);
-                    Log("\tIPv4 Address: %s\n", ipstr);
-                } else { // IPv6
-                    struct sockaddr_in6 *ipv6 = (struct sockaddr_in6 *)p->ai_addr;
-                    inet_ntop(AF_INET6, &(ipv6->sin6_addr), ipstr, sizeof ipstr);
-                    Log("\tIPv6 Address: %s\n", ipstr);
-                }
-
-                int port = 0;
-                char *wshost = NULL;
-                Port *p = GetPort(media);
-
-                if (p == NULL) {
-                    Error("No such media %s\n", MediaFrame::TypeToString(media));
-                } else if (p->GetTransport() != protocol) {
-                    Error("Media is configured with protocol %s. Cannot get media candidate for protocol %s.\n"
-                        , MediaFrame::ProtocolToString(p->GetTransport())
-                        , MediaFrame::ProtocolToString(protocol)
+                    if (p == NULL) {
+                        Error("No such media %s\n", MediaFrame::TypeToString(media));
+                    } else if (p->GetTransport() != protocol) {
+                        Error("Media is configured with protocol %s. Cannot get media candidate for protocol %s.\n"
+                            , MediaFrame::ProtocolToString(p->GetTransport())
+                            , MediaFrame::ProtocolToString(protocol)
                         );
-                } else {
-                    port = p->GetLocalMediaPort();
-                    if (port != -1) {
-                        wshost = p->GetLocalMediaHost();
-                        if (wshost) {
-                            strcpy(ipstr, wshost);
-                        }
+                    } else {
+                        port = p->GetLocalMediaPort();
+                        if (port != -1) {
+                            wshost = p->GetLocalMediaHost();
+                            if (wshost) {
+                                strcpy(host, wshost);
+                            }
 
-                        if (port > 0) {
-                            sprintf(url, "%s://%s:%d", MediaFrame::ProtocolToString(protocol), ipstr, port);
-                        } else {
-                            sprintf(url, "%s://%s", MediaFrame::ProtocolToString(protocol), ipstr);
+                            if (port > 0) {
+                                sprintf(url, "%s://%s:%d", MediaFrame::ProtocolToString(protocol), host, port);
+                            } else {
+                                sprintf(url, "%s://%s", MediaFrame::ProtocolToString(protocol), host);
+                            }
                         }
                     }
-                }
-
-                if (*url != 0) {
-                    if (*urls != 0) {
-                        strcat(urls, "#");
-                    }
-                    strcat(urls, url);
                 }
             }
 
-            freeaddrinfo(res);
+            if (*url != 0) {
+                if (*urls != 0) {
+                    strcat(urls, "#");
+                }
+                strcat(urls, url);
+            }
         }
+
+        freeifaddrs(ifaddr);
+    } else {
     }
 
     if (*urls != 0) {

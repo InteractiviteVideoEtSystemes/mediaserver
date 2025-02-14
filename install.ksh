@@ -343,8 +343,8 @@ function local_compile
 		cd $HOME
 		if [ ! -f xmlrpc-c ]
 		then
-			#svn export svn://svn.code.sf.net/p/xmlrpc-c/code/release_number/01.39.06 xmlrpc-c
-			svn export svn://svn.code.sf.net/p/xmlrpc-c/code/stable xmlrpc-c
+			svn export svn://svn.code.sf.net/p/xmlrpc-c/code/release_number/01.39.13 xmlrpc-c
+			#svn export svn://svn.code.sf.net/p/xmlrpc-c/code/stable xmlrpc-c
 		fi
 		cd xmlrpc-c
 		./configure --disable-abyss-openssl --prefix=$BASESRCDIR/staticdeps --exec-prefix=$BASESRCDIR/staticdeps --enable-shared=no

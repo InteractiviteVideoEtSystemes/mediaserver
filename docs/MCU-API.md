@@ -547,6 +547,9 @@ groupe de participants).
 Crée un participant et l'affecte à une mosaïque et un sidebar.
 - **Params** `(isiii)` : `confId`, `name` (UTF-8), `type` (`Participant::Type` :
   RTP=0 / RTMP=1), `mosaicId`, `sidebarId`.
+- `name` n'est pas qu'une trace : c'est l'**étiquette de départ du mixeur
+  texte**, celle que le flux mixé écrit entre crochets devant chaque tour de
+  parole (`[alice] bonjour`). `SetParticipantDisplayName` la remplace ensuite.
 - **Retour** : `(i)` = `partId`.
 
 #### `DeleteParticipant`
@@ -564,9 +567,11 @@ Change le sidebar de sortie du participant.
 - **Retour** : vide.
 
 #### `SetParticipantDisplayName`
-Affiche (ou efface) le nom d'un participant en surimpression sur SA vignette.
-Le nom est **par participant et par mosaïque** — il n'y a pas de « nom global
-de conférence » ; l'incrustation pleine toile, elle, est une image
+Pose (ou efface) le nom affiché d'un participant. Ce nom sert à **deux
+rendus** : le bandeau en surimpression sur sa vignette vidéo, et l'étiquette
+que le mixeur texte écrit devant chaque tour de parole.
+Le bandeau vidéo est **par participant et par mosaïque** — il n'y a pas de
+« nom global de conférence » ; l'incrustation pleine toile, elle, est une image
 (`SetMosaicOverlayImage`).
 - **Params** `(iiisi)` : `confId`, `mosaicId`, `partId`, `name` (UTF-8 ;
   chaîne vide = efface le bandeau), `scriptCode`.
@@ -590,7 +595,15 @@ de conférence » ; l'incrustation pleine toile, elle, est une image
   participant ; à **ré-émettre après un `CreateMosaic`** ultérieur (une
   mosaïque neuve ne connaît pas les bandeaux existants), alors qu'un
   `SetCompositionType` les conserve (les overlays suivent les participants).
-- **Retour** : `(i)` = 1.
+- **Étiquette texte** : le même nom remplace l'étiquette du mixeur texte, celle
+  que `CreateParticipant` avait posée. Elle ne connaît ni mosaïque ni
+  `scriptCode` : un participant a **un** nom affiché, pas un par média. Elle est
+  tronquée à **20 caractères** (des caractères, pas des octets : un idéogramme
+  compte pour un). Une chaîne vide efface le bandeau vidéo **et** rend
+  l'étiquette au `name` de `CreateParticipant`. Un participant qui rejoint plus
+  tard voit le nom courant, pas celui de la création.
+- **Retour** : `(i)` = 1. C'est le verdict de la **partie vidéo** seule :
+  l'étiquette texte est posée dans tous les cas.
 - Séquence type côté contrôleur, à l'arrivée de chaque participant :
   `SetParticipantDisplayName(confId, -1, partId, "Alice", 0)`.
 

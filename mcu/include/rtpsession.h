@@ -389,6 +389,8 @@ private:
 	RtpSessionSet* Group();
 	int  ReadRTP();
 	int  ReadRTCP();
+	//Checks ICE de la socket média ; `stun` appartient à l'appelant.
+	void ProcessSTUN(STUNMessage* stun,const IPEndpoint& from_addr);
 	//Trace agrégée d'un paquet reçu dont le payload type n'est pas négocié (cf.
 	//unknownPtCount). Rend toujours 0 : l'appelant jette le paquet.
 	int  OnUnknownPayloadType(BYTE type, DWORD ssrc, const IPEndpoint& from);
@@ -637,6 +639,8 @@ private:
 	//redémarrage ICE — SetRemoteSTUNCredentials avec un mot de passe DIFFÉRENT —
 	//puisque la paire validée ne vaut plus rien pour la nouvelle session.
 	bool	iceOwnsSendAddr;
+	//Trace « mot de passe ICE local manquant » : une fois, pas un check sur deux.
+	bool	iceMissingLocalPwdReported;
 	//P5 : anti-rebond one-shot de l'événement « média établi » (premier paquet RTP/SRTP
 	//reçu). Remis à false par ArmRTPReceivedNotification() à chaque StartReceiving.
 	bool	rtpReceivedNotified;

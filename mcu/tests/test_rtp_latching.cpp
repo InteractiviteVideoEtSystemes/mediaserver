@@ -186,6 +186,40 @@ public:
 
 	int Port() const { return ntohs(bound.sin_port); }
 
+	// Le pair JETTE une réponse sans MESSAGE-INTEGRITY (RFC 5389 §10.1.2) : c'est
+	// cette distinction qui décide si la paire sera validée.
+	enum class StunAnswer { None, Authenticated, Unauthenticated };
+
+	StunAnswer WaitForStunResponse(int timeoutMs)
+	{
+		pollfd pfd = { fd, POLLIN, 0 };
+		while (timeoutMs > 0)
+		{
+			const int slice = timeoutMs < 50 ? timeoutMs : 50;
+			timeoutMs -= slice;
+			if (poll(&pfd, 1, slice) <= 0)
+				continue;
+
+			BYTE buffer[MTU];
+			const ssize_t size = recv(fd, buffer, sizeof(buffer), 0);
+			if (size <= 0)
+				continue;
+
+			// Le RTP d'amorçage NAT et le Binding REQUEST en retour arrivent ici aussi.
+			STUNMessage* msg = STUNMessage::Parse(buffer, (DWORD)size);
+			if (!msg)
+				continue;
+
+			const bool isResponse = msg->GetType() == STUNMessage::Response;
+			const bool integrity  = msg->HasAttribute(STUNMessage::Attribute::MessageIntegrity);
+			delete msg;
+
+			if (isResponse)
+				return integrity ? StunAnswer::Authenticated : StunAnswer::Unauthenticated;
+		}
+		return StunAnswer::None;
+	}
+
 private:
 	int         fd = -1;
 	sockaddr_in bound {};
@@ -601,4 +635,76 @@ TEST(RtpLatching, AnIceRestartGivesTheTargetBackToTheControlPlane)
 
 	EXPECT_FALSE(sess.ReachesProbeWithin(probe, kDenyTimeoutMs))
 		<< "apres un redemarrage ICE, la cible redevient celle du plan de controle";
+}
+
+// AUTHENTIFICATION DES CHECKS ICE ENTRANTS
+//
+// Une jambe ICE a besoin des DEUX mots de passe : celui du pair pour signer nos
+// checks, le nôtre pour signer nos réponses. Jambe data channel du 2026-09-07 :
+// le contrôleur avait poussé le distant et oublié le nôtre. Réponses non signées,
+// jetées par le navigateur, paire jamais validée, aucun ClientHello DTLS, pas
+// d'association SCTP. 15 s de checks, puis abandon. Seule trace : une ligne DBG.
+
+// Cas nominal : les deux mots de passe, la réponse est signée.
+TEST(RtpIceAuthentication, AnswersAnIncomingCheckWithMessageIntegrity)
+{
+	ProbeSocket probe;
+	Session sess;
+	REQUIRE_LOOPBACK(probe, sess);
+
+	sess.session.SetLocalSTUNCredentials("localufrag", "localpwd");
+	sess.session.SetRemoteSTUNCredentials("remoteufrag", "remotepwd");
+
+	ASSERT_TRUE(probe.SendStunBindingTo(sess.session.GetLocalPort()));
+	EXPECT_EQ(ProbeSocket::StunAnswer::Authenticated,
+	          probe.WaitForStunResponse(kExpectTimeoutMs))
+		<< "une Binding Response sans MESSAGE-INTEGRITY est jetee par le pair";
+}
+
+// Le serveur ne peut pas fabriquer le mot de passe manquant, mais il sait qu'il
+// manque : il doit NOMMER l'appel oublié. C'est cette trace qui manquait.
+TEST(RtpIceAuthentication, ShoutsWhenTheControllerForgotOurLocalIcePassword)
+{
+	ProbeSocket probe;
+	Session sess;
+	REQUIRE_LOOPBACK(probe, sess);
+
+	sess.session.SetRemoteSTUNCredentials("remoteufrag", "remotepwd");
+
+	::testing::internal::CaptureStdout();
+	ASSERT_TRUE(probe.SendStunBindingTo(sess.session.GetLocalPort()));
+	probe.Drain(300);            // laisse le thread Run traiter le check
+	fflush(stdout);              // la trace est ecrite par un AUTRE thread
+	const std::string traces = ::testing::internal::GetCapturedStdout();
+
+	EXPECT_NE(std::string::npos, traces.find("SetLocalSTUNCredentials"))
+		<< "le serveur doit nommer l'appel manquant, pas se taire. Trace :\n" << traces;
+}
+
+// Un pair réémet toutes les 100 ms : une ligne par check en ferait 128 par appel.
+TEST(RtpIceAuthentication, SaysItOnceAndNotOncePerCheck)
+{
+	ProbeSocket probe;
+	Session sess;
+	REQUIRE_LOOPBACK(probe, sess);
+
+	sess.session.SetRemoteSTUNCredentials("remoteufrag", "remotepwd");
+
+	::testing::internal::CaptureStdout();
+	for (int i = 0; i < 5; i++)
+	{
+		ASSERT_TRUE(probe.SendStunBindingTo(sess.session.GetLocalPort()));
+		probe.Drain(100);
+	}
+	fflush(stdout);
+	const std::string traces = ::testing::internal::GetCapturedStdout();
+
+	int occurrences = 0;
+	for (size_t at = traces.find("SetLocalSTUNCredentials");
+	     at != std::string::npos;
+	     at = traces.find("SetLocalSTUNCredentials", at + 1))
+		occurrences++;
+
+	EXPECT_EQ(1, occurrences)
+		<< "une seule fois par jambe, pas une par check. Trace :\n" << traces;
 }

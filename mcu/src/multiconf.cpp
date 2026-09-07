@@ -1163,6 +1163,17 @@ int MultiConf::SetParticipantOverlay(int mosaicId, int id, const char * filename
 
 int MultiConf::SetParticipantDisplayName(int mosaicId, int partId, const char *name,int scriptCode)
 {
+    //Le mixeur texte prend la meme etiquette : un participant a UN nom affiche,
+    //pas un par media. `mosaicId` et `scriptCode` ne decrivent que le rendu du
+    //bandeau video, le texte n'en a que faire. Un nom vide vide le display
+    //name, et l'etiquette redevient le nom de creation.
+    UTF8Parser parser;
+
+    if (name)
+        parser.Parse((BYTE*)name,strlen(name));
+
+    textMixer.SetDisplayName(partId, parser.GetWString());
+
     return videoMixer.SetDisplayName(mosaicId, partId, name,scriptCode);
 }
 

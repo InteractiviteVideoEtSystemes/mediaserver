@@ -335,6 +335,7 @@ RTPSession::RTPSession(MediaFrame::Type media,Listener *listener,MediaFrame::Med
 	memset(iceCheckTransId,0,sizeof(iceCheckTransId));
 	//La cible d'envoi n'a encore été posée par personne
 	iceOwnsSendAddr = false;
+	iceMissingLocalPwdReported = false;
 	//P5 : événement « média établi » pas encore émis
 	rtpReceivedNotified = false;
 	//P6 : aucune rafale d'amorçage NAT en cours
@@ -2436,6 +2437,217 @@ int RTPSession::ReadRTCP()
 }
 
 /*********************************
+* ProcessSTUN
+*	Les checks de connectivité ICE, dans les deux sens. `stun` reste la
+*	propriété de ReadRTP, qui l'alloue et le détruit.
+*********************************/
+void RTPSession::ProcessSTUN(STUNMessage* stun,const IPEndpoint& from_addr)
+{
+	STUNMessage::Type type = stun->GetType();
+	STUNMessage::Method method = stun->GetMethod();
+	
+	//If it is a request
+	if (type==STUNMessage::Request && method==STUNMessage::Binding)
+	{
+		DWORD len = 0;
+		//Create response
+		STUNMessage* resp = stun->CreateResponse();
+		//Add received xor mapped addres
+		resp->AddXorAddressAttribute(from_addr.Sockaddr());
+		//TODO: Check incoming request username attribute value starts with iceLocalUsername+":"
+		//Create  response
+		DWORD size = resp->GetSize();
+		BYTE *aux = (BYTE*)malloc(size);
+
+		//Check if we have local passworkd
+		Debug("ICE: receiving Binding Request from %s localPwd=%s\n", from_addr.Address().ToString().c_str(),
+		    (iceLocalPwd != NULL) ? iceLocalPwd : "no password");
+
+		// Le distant utilise ICE et nous a fourni son mot de passe.
+		// Si nous ne disposons pas (encore) du nôtre, la réponse part sans
+		// MESSAGE-INTEGRITY, et sera IGNOREE (RFC 5389 §10.1.2). 
+
+		// Le contrôleur n'a pas appelé SetLocalSTUNCredentials()
+		// Rapporter cela comme une erreur.
+		if (iceRemotePwd && !iceLocalPwd && !iceMissingLocalPwdReported)
+		{
+			iceMissingLocalPwdReported = true;
+			Error("-RTPSession ICE: incoming STUN request from [%s:%d] but missing our local password"
+			      " on [%s,role:%d,port:%d]. Response without MESSAGE-INTEGRITY will be sent and"
+			      " probably ignored by the remote party. The controller need to call SetLocalSTUNCredentials().\n",
+			      from_addr.Address().ToString().c_str(),from_addr.Port(),
+			      MediaFrame::TypeToString(media),role,simPort);
+		}
+
+		if (iceRemotePwd)
+		{
+			if (iceLocalPwd)
+				//Serialize and autenticate
+				len = resp->AuthenticatedFingerPrint(aux,size,iceLocalPwd);
+			else
+				//Do nto authenticate
+				len = resp->NonAuthenticatedFingerPrint(aux,size);
+
+			//Branche vide et non retour anticipé : le `return 0` d'avant fuyait
+			//`aux`, `resp` et `stun`, et jetait un check par ailleurs valide.
+			if (len)
+				sendto(simSocket,aux,len,0,from_addr,from_addr.Len());
+			else
+				Debug("ICE: packet empty no need to send it\n");
+		}
+		else
+		{
+			Debug("ICE: No iceRemotePwd defined yet. Dropping request...\n");
+		}
+
+		//Clean memory
+		free(aux);
+		//Clean response
+		delete(resp);
+
+		if ( !HasIceRemote() )
+		{
+			iceRemoteIP = from_addr.Address();
+		}
+
+		//P3 : un check entrant valide prouve la connectivité (rôle serveur /
+		//navigateur) -> on cesse nos éventuels checks sortants (pas de régression).
+		if (!iceConnected && iceRemotePwd)
+		{
+			Log("-RTPSession ICE: connectivité confirmée (check entrant) [%p]\n",this);
+			iceConnected = true;
+		}
+
+		//If set
+		if (stun->HasAttribute(STUNMessage::Attribute::IceControlled)
+			|| stun->HasAttribute(STUNMessage::Attribute::UseCandidate)
+			|| SameAddr(iceRemoteIP,from_addr.Address()))
+		{
+			// We should check that username matches
+			if (iceRemoteUsername)
+			{
+				// ICE is enabled
+				if ( !HasRecIP() )
+				{
+					// set recIP if not set
+					recIP = from_addr.Address();
+					recPort = from_addr.Port();
+				}
+				
+				
+				if ( !SameAddr(sendAddr.Address(),recIP) 
+				     || 
+				     sendAddr.Port() != recPort )
+				{
+					// Do symetric RTP
+					sendAddr = Dest(recIP,recPort);
+					//Paire validée par un check entrant : c'est ICE qui tient
+					//désormais la cible, pas le `c=` du SDP
+					iceOwnsSendAddr = true;
+				}
+			}
+
+			DWORD len = 0;
+			//Create trans id
+			BYTE transId[12];
+			//Set first to 0
+			set4(transId,0,0);
+			//Set timestamp as trans id
+			set8(transId,4,getTime());
+			//Create binding request to send back
+			STUNMessage *request = new STUNMessage(STUNMessage::Request,STUNMessage::Binding,transId);
+			//Check usernames
+			if (iceLocalUsername && iceRemoteUsername)
+				//Add username
+				request->AddUsernameAttribute(iceLocalUsername,iceRemoteUsername);
+				//Add other attributes
+			if ( stun->HasAttribute(STUNMessage::Attribute::IceControlled ) )
+			{
+				request->AddAttribute(STUNMessage::Attribute::IceControlling,(QWORD)-1);
+				request->AddAttribute(STUNMessage::Attribute::UseCandidate);
+			}
+			else
+				request->AddAttribute(STUNMessage::Attribute::IceControlled,(QWORD)-1);
+
+			request->AddAttribute(STUNMessage::Attribute::Priority,(DWORD)33554431);
+			//Create  request
+			DWORD size = request->GetSize();
+			BYTE* aux = (BYTE*)malloc(size);
+
+			//Check remote pwd
+			if (iceRemotePwd)
+			{
+				Debug("ICE: sending bind request with remote user=[%s], remote password=[%s] to %s:%d.\n",
+			      (iceRemoteUsername != NULL) ? iceRemoteUsername : "no user",
+			      (iceRemotePwd != NULL ) ? iceRemotePwd : "no pwd",
+				 from_addr.Address().ToString().c_str(), from_addr.Port());
+				if (iceRemotePwd)
+				//Serialize and autenticate
+					len = request->AuthenticatedFingerPrint(aux,size,iceRemotePwd);
+				else
+				//Do nto authenticate
+					len = request->NonAuthenticatedFingerPrint(aux,size);
+
+				//Send it — ou pas, si la sérialisation n'a rien produit. Ce cas
+				//sortait de la fonction par un `return 0` qui sautait les trois
+				//libérations ci-dessous : le tampon `aux`, la requête `request` et
+				//le message `stun` fuyaient à chaque binding request qu'on n'arrivait
+				//pas à signer. Rien à émettre n'est pas une raison de ne pas ranger.
+				if (len)
+					sendto(simSocket,aux,len,0,from_addr,from_addr.Len());
+				else
+					Debug("ICE: packet empty no need to send it\n");
+			}
+
+			//Clean memory
+			free(aux);
+			//Clean response
+			delete(request);
+
+			// Needed for DTLS in client mode (otherwise the DTLS "Client Hello" is not sent over the wire)
+			//
+			//…mais seulement s'il Y A un DTLS. Le demander sur une session qui n'en
+			//a pas coûtait une ERR par binding request reçu, et un pair qui fait de
+			//l'ICE en émet plusieurs par flux même quand nous n'avons annoncé ni ICE
+			//ni DTLS : une paire d'appels Linphone en RTP clair produisait ainsi une
+			//quarantaine de « DTLSConnection::Read() | SSL not yet ready » sur son
+			//chemin nominal (trafic du 2026-08-14).
+			//
+			//Structuré en `if` et non en retour anticipé : la sortie de ce bloc
+			//passe par le `delete(stun)` d'en dessous. Le `return 0` qui gardait le
+			//cas « rien à émettre » le sautait, et fuyait le message STUN à chaque
+			//fois — il devient la branche vide qu'il aurait toujours dû être.
+			if (dtls.IsInited())
+			{
+				//Local : ReadRTP le prêtait, et c'était sa seule dépendance ici.
+				BYTE buffer[MTU];
+				len = dtls.Read(buffer,MTU);
+				//Send back
+				if (len)
+					sendto(simSocket,buffer,len,0,from_addr,from_addr.Len());
+				else
+					Debug("DTLS: packet empty no need to send it\n");
+			}
+		}
+	}
+	//P3 : réponse à un binding request que NOUS avons émis (pair ICE-lite ou full).
+	//Le handler historique n'acceptait que les Request : les Response étaient
+	//ignorées, ce qui empêchait toute validation de connectivité côté offreur.
+	else if (type==STUNMessage::Response && method==STUNMessage::Binding)
+	{
+		Log("ICE: réception Binding Response de %s:%d [%p]\n",
+			from_addr.Address().ToString().c_str(), from_addr.Port(), this);
+		//Validation pragmatique (parité avec le niveau ICE existant : pas de
+		//vérif MESSAGE-INTEGRITY sur l'entrant) : une Binding Response provenant du
+		//pair attendu confirme la connectivité.
+		if (!HasIceRemote() || SameAddr(iceRemoteIP,from_addr.Address()))
+			OnICEConnectivityConfirmed(from_addr);
+		else
+			Debug("ICE: Binding Response d'une source inattendue, ignorée [%p]\n",this);
+	}
+}
+
+/*********************************
 * GetTextPacket
 *	Lee el siguiente paquete de video
 *********************************/
@@ -2475,191 +2687,7 @@ int RTPSession::ReadRTP()
 	//If it was
 	if (stun)
 	{
-		STUNMessage::Type type = stun->GetType();
-		STUNMessage::Method method = stun->GetMethod();
-		
-		//If it is a request
-		if (type==STUNMessage::Request && method==STUNMessage::Binding)
-		{
-			DWORD len = 0;
-			//Create response
-			STUNMessage* resp = stun->CreateResponse();
-			//Add received xor mapped addres
-			resp->AddXorAddressAttribute(from_addr.Sockaddr());
-			//TODO: Check incoming request username attribute value starts with iceLocalUsername+":"
-			//Create  response
-			DWORD size = resp->GetSize();
-			BYTE *aux = (BYTE*)malloc(size);
-
-			//Check if we have local passworkd
-			Debug("ICE: receiving Binding Request from %s localPwd=%s\n", from_addr.Address().ToString().c_str(), 
-			    (iceLocalPwd != NULL) ? iceLocalPwd : "no password");
-			if (iceRemotePwd)
-			{
-				if (iceLocalPwd)
-					//Serialize and autenticate
-					len = resp->AuthenticatedFingerPrint(aux,size,iceLocalPwd);
-				else
-					//Do nto authenticate
-					len = resp->NonAuthenticatedFingerPrint(aux,size);
-				if (!len)
-				{
-					Debug("ICE: packet empty no need to send it\n");
-					return 0;	
-				}
-						
-				//Send it
-				sendto(simSocket,aux,len,0,from_addr,from_addr.Len());
-			}
-			else
-			{
-				Debug("ICE: No iceRemotePwd defined yet. Dropping request...\n");
-			}
-
-			//Clean memory
-			free(aux);
-			//Clean response
-			delete(resp);
-
-			if ( !HasIceRemote() )
-			{
-				iceRemoteIP = from_addr.Address();
-			}
-
-			//P3 : un check entrant valide prouve la connectivité (rôle serveur /
-			//navigateur) -> on cesse nos éventuels checks sortants (pas de régression).
-			if (!iceConnected && iceRemotePwd)
-			{
-				Log("-RTPSession ICE: connectivité confirmée (check entrant) [%p]\n",this);
-				iceConnected = true;
-			}
-
-			//If set
-			if (stun->HasAttribute(STUNMessage::Attribute::IceControlled)
-				|| stun->HasAttribute(STUNMessage::Attribute::UseCandidate)
-				|| SameAddr(iceRemoteIP,from_addr.Address()))
-			{
-				// We should check that username matches
-				if (iceRemoteUsername)
-				{
-					// ICE is enabled
-					if ( !HasRecIP() )
-					{
-						// set recIP if not set
-						recIP = from_addr.Address();
-						recPort = from_addr.Port();
-					}
-					
-					
-					if ( !SameAddr(sendAddr.Address(),recIP) 
-					     || 
-					     sendAddr.Port() != recPort )
-					{
-						// Do symetric RTP
-						sendAddr = Dest(recIP,recPort);
-						//Paire validée par un check entrant : c'est ICE qui tient
-						//désormais la cible, pas le `c=` du SDP
-						iceOwnsSendAddr = true;
-					}
-				}
-
-				DWORD len = 0;
-				//Create trans id
-				BYTE transId[12];
-				//Set first to 0
-				set4(transId,0,0);
-				//Set timestamp as trans id
-				set8(transId,4,getTime());
-				//Create binding request to send back
-				STUNMessage *request = new STUNMessage(STUNMessage::Request,STUNMessage::Binding,transId);
-				//Check usernames
-				if (iceLocalUsername && iceRemoteUsername)
-					//Add username
-					request->AddUsernameAttribute(iceLocalUsername,iceRemoteUsername);
-					//Add other attributes
-				if ( stun->HasAttribute(STUNMessage::Attribute::IceControlled ) )
-				{
-					request->AddAttribute(STUNMessage::Attribute::IceControlling,(QWORD)-1);
-					request->AddAttribute(STUNMessage::Attribute::UseCandidate);
-				}
-				else
-					request->AddAttribute(STUNMessage::Attribute::IceControlled,(QWORD)-1);
-
-				request->AddAttribute(STUNMessage::Attribute::Priority,(DWORD)33554431);
-				//Create  request
-				DWORD size = request->GetSize();
-				BYTE* aux = (BYTE*)malloc(size);
-
-				//Check remote pwd
-				if (iceRemotePwd)
-				{
-					Debug("ICE: sending bind request with remote user=[%s], remote password=[%s] to %s:%d.\n",
-				      (iceRemoteUsername != NULL) ? iceRemoteUsername : "no user",
-				      (iceRemotePwd != NULL ) ? iceRemotePwd : "no pwd",
-					 from_addr.Address().ToString().c_str(), from_addr.Port());
-					if (iceRemotePwd)
-					//Serialize and autenticate
-						len = request->AuthenticatedFingerPrint(aux,size,iceRemotePwd);
-					else
-					//Do nto authenticate
-						len = request->NonAuthenticatedFingerPrint(aux,size);
-
-					//Send it — ou pas, si la sérialisation n'a rien produit. Ce cas
-					//sortait de la fonction par un `return 0` qui sautait les trois
-					//libérations ci-dessous : le tampon `aux`, la requête `request` et
-					//le message `stun` fuyaient à chaque binding request qu'on n'arrivait
-					//pas à signer. Rien à émettre n'est pas une raison de ne pas ranger.
-					if (len)
-						sendto(simSocket,aux,len,0,from_addr,from_addr.Len());
-					else
-						Debug("ICE: packet empty no need to send it\n");
-				}
-
-				//Clean memory
-				free(aux);
-				//Clean response
-				delete(request);
-
-				// Needed for DTLS in client mode (otherwise the DTLS "Client Hello" is not sent over the wire)
-				//
-				//…mais seulement s'il Y A un DTLS. Le demander sur une session qui n'en
-				//a pas coûtait une ERR par binding request reçu, et un pair qui fait de
-				//l'ICE en émet plusieurs par flux même quand nous n'avons annoncé ni ICE
-				//ni DTLS : une paire d'appels Linphone en RTP clair produisait ainsi une
-				//quarantaine de « DTLSConnection::Read() | SSL not yet ready » sur son
-				//chemin nominal (trafic du 2026-08-14).
-				//
-				//Structuré en `if` et non en retour anticipé : la sortie de ce bloc
-				//passe par le `delete(stun)` d'en dessous. Le `return 0` qui gardait le
-				//cas « rien à émettre » le sautait, et fuyait le message STUN à chaque
-				//fois — il devient la branche vide qu'il aurait toujours dû être.
-				if (dtls.IsInited())
-				{
-					len = dtls.Read(buffer,MTU);
-					//Send back
-					if (len)
-						sendto(simSocket,buffer,len,0,from_addr,from_addr.Len());
-					else
-						Debug("DTLS: packet empty no need to send it\n");
-				}
-			}
-		}
-		//P3 : réponse à un binding request que NOUS avons émis (pair ICE-lite ou full).
-		//Le handler historique n'acceptait que les Request : les Response étaient
-		//ignorées, ce qui empêchait toute validation de connectivité côté offreur.
-		else if (type==STUNMessage::Response && method==STUNMessage::Binding)
-		{
-			Log("ICE: réception Binding Response de %s:%d [%p]\n",
-				from_addr.Address().ToString().c_str(), from_addr.Port(), this);
-			//Validation pragmatique (parité avec le niveau ICE existant : pas de
-			//vérif MESSAGE-INTEGRITY sur l'entrant) : une Binding Response provenant du
-			//pair attendu confirme la connectivité.
-			if (!HasIceRemote() || SameAddr(iceRemoteIP,from_addr.Address()))
-				OnICEConnectivityConfirmed(from_addr);
-			else
-				Debug("ICE: Binding Response d'une source inattendue, ignorée [%p]\n",this);
-		}
-
+		ProcessSTUN(stun,from_addr);
 		//Delete message
 		delete(stun);
 		//Exit

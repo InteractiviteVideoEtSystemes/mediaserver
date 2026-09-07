@@ -38,8 +38,10 @@ int TextMixer::Run()
 
 	Log(">MixText\n");
 
-	//Mientras estemos mezclando
-	while(mixingText)
+	//Mientras estemos mezclando. `IsThreadRunning()` fait partie de la condition
+	//parce que le contrat de worker.h l'exige : sans lui, le StopThread() du
+	//destructeur joint un thread que seul End() peut arreter, et pend.
+	while(mixingText && IsThreadRunning())
 	{
 		//Lock list of text mixers
 		//La passe entiere tient le verrou : elle itere les trois collections ET
@@ -225,6 +227,38 @@ int TextMixer::CreateMixer(int id,std::wstring &name)
 }
 
 /***********************
+* SetDisplayName
+*	Cambia la etiqueta mostrada para un participante
+*************************/
+int TextMixer::SetDisplayName(int id,const std::wstring &displayName)
+{
+	//Verrou EXCLUSIF, comme AddWritter : on modifie les workers que le thread
+	//de mixage parcourt, et TextMixerWorker n'a aucune synchronisation propre.
+	std::unique_lock<std::mutex> lock(mutex);
+
+	//Buscamos el text source
+	TextSources::iterator it = sources.find(id);
+
+	//Si no esta
+	if (it == sources.end())
+		return Error("Text source not found [%d]\n",id);
+
+	//L'etiquette est dupliquee dans le worker de chaque AUTRE participant : la
+	//source la garde pour ceux qui rejoindront ensuite.
+	it->second->displayName = displayName;
+
+	for (TextWorkers::iterator itWorker=workers.begin();itWorker!=workers.end();++itWorker)
+		//Le worker du participant lui-meme ne le porte pas : il rend 0, sans faute
+		(*itWorker)->SetWritterDisplayName(id,displayName);
+
+	//Le display name ne s'imprime pas : Log passe par %ls, et la locale C
+	//tronque la ligne au premier caractere non ASCII.
+	Log("-SetDisplayName text [%d]\n",id);
+
+	return 1;
+}
+
+/***********************
 * InitMixer
 *	Inicializa un text
 *************************/
@@ -265,7 +299,7 @@ int TextMixer::InitMixer(int id)
 	//Add as writter to all the other participants
 	for (TextWorkers::iterator it=workers.begin();it!=workers.end();++it)
 		//Add writter
-		(*it)->AddWritter(text->id,text->name,true);
+		(*it)->AddWritter(text->id,text->name,text->displayName,true);
 
 	//Set all other participants as writters for the user
 	for (TextSources::iterator it=sources.begin();it!=sources.end();++it)
@@ -276,7 +310,7 @@ int TextMixer::InitMixer(int id)
 		//Check if it is us
 		if (source->id!=text->id)
 			//Add writer
-			text->worker->AddWritter(source->id,source->name,true);
+			text->worker->AddWritter(source->id,source->name,source->displayName,true);
 	}
 
 	//Add the worker to the list
@@ -570,7 +604,7 @@ int TextMixer::InitPrivate(int id)
 	//if found
 	if (itSource!=sources.end())
 		//Add writer
-		itSource->second->worker->AddWritter(id,priv->name,false);
+		itSource->second->worker->AddWritter(id,priv->name,std::wstring(),false);
 
 	//Desprotegemos
 	lock.unlock();

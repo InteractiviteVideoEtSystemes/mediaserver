@@ -25,6 +25,12 @@ static wchar_t PARAGRAPH_SEPARATOR[]	= {0x2029};
 
 #define WLEN(str) 	sizeof(str)/sizeof(wchar_t)
 
+//Plafond de l'etiquette de tour de parole. Il compte des CARACTERES wchar_t,
+//jamais des octets : un ideogramme y compte pour un, et la coupe ne tombe
+//jamais au milieu d'un caractere.
+static const DWORD maxLabelNameSize = 20;
+static const DWORD maxLabelSize = maxLabelNameSize+WLEN(LABEL_START)+WLEN(LABEL_END);
+
 TextMixerWorker::TextMixerWorker()
 {
 	//Set initial values
@@ -54,7 +60,7 @@ int TextMixerWorker::End()
 }
 
 
-int TextMixerWorker::AddWritter(DWORD id, const std::wstring name,bool realtime)
+int TextMixerWorker::AddWritter(DWORD id, const std::wstring name, const std::wstring displayName,bool realtime)
 {
 	Log("-AddWritter [id:%d,name:\"%ls\"]\n",id,name.c_str());
 	//Check if we alredy have it
@@ -62,7 +68,22 @@ int TextMixerWorker::AddWritter(DWORD id, const std::wstring name,bool realtime)
 		//Error
 		return 0;
 	//Create
-	writters[id] = new TextWritter(id,name,realtime);
+	writters[id] = new TextWritter(id,name,displayName,realtime);
+
+	return 1;
+}
+
+int TextMixerWorker::SetWritterDisplayName(DWORD id, const std::wstring& displayName)
+{
+	//find it
+	Writters::iterator it = writters.find(id);
+
+	//Un writter absent n'est pas une faute : le participant renomme n'ecrit pas
+	//dans son propre worker, et TextMixer nous appelle sur tous les workers.
+	if (it==writters.end())
+		return 0;
+
+	it->second->displayName = displayName;
 
 	return 1;
 }
@@ -200,9 +221,6 @@ int TextMixerWorker::ProcessText()
 	DWORD maxWaitingTimeLimit = 20000;
 	DWORD timeExtension = 7000;
 	DWORD maxCurrentParticipantInactiveLimit = 7000;
-
-	DWORD maxLabelNameSize = 12;
-	DWORD maxLabelSize = maxLabelNameSize+WLEN(LABEL_START)+WLEN(LABEL_END);
 
 	//Check all writters
 	for (Writters::iterator it=writters.begin();it!=writters.end();++it)
@@ -402,13 +420,13 @@ int TextMixerWorker::ProcessText()
 					send += WLEN(LABEL_START);
 
 					//Get name length
-					DWORD nameLength = currentWritter->name.length();
+					DWORD nameLength = currentWritter->Label().length();
 					//Check size
 					if (nameLength>maxLabelNameSize)
 						//Cut it
 						nameLength = maxLabelNameSize;
 					//Append label name
-					wmemcpy(aux+send,currentWritter->name.c_str(),nameLength);
+					wmemcpy(aux+send,currentWritter->Label().c_str(),nameLength);
 					//Inc size
 					send += nameLength;
 
@@ -537,9 +555,6 @@ int TextMixerWorker::FlushText()
 	wchar_t aux[1024];
 	DWORD size=1024;
 
-	DWORD maxLabelNameSize = 12;
-	DWORD maxLabelSize = maxLabelNameSize+WLEN(LABEL_START)+WLEN(LABEL_END);
-
 	//While there is somthing left
 	while (currentWritter)
 	{
@@ -582,13 +597,13 @@ int TextMixerWorker::FlushText()
 					send += WLEN(LABEL_START);
 
 					//Get name length
-					DWORD nameLength = currentWritter->name.length();
+					DWORD nameLength = currentWritter->Label().length();
 					//Check size
 					if (nameLength>maxLabelNameSize)
 						//Cut it
 						nameLength = maxLabelNameSize;
 					//Append label name
-					wmemcpy(aux+send,currentWritter->name.c_str(),nameLength);
+					wmemcpy(aux+send,currentWritter->Label().c_str(),nameLength);
 					//Inc size
 					send += nameLength;
 

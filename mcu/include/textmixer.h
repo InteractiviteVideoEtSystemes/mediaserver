@@ -25,6 +25,7 @@ public:
 
 	int Init();
 	int CreateMixer(int id,std::wstring &name);
+	int SetDisplayName(int id,const std::wstring &displayName);
 	int InitMixer(int id);
 	int EndMixer(int id);
 	int DeleteMixer(int id);
@@ -48,7 +49,11 @@ private:
 	struct TextSource
 	{
 		DWORD id;
+		//Le nom de creation, et l'etiquette que le controleur a posee par
+		//dessus. Retenue ICI aussi : un participant qui rejoint plus tard la
+		//recopie dans son worker (InitMixer).
 		std::wstring	name;
+		std::wstring	displayName;
 		std::shared_ptr<PipeTextInput>	input;
 		std::shared_ptr<PipeTextOutput>	output;
 		//Le worker est co-detenu avec la liste `workers` : il porte un pointeur

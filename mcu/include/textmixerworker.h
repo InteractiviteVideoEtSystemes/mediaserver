@@ -12,7 +12,8 @@ public:
 	TextMixerWorker();
 	~TextMixerWorker();
 	int Init();
-	int AddWritter(DWORD id, const std::wstring name,bool realtime);
+	int AddWritter(DWORD id, const std::wstring name, const std::wstring displayName,bool realtime);
+	int SetWritterDisplayName(DWORD id, const std::wstring& displayName);
 	int WriteText(DWORD id,const wchar_t *data,DWORD size);
 	int ProcessText();
 	int FlushText();
@@ -26,22 +27,30 @@ private:
 	struct TextWritter
 	{
 		DWORD			id;
+		//`name` est le nom de creation, fige, et c'est le SEUL que les traces
+		//impriment : elles passent par %ls, que la locale C tronque au premier
+		//caractere non ASCII. L'etiquette du flux mixe, elle, suit le display
+		//name des qu'il y en a un.
 		std::wstring		name;
+		std::wstring		displayName;
 		bool			realtime;
 		fifo<wchar_t,1024>	textQueue;
 		timeval			waitingSince;
 		bool			firstSentenceDelimiterCharFound;
 
-		TextWritter(DWORD id,std::wstring name,bool realtime)
+		TextWritter(DWORD id,std::wstring name,std::wstring displayName,bool realtime)
 		{
 			this->id = id;
 			this->name = name;
+			this->displayName = displayName;
 			this->realtime = realtime;
 			//Set zero time
 			setZeroTime(&waitingSince);
 			//Not found
 			firstSentenceDelimiterCharFound = false;
 		}
+
+		const std::wstring& Label() const	{ return displayName.empty() ? name : displayName; }
 	};
 
 	struct TextReader

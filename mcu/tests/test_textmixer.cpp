@@ -113,6 +113,33 @@ TEST(TextMixerSite, BothDirections)
 	mixer.End();
 }
 
+// GARDE-FOU du contrat de worker.h : un TextMixer détruit SANS End() doit tout
+// de même s'arrêter. Run() bouclait sur le seul `mixingText`, que seul End()
+// baisse — le StopThread() du destructeur joignait alors un thread qui ne
+// s'arrêtait jamais. Le symptôme n'était pas théorique : une assertion en échec
+// dans ce fichier, qui saute le `mixer.End()` final, PENDAIT le binaire de test
+// au lieu de rapporter l'échec.
+TEST(TextMixerSite, DestructionWithoutEndDoesNotHang)
+{
+	std::wstring alice = L"alice", bob = L"bob";
+	Clock::time_point t0;
+
+	{
+		TextMixer mixer;
+		ASSERT_TRUE(mixer.Init());
+		ASSERT_TRUE(mixer.CreateMixer(1, alice));
+		ASSERT_TRUE(mixer.CreateMixer(2, bob));
+		ASSERT_TRUE(mixer.InitMixer(1));
+		ASSERT_TRUE(mixer.InitMixer(2));
+
+		// Laisser le thread s'endormir dans son tick, puis partir sans End()
+		std::this_thread::sleep_for(std::chrono::milliseconds(50));
+		t0 = Clock::now();
+	}
+
+	EXPECT_LT(ElapsedMs(t0), 150);
+}
+
 // CIBLE de la conversion Wait : End() interrompt le tick au lieu d'attendre
 // sa fin (l'historique msleep(200 ms) faisait patienter le join d'autant).
 TEST(TextMixerSite, EndIsImmediate)
@@ -149,6 +176,112 @@ TEST(TextMixerSite, ReInitAfterEndStillMixes)
 
 	Speak(mixer, 1, L"apres reinit");
 	EXPECT_TRUE(ReceivedContains(mixer, 2, L"apres reinit", 3000));
+
+	mixer.End();
+}
+
+// ---------------------------------------------------------------------------
+// L'étiquette de tour de parole ([nom]) : le nom de création vient du
+// contrôleur à CreateParticipant, le display name le remplace quand il y en a
+// un (SetParticipantDisplayName). Deux champs, parce que les traces gardent le
+// premier et que le second peut porter des accents.
+// ---------------------------------------------------------------------------
+
+// Le display name posé APRÈS l'arrivée du participant remplace l'étiquette.
+// Le nom porte un accent et fait 13 caractères : il échoue aussi bien si le
+// display name n'est pas pris que si le plafond est resté à 12.
+TEST(TextMixerSite, DisplayNameReplacesTheCreationLabel)
+{
+	TextMixer mixer;
+	std::wstring alice = L"alice", bob = L"bob";
+	ASSERT_TRUE(mixer.Init());
+	ASSERT_TRUE(mixer.CreateMixer(1, alice));
+	ASSERT_TRUE(mixer.CreateMixer(2, bob));
+	ASSERT_TRUE(mixer.InitMixer(1));
+	ASSERT_TRUE(mixer.InitMixer(2));
+
+	EXPECT_TRUE(mixer.SetDisplayName(1, L"Émilie Durand"));
+	//Un participant inconnu n'est pas renommé en silence.
+	EXPECT_FALSE(mixer.SetDisplayName(99, L"personne"));
+
+	Speak(mixer, 1, L"hola mundo");
+
+	EXPECT_TRUE(ReceivedContains(mixer, 2, L"[Émilie Durand] hola mundo", 3000));
+
+	mixer.End();
+}
+
+// Le PIÈGE D'ORDRE : renommer, PUIS accueillir un nouveau participant. Son
+// worker est peuplé par InitMixer à partir des sources, pas des autres
+// workers : sans display name retenu sur la source, il verrait le nom de
+// création alors que tous les autres voient le nouveau.
+TEST(TextMixerSite, LateJoinerSeesTheDisplayName)
+{
+	TextMixer mixer;
+	std::wstring alice = L"alice", bob = L"bob", carol = L"carol";
+	ASSERT_TRUE(mixer.Init());
+	ASSERT_TRUE(mixer.CreateMixer(1, alice));
+	ASSERT_TRUE(mixer.CreateMixer(2, bob));
+	ASSERT_TRUE(mixer.InitMixer(1));
+	ASSERT_TRUE(mixer.InitMixer(2));
+
+	EXPECT_TRUE(mixer.SetDisplayName(1, L"Alice Merveille"));
+
+	//Carol arrive après le renommage
+	ASSERT_TRUE(mixer.CreateMixer(3, carol));
+	ASSERT_TRUE(mixer.InitMixer(3));
+
+	Speak(mixer, 1, L"tardif");
+
+	EXPECT_TRUE(ReceivedContains(mixer, 3, L"[Alice Merveille] tardif", 3000));
+
+	mixer.End();
+}
+
+// Un display name vide (ce que SetParticipantDisplayName passe quand le
+// contrôleur efface le bandeau) rend l'étiquette au nom de création.
+// L'effacement se fait AVANT le premier tour de parole : une étiquette n'est
+// réécrite qu'au changement de locuteur, et le mixeur ne change de locuteur
+// qu'après 7 s de silence du précédent (maxCurrentParticipantInactiveLimit).
+TEST(TextMixerSite, EmptyDisplayNameFallsBackToTheCreationName)
+{
+	TextMixer mixer;
+	std::wstring alice = L"alice", bob = L"bob";
+	ASSERT_TRUE(mixer.Init());
+	ASSERT_TRUE(mixer.CreateMixer(1, alice));
+	ASSERT_TRUE(mixer.CreateMixer(2, bob));
+	ASSERT_TRUE(mixer.InitMixer(1));
+	ASSERT_TRUE(mixer.InitMixer(2));
+
+	EXPECT_TRUE(mixer.SetDisplayName(1, L"Alice Merveille"));
+	EXPECT_TRUE(mixer.SetDisplayName(1, L""));
+
+	Speak(mixer, 1, L"efface");
+
+	EXPECT_TRUE(ReceivedContains(mixer, 2, L"[alice] efface", 3000));
+
+	mixer.End();
+}
+
+// La coupe se fait à 20 CARACTÈRES. Le nom en fait 27 : l'assertion tombe si
+// le plafond bouge, dans un sens comme dans l'autre.
+TEST(TextMixerSite, LongDisplayNameIsCutAtTwentyChars)
+{
+	TextMixer mixer;
+	std::wstring alice = L"alice", bob = L"bob";
+	ASSERT_TRUE(mixer.Init());
+	ASSERT_TRUE(mixer.CreateMixer(1, alice));
+	ASSERT_TRUE(mixer.CreateMixer(2, bob));
+	ASSERT_TRUE(mixer.InitMixer(1));
+	ASSERT_TRUE(mixer.InitMixer(2));
+
+	const std::wstring tresLong = L"Jean-Baptiste Emmanuel Zorg";
+	EXPECT_EQ((size_t)27, tresLong.length());
+	EXPECT_TRUE(mixer.SetDisplayName(1, tresLong));
+
+	Speak(mixer, 1, L"coupe");
+
+	EXPECT_TRUE(ReceivedContains(mixer, 2, L"[Jean-Baptiste Emmanu] coupe", 3000));
 
 	mixer.End();
 }
